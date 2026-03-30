@@ -1,0 +1,15 @@
+viewer:
+  mode: realtime
+
+  viewer_root: third_party/viewer/bin
+  model_path: outputs/test_scene
+  source_path: datasets/processed/test_scene
+
+  rendering_width: 1200
+  rendering_height: 800
+  force_aspect_ratio: false
+  load_images: false
+  device: 0
+
+  wait_until_close: true
+  detached: false

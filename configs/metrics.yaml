@@ -1,0 +1,5 @@
+metrics:
+  scene_name: test_scene
+  model_paths:
+    - outputs/test_scene
+  quiet: false

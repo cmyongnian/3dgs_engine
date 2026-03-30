@@ -1,0 +1,8 @@
+render:
+  scene_name: test_scene
+  model_path: outputs/test_scene
+
+  iteration: -1
+  skip_train: true
+  skip_test: false
+  quiet: false

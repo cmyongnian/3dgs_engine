@@ -1,0 +1,9 @@
+colmap:
+  scene_name: raw_scene_01
+
+  image_path: datasets/raw/raw_scene_01/images
+  workspace_path: datasets/processed/raw_scene_01/colmap_workspace
+
+  colmap_executable: E:/3dgs/3dgs_platform/third_party/colmap/COLMAP.bat
+  use_gpu: true
+ # workspace_format: both
