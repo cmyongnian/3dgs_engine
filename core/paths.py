@@ -20,6 +20,7 @@ class PathManager:
         self.processed_data = self._resolve_path(cfg["paths"]["processed_data"])
         self.outputs = self._resolve_path(cfg["paths"]["outputs"])
         self.logs = self._resolve_path(cfg["paths"]["logs"])
+        self.videos_data = self._resolve_path(cfg["paths"]["videos_data"])
 
     def _resolve_path(self, p: str) -> Path:
         p = Path(p)
@@ -38,3 +39,6 @@ class PathManager:
 
     def scene_log(self, scene_name: str):
         return self.logs / scene_name
+
+    def scene_video(self, scene_name: str, suffix=".mp4"):
+        return self.videos_data / f"{scene_name}{suffix}"

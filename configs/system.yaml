@@ -6,6 +6,7 @@ paths:
   processed_data: datasets/processed
   outputs: outputs
   logs: logs
+  videos_data: datasets/videos
 
 runtime:
   python_env: 3dgs1

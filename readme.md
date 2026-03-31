@@ -105,8 +105,8 @@
     └── viewers/                 # 官方viewer程序
 
 
-
-    python -m app.colmap_main
+  python -m app.video_main
+  python -m app.colmap_main
   python -m app.convert_main
   python -m app.main
   python -m app.main

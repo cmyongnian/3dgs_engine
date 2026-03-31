@@ -1,6 +1,6 @@
 render:
-  scene_name: test_scene
-  model_path: outputs/test_scene
+  scene_name: video_scene_01
+  model_path: outputs/video_scene_01
 
   iteration: -1
   skip_train: true

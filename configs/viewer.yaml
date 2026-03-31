@@ -2,8 +2,8 @@ viewer:
   mode: realtime
 
   viewer_root: third_party/viewer/bin
-  model_path: outputs/test_scene
-  source_path: datasets/processed/test_scene
+  model_path: outputs/video_scene_01
+  source_path: datasets/processed/video_scene_01
 
   rendering_width: 1200
   rendering_height: 800

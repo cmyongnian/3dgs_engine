@@ -1,0 +1,6 @@
+video:
+  scene_name: video_scene_01
+  video_path: datasets/videos/video_scene_01.mp4
+  output_images: datasets/raw/video_scene_01/images
+  ffmpeg_executable: E:/3dgs/3dgs_platform/third_party/ffmpeg-2026-03-30-git-e54e117998-full_build/bin/ffmpeg.exe
+  target_fps: 2
