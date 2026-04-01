@@ -13,7 +13,7 @@ train:
       test_iterations: [-1]
       checkpoint_iterations: [2000, 15000, 30000]
       start_checkpoint: ""
-      resume_from_latest: true
+      resume_from_latest: false
       quiet: false
       extra_args:
         data_device: cpu
