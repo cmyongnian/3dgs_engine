@@ -1,6 +1,6 @@
 train:
   scene_name: video_scene_01
-  source_path: datasets/processed/video_scene_01
+  source_path: datasets/processed/video_scene_01/gs_input
   model_output: outputs/video_scene_01
 
   active_profile: low_vram 
@@ -8,8 +8,8 @@ train:
   profiles:
     low_vram:
       eval: true
-      iterations: 7000
-      save_iterations: [3000, 7000]
+      iterations: 30000
+      save_iterations: [7000, 30000]
       test_iterations: [-1]
       quiet: false
 
