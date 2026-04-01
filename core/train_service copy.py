@@ -38,18 +38,6 @@ class TrainerService:
             raise ValueError(f"未找到训练模式: {active_profile}")
 
         return active_profile, profiles[active_profile]
-    def _find_latest_checkpoint(self, model_output: Path):
-        candidates = sorted(model_output.glob("chkpnt*.pth"))
-        if not candidates:
-            return None
-
-        def extract_iter(p: Path):
-            name = p.stem  # chkpnt7000
-            num = "".join(ch for ch in name if ch.isdigit())
-            return int(num) if num else -1
-
-        candidates = sorted(candidates, key=extract_iter)
-        return candidates[-1]
 
     def run(self):
         scene_name = self.train_cfg["scene_name"]
@@ -62,9 +50,6 @@ class TrainerService:
         iterations = profile.get("iterations", 30000)
         save_iterations = profile.get("save_iterations", [])
         test_iterations = profile.get("test_iterations", [])
-        checkpoint_iterations = profile.get("checkpoint_iterations", [])
-        start_checkpoint = profile.get("start_checkpoint", "")
-        resume_from_latest = profile.get("resume_from_latest", False)
         quiet = profile.get("quiet", False)
 
         extra_args = profile.get("extra_args", {})
@@ -78,19 +63,7 @@ class TrainerService:
             raise FileNotFoundError(f"训练输入目录不存在: {source_path}")
 
         model_output.mkdir(parents=True, exist_ok=True)
-        resolved_start_checkpoint = None
 
-        if start_checkpoint:
-            resolved_start_checkpoint = self._resolve_user_path(start_checkpoint)
-            if not resolved_start_checkpoint.exists():
-                raise FileNotFoundError(f"start_checkpoint 不存在: {resolved_start_checkpoint}")
-        elif resume_from_latest:
-            latest_ckpt = self._find_latest_checkpoint(model_output)
-            if latest_ckpt is None:
-                print("未找到可恢复的 checkpoint，将从头开始训练。")
-            else:
-                resolved_start_checkpoint = latest_ckpt
-                print(f"检测到最新 checkpoint: {resolved_start_checkpoint}")
         log_dir = self.pm.scene_log(scene_name)
         log_dir.mkdir(parents=True, exist_ok=True)
         log_file = log_dir / f"train_{active_profile_name}.log"
@@ -121,11 +94,6 @@ class TrainerService:
         if test_iterations:
             cmd.append("--test_iterations")
             cmd.extend([str(x) for x in test_iterations])
-        if checkpoint_iterations:
-            cmd.append("--checkpoint_iterations")
-            cmd.extend([str(x) for x in checkpoint_iterations])
-        if resolved_start_checkpoint is not None:
-            cmd.extend(["--start_checkpoint", str(resolved_start_checkpoint)])
 
         if data_device is not None:
             cmd.extend(["--data_device", str(data_device)])
@@ -150,13 +118,10 @@ class TrainerService:
         logger.info("训练输入目录: %s", source_path)
         logger.info("模型输出目录: %s", model_output)
         logger.info("执行命令: %s", " ".join(cmd))
-        logger.info("checkpoint 保存步数: %s", checkpoint_iterations)
-        logger.info("恢复训练起点: %s", resolved_start_checkpoint if resolved_start_checkpoint else "无")
 
         print(f"当前训练模式: {active_profile_name}")
         print(f"训练输入目录: {source_path}")
         print(f"模型输出目录: {model_output}")
-
 
         process = subprocess.Popen(
             cmd,

@@ -3,18 +3,16 @@ train:
   source_path: datasets/processed/video_scene_01/gs_input
   model_output: outputs/video_scene_01
 
-  active_profile: low_vram
-
+  active_profile: low_vram 
+## 三种模式
   profiles:
     low_vram:
       eval: true
       iterations: 30000
       save_iterations: [7000, 30000]
       test_iterations: [-1]
-      checkpoint_iterations: [2000, 15000, 30000]
-      start_checkpoint: ""
-      resume_from_latest: true
       quiet: false
+
       extra_args:
         data_device: cpu
         resolution: 4
@@ -27,10 +25,8 @@ train:
       iterations: 15000
       save_iterations: [7000, 15000]
       test_iterations: [7000, 15000]
-      checkpoint_iterations: [7000, 15000]
-      start_checkpoint: ""
-      resume_from_latest: false
       quiet: false
+
       extra_args:
         resolution: 2
 
@@ -39,10 +35,8 @@ train:
       iterations: 3000
       save_iterations: [1000, 3000]
       test_iterations: [-1]
-      checkpoint_iterations: [1000, 3000]
-      start_checkpoint: ""
-      resume_from_latest: false
       quiet: false
+
       extra_args:
         data_device: cpu
         resolution: 8
