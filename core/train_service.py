@@ -1,11 +1,11 @@
 from pathlib import Path
 import subprocess
 import sys
+from PIL import Image, UnidentifiedImageError
 
 from core.config import load_yaml
 from core.paths import PathManager
 from core.logger import setup_logger
-
 
 class TrainerService:
     def __init__(
@@ -50,6 +50,39 @@ class TrainerService:
 
         candidates = sorted(candidates, key=extract_iter)
         return candidates[-1]
+    def _collect_images(self, image_dir: Path):
+        image_exts = {".jpg", ".jpeg", ".png", ".bmp", ".tif", ".tiff"}
+        return sorted([
+            p for p in image_dir.iterdir()
+            if p.is_file() and p.suffix.lower() in image_exts
+        ])
+
+    def _validate_training_images(self, source_path: Path):
+        image_dir = source_path / "images"
+        if not image_dir.exists():
+            return
+
+        bad_files = []
+        for img_path in self._collect_images(image_dir):
+            try:
+                with Image.open(img_path) as img:
+                    img.verify()
+
+                with Image.open(img_path) as img:
+                    img.load()
+                    _ = img.size
+            except (UnidentifiedImageError, OSError, ValueError) as e:
+                bad_files.append(f"{img_path.name}: {e}")
+
+        if bad_files:
+            msg = "\n".join(bad_files[:20])
+            raise RuntimeError(
+                f"训练输入中发现损坏或不可读取图片，共 {len(bad_files)} 张：\n{msg}"
+            )  
+
+
+
+
 
     def run(self):
         scene_name = self.train_cfg["scene_name"]
@@ -76,6 +109,7 @@ class TrainerService:
 
         if not source_path.exists():
             raise FileNotFoundError(f"训练输入目录不存在: {source_path}")
+        self._validate_training_images(source_path)
 
         model_output.mkdir(parents=True, exist_ok=True)
         resolved_start_checkpoint = None

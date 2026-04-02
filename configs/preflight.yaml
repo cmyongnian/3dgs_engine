@@ -1,5 +1,9 @@
 preflight:
   scene_name: video_scene_01
-  image_path: datasets/raw/video_scene_01/images
+
+  raw_image_path: datasets/raw/video_scene_01/images
+  processed_image_path: datasets/processed/video_scene_01/gs_input/images
+
   min_images: 10
   blur_threshold: 100.0
+  fail_on_unreadable: true
