@@ -37,61 +37,61 @@ class PipelineService:
         self.run_metrics_flag = cfg.get("run_metrics", True)
         self.launch_viewer_flag = cfg.get("launch_viewer", False)
 
-def run(self):
-    print("===== 3DGS 平台一键流水线启动 =====")
+    def run(self):
+        print("===== 3DGS 平台一键流水线启动 =====")
 
-    if self.input_mode == "video" and self.run_video_extract_flag:
-        print(">>> 第一步：视频抽帧")
-        video_service = VideoService(system_config_path=self.system_config_path)
-        video_service.run()
-        print(">>> 视频抽帧结束")
+        if self.input_mode == "video" and self.run_video_extract_flag:
+            print(">>> 第一步：视频抽帧")
+            video_service = VideoService(system_config_path=self.system_config_path)
+            video_service.run()
+            print(">>> 视频抽帧结束")
 
-    if self.run_preflight_flag:
-        print(">>> 第二步：原始数据预检查")
-        preflight = PreflightService(system_config_path=self.system_config_path)
-        preflight.run()
-        print(">>> 原始数据预检查结束")
+        if self.run_preflight_flag:
+            print(">>> 第二步：原始数据预检查")
+            preflight = PreflightService(system_config_path=self.system_config_path)
+            preflight.run()
+            print(">>> 原始数据预检查结束")
 
-    if self.run_colmap_flag:
-        print(">>> 第三步：COLMAP 重建")
-        colmap_service = ColmapService(system_config_path=self.system_config_path)
-        colmap_service.run()
-        print(">>> COLMAP 重建结束")
+        if self.run_colmap_flag:
+            print(">>> 第三步：COLMAP 重建")
+            colmap_service = ColmapService(system_config_path=self.system_config_path)
+            colmap_service.run()
+            print(">>> COLMAP 重建结束")
 
-    if self.run_convert_flag:
-        print(">>> 第四步：执行 convert.py")
-        convert_service = ConvertService(system_config_path=self.system_config_path)
-        convert_service.run()
-        print(">>> convert.py 执行结束")
+        if self.run_convert_flag:
+            print(">>> 第四步：执行 convert.py")
+            convert_service = ConvertService(system_config_path=self.system_config_path)
+            convert_service.run()
+            print(">>> convert.py 执行结束")
 
-    if self.run_preflight_flag:
-        print(">>> 第五步：训练前复检 processed 数据")
-        preflight = PreflightService(system_config_path=self.system_config_path)
-        preflight.run()
-        print(">>> 训练前复检结束")
+        if self.run_preflight_flag:
+            print(">>> 第五步：训练前复检 processed 数据")
+            preflight = PreflightService(system_config_path=self.system_config_path)
+            preflight.run()
+            print(">>> 训练前复检结束")
 
-    if self.run_train_flag:
-        print(">>> 第六步：开始训练")
-        trainer = TrainerService(system_config_path=self.system_config_path)
-        trainer.run()
-        print(">>> 训练结束")
+        if self.run_train_flag:
+            print(">>> 第六步：开始训练")
+            trainer = TrainerService(system_config_path=self.system_config_path)
+            trainer.run()
+            print(">>> 训练结束")
 
-    if self.run_render_flag:
-        print(">>> 第七步：开始渲染")
-        renderer = RenderService(system_config_path=self.system_config_path)
-        renderer.run()
-        print(">>> 渲染结束")
+        if self.run_render_flag:
+            print(">>> 第七步：开始渲染")
+            renderer = RenderService(system_config_path=self.system_config_path)
+            renderer.run()
+            print(">>> 渲染结束")
 
-    if self.run_metrics_flag:
-        print(">>> 第八步：开始评测")
-        metrics = MetricsService(system_config_path=self.system_config_path)
-        metrics.run()
-        print(">>> 评测结束")
+        if self.run_metrics_flag:
+            print(">>> 第八步：开始评测")
+            metrics = MetricsService(system_config_path=self.system_config_path)
+            metrics.run()
+            print(">>> 评测结束")
 
-    if self.launch_viewer_flag:
-        print(">>> 第九步：启动官方 Viewer")
-        viewer = ViewerService(system_config_path=self.system_config_path)
-        viewer.run()
-        print(">>> Viewer 已启动")
+        if self.launch_viewer_flag:
+            print(">>> 第九步：启动官方 Viewer")
+            viewer = ViewerService(system_config_path=self.system_config_path)
+            viewer.run()
+            print(">>> Viewer 已启动")
 
-    print("===== 一键流水线执行完成 =====")
+        print("===== 一键流水线执行完成 =====")
