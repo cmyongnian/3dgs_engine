@@ -1,0 +1,7 @@
+report:
+  scene_name: video_scene_01
+  model_paths:
+    - outputs/video_scene_01_exp_7000
+    - outputs/video_scene_01_exp_15000
+    - outputs/video_scene_01_exp_30000
+  report_dir: reports/video_scene_01

@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from core.preflight_service import PreflightService
 from core.video_service import VideoService
 from core.colmap_service import ColmapService
 from core.convert_service import ConvertService
@@ -27,6 +28,7 @@ class PipelineService:
         cfg = load_yaml(str(pipeline_config_path))["pipeline"]
 
         self.input_mode = cfg.get("input_mode", "images")
+        self.run_preflight_flag = cfg.get("run_preflight", False)
         self.run_video_extract_flag = cfg.get("run_video_extract", False)
         self.run_colmap_flag = cfg.get("run_colmap", False)
         self.run_convert_flag = cfg.get("run_convert", False)
@@ -43,6 +45,12 @@ class PipelineService:
             video_service = VideoService(system_config_path=self.system_config_path)
             video_service.run()
             print(">>> 视频抽帧结束")
+
+        if self.run_preflight_flag:
+            print(">>> 数据预检查")
+            preflight = PreflightService(system_config_path=self.system_config_path)
+            preflight.run()
+            print(">>> 数据预检查结束")
 
         if self.run_colmap_flag:
             print(">>> 第二步：COLMAP 重建")

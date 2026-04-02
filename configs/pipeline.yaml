@@ -1,4 +1,5 @@
 pipeline:
+  run_preflight: true
   input_mode: video
   run_video_extract: true
   run_colmap: true
@@ -7,3 +8,4 @@ pipeline:
   run_render: true
   run_metrics: true
   launch_viewer: true
+  
