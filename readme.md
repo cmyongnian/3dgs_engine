@@ -112,3 +112,5 @@
   python -m app.main
   python -m app.viewer_main
   python -m app.pipeline_main
+  python -m app.preflight_main
+  python -m app.metrics_main
