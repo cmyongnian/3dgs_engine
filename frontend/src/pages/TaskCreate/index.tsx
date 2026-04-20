@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { 创建并启动任务 } from '../../api/task'
+import { 创建任务, 启动任务 } from '../../api/task'
 import type { 创建任务请求 } from '../../types/task'
 
 const 初始值: 创建任务请求 = {
@@ -47,6 +47,17 @@ const 初始值: 创建任务请求 = {
   },
 }
 
+const 开关项: Array<[keyof 创建任务请求['pipeline'], string]> = [
+  ['run_preflight', '执行预检查'],
+  ['run_video_extract', '执行视频抽帧'],
+  ['run_colmap', '执行 COLMAP'],
+  ['run_convert', '执行转换'],
+  ['run_train', '执行训练'],
+  ['run_render', '执行渲染'],
+  ['run_metrics', '执行评测'],
+  ['launch_viewer', '启动查看器'],
+]
+
 export function TaskCreatePage() {
   const [表单, set表单] = useState<创建任务请求>(初始值)
   const [提交中, set提交中] = useState(false)
@@ -58,8 +69,10 @@ export function TaskCreatePage() {
       set提交中(true)
       set错误('')
 
-      const 已启动 = await 创建并启动任务(表单)
-      navigate(`/tasks/${已启动.task_id}`)
+      const 已创建 = await 创建任务(表单)
+      await 启动任务(已创建.task_id)
+
+      navigate(`/tasks/${已创建.task_id}`)
     } catch (error) {
       set错误(error instanceof Error ? error.message : '创建失败')
     } finally {
@@ -218,20 +231,11 @@ export function TaskCreatePage() {
       </div>
 
       <div className="flag-grid">
-        {[
-          ['run_preflight', '执行预检查'],
-          ['run_video_extract', '执行视频抽帧'],
-          ['run_colmap', '执行 COLMAP'],
-          ['run_convert', '执行转换'],
-          ['run_train', '执行训练'],
-          ['run_render', '执行渲染'],
-          ['run_metrics', '执行评测'],
-          ['launch_viewer', '启动查看器'],
-        ].map(([字段, 标签]) => (
+        {开关项.map(([字段, 标签]) => (
           <label key={字段} className="flag-card">
             <input
               type="checkbox"
-              checked={Boolean(表单.pipeline[字段 as keyof typeof 表单.pipeline])}
+              checked={Boolean(表单.pipeline[字段])}
               onChange={(e) =>
                 set表单({
                   ...表单,
@@ -249,7 +253,7 @@ export function TaskCreatePage() {
 
       {错误 ? <div className="error-box">{错误}</div> : null}
 
-      <button onClick={提交} disabled={提交中}>
+      <button className="primary-btn" onClick={提交} disabled={提交中}>
         {提交中 ? '正在提交' : '创建并启动任务'}
       </button>
     </div>

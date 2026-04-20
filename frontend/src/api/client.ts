@@ -28,7 +28,7 @@ export async function 请求<T>(path: string, init?: RequestInit): Promise<T> {
     }
   }
 
-  return response.json() as Promise<T>
+  return (await response.json()) as T
 }
 
 export const 日志地址 = (taskId: string) =>

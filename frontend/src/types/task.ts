@@ -6,7 +6,15 @@ export interface 任务响应 {
   status: 任务状态 | string
   current_stage: string
   message: string
-  result: Record<string, string>
+  result: Record<string, unknown>
+  error?: string | null
+}
+
+export interface 结果响应 {
+  task_id: string
+  status: string
+  scene_name: string
+  result: Record<string, unknown>
   error?: string | null
 }
 

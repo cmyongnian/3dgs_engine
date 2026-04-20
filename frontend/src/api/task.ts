@@ -1,5 +1,5 @@
 import { 请求 } from './client'
-import type { 创建任务请求, 任务响应 } from '../types/task'
+import type { 创建任务请求, 任务响应, 结果响应 } from '../types/task'
 
 export function 创建任务(payload: 创建任务请求) {
   return 请求<任务响应>('/tasks', {
@@ -19,5 +19,5 @@ export function 获取任务(taskId: string) {
 }
 
 export function 获取结果(taskId: string) {
-  return 请求<{ task_id: string; status: string; scene_name: string; result: Record<string, string>; error?: string | null }>(`/results/${taskId}`)
+  return 请求<结果响应>(`/results/${taskId}`)
 }

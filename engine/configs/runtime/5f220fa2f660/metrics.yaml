@@ -1,0 +1,5 @@
+metrics:
+  scene_name: video_scene_01
+  model_paths:
+  - outputs/video_scene_01
+  quiet: false

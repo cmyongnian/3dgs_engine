@@ -141,3 +141,33 @@ select {
   border-radius: 14px;
   white-space: pre-wrap;
 }
+
+.flag-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.flag-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 88px;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 14px 18px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+.flag-card input[type='checkbox'] {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+}
+
+.flag-card span {
+  font-size: 16px;
+  line-height: 1.5;
+  color: #111827;
+}
