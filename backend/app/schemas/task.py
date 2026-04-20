@@ -1,6 +1,4 @@
-from __future__ import annotations
-
-from typing import Any, Literal
+from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel, Field
 
@@ -30,13 +28,13 @@ class TrainProfile(BaseModel):
     active_profile: str = "low_vram"
     eval: bool = True
     iterations: int = 30000
-    save_iterations: list[int] = Field(default_factory=lambda: [7000, 30000])
-    test_iterations: list[int] = Field(default_factory=lambda: [-1])
-    checkpoint_iterations: list[int] = Field(default_factory=lambda: [2000, 15000, 30000])
+    save_iterations: List[int] = Field(default_factory=lambda: [7000, 30000])
+    test_iterations: List[int] = Field(default_factory=lambda: [-1])
+    checkpoint_iterations: List[int] = Field(default_factory=lambda: [2000, 15000, 30000])
     start_checkpoint: str = ""
     resume_from_latest: bool = False
     quiet: bool = False
-    extra_args: dict[str, Any] = Field(
+    extra_args: Dict[str, Any] = Field(
         default_factory=lambda: {
             "data_device": "cpu",
             "resolution": 4,
@@ -73,5 +71,5 @@ class TaskResponse(BaseModel):
     status: str
     current_stage: str
     message: str
-    result: dict[str, Any] = Field(default_factory=dict)
-    error: str | None = None
+    result: Dict[str, Any] = Field(default_factory=dict)
+    error: Optional[str] = None
