@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { 创建任务, 启动任务 } from '../../api/task'
+import { 创建并启动任务 } from '../../api/task'
 import type { 创建任务请求 } from '../../types/task'
 
 const 初始值: 创建任务请求 = {
@@ -57,9 +57,9 @@ export function TaskCreatePage() {
     try {
       set提交中(true)
       set错误('')
-      const 已创建 = await 创建任务(表单)
-      await 启动任务(已创建.task_id)
-      navigate(`/tasks/${已创建.task_id}`)
+
+      const 已启动 = await 创建并启动任务(表单)
+      navigate(`/tasks/${已启动.task_id}`)
     } catch (error) {
       set错误(error instanceof Error ? error.message : '创建失败')
     } finally {
@@ -70,53 +70,154 @@ export function TaskCreatePage() {
   return (
     <div className="page">
       <h1>新建任务</h1>
+
       <div className="form-grid">
-        <label>
-          <span>场景名称</span>
-          <input value={表单.scene.scene_name} onChange={(e) => set表单({ ...表单, scene: { ...表单.scene, scene_name: e.target.value } })} />
-        </label>
-        <label>
-          <span>输入模式</span>
-          <select value={表单.pipeline.input_mode} onChange={(e) => set表单({ ...表单, pipeline: { ...表单.pipeline, input_mode: e.target.value as 'images' | 'video' } })}>
+        <div className="card">
+          <label>场景名称</label>
+          <input
+            value={表单.scene.scene_name}
+            onChange={(e) =>
+              set表单({
+                ...表单,
+                scene: { ...表单.scene, scene_name: e.target.value },
+              })
+            }
+          />
+        </div>
+
+        <div className="card">
+          <label>输入模式</label>
+          <select
+            value={表单.pipeline.input_mode}
+            onChange={(e) =>
+              set表单({
+                ...表单,
+                pipeline: {
+                  ...表单.pipeline,
+                  input_mode: e.target.value as 'images' | 'video',
+                },
+              })
+            }
+          >
             <option value="images">图片</option>
             <option value="video">视频</option>
           </select>
-        </label>
-        <label>
-          <span>原始图片目录</span>
-          <input value={表单.scene.raw_image_path} onChange={(e) => set表单({ ...表单, scene: { ...表单.scene, raw_image_path: e.target.value } })} />
-        </label>
-        <label>
-          <span>处理目录</span>
-          <input value={表单.scene.processed_scene_path} onChange={(e) => set表单({ ...表单, scene: { ...表单.scene, processed_scene_path: e.target.value } })} />
-        </label>
-        <label>
-          <span>训练输入目录</span>
-          <input value={表单.scene.source_path} onChange={(e) => set表单({ ...表单, scene: { ...表单.scene, source_path: e.target.value } })} />
-        </label>
-        <label>
-          <span>模型输出目录</span>
-          <input value={表单.scene.model_output} onChange={(e) => set表单({ ...表单, scene: { ...表单.scene, model_output: e.target.value } })} />
-        </label>
-        <label>
-          <span>视频路径</span>
-          <input value={表单.scene.video_path} onChange={(e) => set表单({ ...表单, scene: { ...表单.scene, video_path: e.target.value } })} />
-        </label>
-        <label>
-          <span>训练轮数</span>
-          <input type="number" value={表单.train.iterations} onChange={(e) => set表单({ ...表单, train: { ...表单.train, iterations: Number(e.target.value) } })} />
-        </label>
-        <label>
-          <span>训练模式</span>
-          <input value={表单.train.active_profile} onChange={(e) => set表单({ ...表单, train: { ...表单.train, active_profile: e.target.value } })} />
-        </label>
-        <label>
-          <span>分辨率倍率</span>
-          <input type="number" value={表单.train.extra_args.resolution} onChange={(e) => set表单({ ...表单, train: { ...表单.train, extra_args: { ...表单.train.extra_args, resolution: Number(e.target.value) } } })} />
-        </label>
+        </div>
+
+        <div className="card">
+          <label>原始图片目录</label>
+          <input
+            value={表单.scene.raw_image_path}
+            onChange={(e) =>
+              set表单({
+                ...表单,
+                scene: { ...表单.scene, raw_image_path: e.target.value },
+              })
+            }
+          />
+        </div>
+
+        <div className="card">
+          <label>处理目录</label>
+          <input
+            value={表单.scene.processed_scene_path}
+            onChange={(e) =>
+              set表单({
+                ...表单,
+                scene: { ...表单.scene, processed_scene_path: e.target.value },
+              })
+            }
+          />
+        </div>
+
+        <div className="card">
+          <label>训练输入目录</label>
+          <input
+            value={表单.scene.source_path}
+            onChange={(e) =>
+              set表单({
+                ...表单,
+                scene: { ...表单.scene, source_path: e.target.value },
+              })
+            }
+          />
+        </div>
+
+        <div className="card">
+          <label>模型输出目录</label>
+          <input
+            value={表单.scene.model_output}
+            onChange={(e) =>
+              set表单({
+                ...表单,
+                scene: { ...表单.scene, model_output: e.target.value },
+              })
+            }
+          />
+        </div>
+
+        <div className="card">
+          <label>视频路径</label>
+          <input
+            value={表单.scene.video_path}
+            onChange={(e) =>
+              set表单({
+                ...表单,
+                scene: { ...表单.scene, video_path: e.target.value },
+              })
+            }
+          />
+        </div>
+
+        <div className="card">
+          <label>训练轮数</label>
+          <input
+            type="number"
+            value={表单.train.iterations}
+            onChange={(e) =>
+              set表单({
+                ...表单,
+                train: { ...表单.train, iterations: Number(e.target.value) },
+              })
+            }
+          />
+        </div>
+
+        <div className="card">
+          <label>训练模式</label>
+          <input
+            value={表单.train.active_profile}
+            onChange={(e) =>
+              set表单({
+                ...表单,
+                train: { ...表单.train, active_profile: e.target.value },
+              })
+            }
+          />
+        </div>
+
+        <div className="card">
+          <label>分辨率倍率</label>
+          <input
+            type="number"
+            value={表单.train.extra_args.resolution}
+            onChange={(e) =>
+              set表单({
+                ...表单,
+                train: {
+                  ...表单.train,
+                  extra_args: {
+                    ...表单.train.extra_args,
+                    resolution: Number(e.target.value),
+                  },
+                },
+              })
+            }
+          />
+        </div>
       </div>
 
-      <div className="checkbox-grid">
+      <div className="flag-grid">
         {[
           ['run_preflight', '执行预检查'],
           ['run_video_extract', '执行视频抽帧'],
@@ -127,14 +228,17 @@ export function TaskCreatePage() {
           ['run_metrics', '执行评测'],
           ['launch_viewer', '启动查看器'],
         ].map(([字段, 标签]) => (
-          <label key={字段} className="checkbox-item">
+          <label key={字段} className="flag-card">
             <input
               type="checkbox"
               checked={Boolean(表单.pipeline[字段 as keyof typeof 表单.pipeline])}
               onChange={(e) =>
                 set表单({
                   ...表单,
-                  pipeline: { ...表单.pipeline, [字段]: e.target.checked },
+                  pipeline: {
+                    ...表单.pipeline,
+                    [字段]: e.target.checked,
+                  },
                 })
               }
             />
@@ -145,7 +249,7 @@ export function TaskCreatePage() {
 
       {错误 ? <div className="error-box">{错误}</div> : null}
 
-      <button className="primary-btn" onClick={提交} disabled={提交中}>
+      <button onClick={提交} disabled={提交中}>
         {提交中 ? '正在提交' : '创建并启动任务'}
       </button>
     </div>

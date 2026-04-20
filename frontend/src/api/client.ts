@@ -19,11 +19,17 @@ export async function 请求<T>(path: string, init?: RequestInit): Promise<T> {
   })
 
   if (!response.ok) {
-    const text = await response.text().catch(() => '')
-    throw new Error(text || `请求失败：${response.status}`)
+    try {
+      const data = await response.json()
+      throw new Error(data.detail || `请求失败：${response.status}`)
+    } catch {
+      const text = await response.text().catch(() => '')
+      throw new Error(text || `请求失败：${response.status}`)
+    }
   }
 
   return response.json() as Promise<T>
 }
 
-export const 日志地址 = (taskId: string) => `${getWebSocketBase()}/api/ws/logs/${taskId}`
+export const 日志地址 = (taskId: string) =>
+  `${getWebSocketBase()}/api/ws/logs/${taskId}`

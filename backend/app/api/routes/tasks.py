@@ -11,6 +11,14 @@ def create_task(payload: TaskCreateRequest) -> TaskResponse:
     return task_service.create_task(payload)
 
 
+@router.post("/run", response_model=TaskResponse)
+def create_and_start_task(payload: TaskCreateRequest) -> TaskResponse:
+    task = task_service.create_and_start_task(payload)
+    if task is None:
+        raise HTTPException(status_code=500, detail="任务创建后启动失败")
+    return task
+
+
 @router.post("/{task_id}/start", response_model=TaskResponse)
 def start_task(task_id: str) -> TaskResponse:
     task = task_service.start_task(task_id)
