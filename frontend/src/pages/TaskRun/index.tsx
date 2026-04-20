@@ -26,15 +26,53 @@ export function TaskRunPage() {
 
   useEffect(() => {
     if (!taskId) return
+
+    let active = true
     const ws = new WebSocket(日志地址(taskId))
-    ws.onopen = () => ws.send('连接成功')
-    ws.onmessage = (event) => {
-      set日志((prev) => [...prev, event.data])
-      ws.send('继续')
+
+    ws.onopen = () => {
+      if (!active) return
+      set错误('')
+      ws.send('ping')
     }
-    ws.onerror = () => set错误('日志连接异常')
-    return () => ws.close()
-  }, [taskId])
+
+    ws.onmessage = (event) => {
+      if (!active) return
+      set日志((prev) => [...prev, event.data])
+
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send('ping')
+      }
+    }
+
+    ws.onerror = () => {
+      if (!active) return
+
+      // 任务已经结束时，不再把 ws 波动当成错误提示
+      if (任务?.status !== 'success' && 任务?.status !== 'failed') {
+        set错误('日志连接异常')
+      }
+    }
+
+    ws.onclose = () => {
+      if (!active) return
+
+      // 成功或失败后关闭连接属于正常现象
+      if (任务?.status === 'success' || 任务?.status === 'failed') {
+        set错误('')
+      }
+    }
+
+    return () => {
+      active = false
+      if (
+        ws.readyState === WebSocket.OPEN ||
+        ws.readyState === WebSocket.CONNECTING
+      ) {
+        ws.close()
+      }
+    }
+  }, [taskId, 任务?.status])
 
   const 是否完成 = useMemo(() => 任务?.status === 'success', [任务])
 

@@ -1,0 +1,7 @@
+render:
+  scene_name: video_scene_01
+  model_path: outputs/video_scene_01
+  iteration: -1
+  skip_train: true
+  skip_test: false
+  quiet: false

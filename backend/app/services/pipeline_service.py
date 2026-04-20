@@ -110,12 +110,14 @@ class PipelineService:
 
             ConvertService(system_config_path=system_path, convert_config_path=config_paths["convert"]).run()
 
-        if flags.run_preflight:
+        if flags.run_train and flags.run_preflight:
             self._set_stage(task_id, "训练前复检")
+
             from engine.core.preflight_service import PreflightService
-
-            PreflightService(system_config_path=system_path, preflight_config_path=config_paths["preflight"]).run()
-
+            PreflightService(
+                system_config_path=system_path,
+                preflight_config_path=config_paths["preflight"],
+            ).run()
         if flags.run_train:
             self._set_stage(task_id, "模型训练")
             from engine.core.train_service import TrainerService
