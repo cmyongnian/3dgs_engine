@@ -1,3 +1,19 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+.env
+.venv/
+node_modules/
+frontend/dist/
+backend/.pytest_cache/
+backend/.mypy_cache/
+engine/logs/
+engine/outputs/
+engine/datasets/
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
@@ -213,8 +229,8 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 
-dataset/*
-!dataset/.gitkeep
+engine/dataset/*
+engine/!dataset/.gitkeep
 
-output/*
-!output/.gitkeep
+engine/output/*
+engine/!output/.gitkeep
