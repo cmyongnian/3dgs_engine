@@ -2,8 +2,8 @@ from pathlib import Path
 import subprocess
 import os
 
-from core.config import load_yaml
-from core.paths import PathManager
+from engine.core.config import load_yaml
+from engine.core.paths import PathManager
 
 
 class ViewerService:

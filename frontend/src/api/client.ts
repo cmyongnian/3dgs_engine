@@ -1,18 +1,29 @@
-const 基础地址 = 'http://127.0.0.1:8000/api'
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '/api'
+
+function getWebSocketBase() {
+  if (import.meta.env.VITE_WS_BASE_URL) {
+    return import.meta.env.VITE_WS_BASE_URL
+  }
+
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+  return `${protocol}//${window.location.host}`
+}
 
 export async function 请求<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${基础地址}${path}`, {
+  const response = await fetch(`${API_BASE}${path}`, {
     headers: {
       'Content-Type': 'application/json',
+      ...(init?.headers ?? {}),
     },
     ...init,
   })
 
   if (!response.ok) {
-    throw new Error(`请求失败：${response.status}`)
+    const text = await response.text().catch(() => '')
+    throw new Error(text || `请求失败：${response.status}`)
   }
 
   return response.json() as Promise<T>
 }
 
-export const 日志地址 = (taskId: string) => `ws://127.0.0.1:8000/api/ws/logs/${taskId}`
+export const 日志地址 = (taskId: string) => `${getWebSocketBase()}/api/ws/logs/${taskId}`

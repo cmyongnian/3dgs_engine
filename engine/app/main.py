@@ -1,4 +1,4 @@
-from core.train_service import TrainerService
+from engine.core.train_service import TrainerService
 
 
 def main():

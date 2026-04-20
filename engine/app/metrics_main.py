@@ -1,4 +1,4 @@
-from core.metrics_service import MetricsService
+from engine.core.metrics_service import MetricsService
 
 
 def main():

@@ -1,5 +1,5 @@
 from pathlib import Path
-from core.config import load_yaml
+from engine.core.config import load_yaml
 
 
 class PathManager:

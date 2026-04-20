@@ -3,9 +3,9 @@ from collections import Counter
 from PIL import Image, UnidentifiedImageError
 import cv2
 
-from core.config import load_yaml
-from core.paths import PathManager
-from core.logger import setup_logger
+from engine.core.config import load_yaml
+from engine.core.paths import PathManager
+from engine.core.logger import setup_logger
 
 
 class PreflightService:

@@ -1,4 +1,4 @@
-from core.convert_service import ConvertService
+from engine.core.convert_service import ConvertService
 
 
 def main():

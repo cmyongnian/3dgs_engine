@@ -1,4 +1,4 @@
-from core.report_service import ReportService
+from engine.core.report_service import ReportService
 
 
 def main():

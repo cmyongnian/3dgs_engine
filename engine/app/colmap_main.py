@@ -1,4 +1,4 @@
-from core.colmap_service import ColmapService
+from engine.core.colmap_service import ColmapService
 
 
 def main():

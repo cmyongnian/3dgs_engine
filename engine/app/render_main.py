@@ -1,4 +1,4 @@
-from core.render_service import RenderService
+from engine.core.render_service import RenderService
 
 
 def main():

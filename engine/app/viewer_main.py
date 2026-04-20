@@ -1,4 +1,4 @@
-from core.viewer_service import ViewerService
+from engine.core.viewer_service import ViewerService
 
 
 def main():

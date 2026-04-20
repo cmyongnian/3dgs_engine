@@ -1,4 +1,4 @@
-from core.video_service import VideoService
+from engine.core.video_service import VideoService
 
 
 if __name__ == "__main__":

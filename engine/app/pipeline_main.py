@@ -1,4 +1,4 @@
-from core.pipeline_service import PipelineService
+from engine.core.pipeline_service import PipelineService
 
 
 def main():
