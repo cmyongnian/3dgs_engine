@@ -1,0 +1,11 @@
+convert:
+  scene_name: video_scene_01
+  source_images: datasets/raw/video_scene_01/images
+  colmap_workspace: datasets/processed/video_scene_01/colmap_workspace
+  gs_input_path: datasets/processed/video_scene_01/gs_input
+  gs_repo: third_party/gaussian-splatting
+  colmap_executable: third_party/colmap/COLMAP.bat
+  skip_matching: true
+  resize: false
+  use_magick: false
+  magick_executable: ''
