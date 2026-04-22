@@ -1,0 +1,11 @@
+project_name: 3dgs_platform
+paths:
+  gs_repo: third_party/gaussian-splatting
+  raw_data: datasets/raw
+  processed_data: datasets/processed
+  outputs: outputs
+  logs: logs
+  videos_data: datasets/videos
+runtime:
+  python_env: 3dgs1
+  device: cuda

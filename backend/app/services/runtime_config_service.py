@@ -1,208 +1,213 @@
-from __future__ import annotations
-
 from pathlib import Path
+from typing import Any, Dict
 
 import yaml
-
-from backend.app.schemas.task import TaskCreateRequest
 
 
 class RuntimeConfigService:
     def __init__(self) -> None:
         self.project_root = Path(__file__).resolve().parents[3]
-        self.engine_root = self.project_root / "engine"
-        self.runtime_root = self.engine_root / "configs" / "runtime"
+        self.runtime_root = self.project_root / "backend" / "runtime"
 
-    def build(self, task_id: str, payload: TaskCreateRequest) -> dict[str, str]:
-        scene = payload.scene
-        system_paths = payload.system_paths
-        pipeline = payload.pipeline
-        train = payload.train
+    def _to_dict(self, payload: Any) -> Dict[str, Any]:
+        if hasattr(payload, "model_dump"):
+            return payload.model_dump()
+        if hasattr(payload, "dict"):
+            return payload.dict()
+        if isinstance(payload, dict):
+            return payload
+        raise TypeError("不支持的任务配置类型")
 
+    def _write_yaml(self, path: Path, data: Dict[str, Any]) -> None:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with open(path, "w", encoding="utf-8") as f:
+            yaml.safe_dump(
+                data,
+                f,
+                allow_unicode=True,
+                sort_keys=False,
+            )
+
+    def build(self, task_id: str, payload: Any) -> Dict[str, str]:
+        data = self._to_dict(payload)
+
+        scene = data.get("scene", {})
+        system_paths = data.get("system_paths", {})
+        pipeline = data.get("pipeline", {})
+        train = data.get("train", {})
+
+        scene_name = scene.get("scene_name", "default_scene")
         runtime_dir = self.runtime_root / task_id
         runtime_dir.mkdir(parents=True, exist_ok=True)
 
-        scene_name = scene.scene_name
-        raw_image_path = scene.raw_image_path or f"datasets/raw/{scene_name}/images"
-        processed_scene_path = scene.processed_scene_path or f"datasets/processed/{scene_name}"
-        source_path = scene.source_path or f"{processed_scene_path}/gs_input"
-        model_output = scene.model_output or f"outputs/{scene_name}"
-        video_path = scene.video_path or f"datasets/videos/{scene_name}.mp4"
-        colmap_workspace = f"{processed_scene_path}/colmap_workspace"
-
         files = {
-            "system": runtime_dir / "system.yaml",
-            "pipeline": runtime_dir / "pipeline.yaml",
-            "train": runtime_dir / "train.yaml",
-            "render": runtime_dir / "render.yaml",
-            "metrics": runtime_dir / "metrics.yaml",
-            "preflight": runtime_dir / "preflight.yaml",
-            "colmap": runtime_dir / "colmap.yaml",
-            "convert": runtime_dir / "convert.yaml",
-            "viewer": runtime_dir / "viewer.yaml",
-            "video": runtime_dir / "video.yaml",
+            "task_id": task_id,
+            "runtime_dir": str(runtime_dir),
+            "system": str(runtime_dir / "system.yaml"),
+            "pipeline": str(runtime_dir / "pipeline.yaml"),
+            "train": str(runtime_dir / "train.yaml"),
+            "render": str(runtime_dir / "render.yaml"),
+            "metrics": str(runtime_dir / "metrics.yaml"),
+            "preflight": str(runtime_dir / "preflight.yaml"),
+            "colmap": str(runtime_dir / "colmap.yaml"),
+            "convert": str(runtime_dir / "convert.yaml"),
+            "viewer": str(runtime_dir / "viewer.yaml"),
+            "video": str(runtime_dir / "video.yaml"),
+            "report": str(runtime_dir / "report.yaml"),
         }
 
-        self._dump(
-            files["system"],
-            {
-                "project_name": "3dgs_platform",
-                "paths": {
-                    "gs_repo": system_paths.gs_repo,
-                    "raw_data": system_paths.raw_data,
-                    "processed_data": system_paths.processed_data,
-                    "outputs": system_paths.outputs,
-                    "logs": system_paths.logs,
-                    "videos_data": system_paths.videos_data,
-                },
-                "runtime": {"python_env": "3dgs1", "device": "cuda"},
-            },
-        )
+        output_dir = scene.get("model_output", "")
+        processed_scene_path = scene.get("processed_scene_path", "")
+        source_path = scene.get("source_path", "")
+        raw_image_path = scene.get("raw_image_path", "")
+        video_path = scene.get("video_path", "")
 
-        self._dump(
-            files["pipeline"],
-            {
-                "pipeline": {
-                    "input_mode": pipeline.input_mode,
-                    "run_preflight": pipeline.run_preflight,
-                    "run_video_extract": pipeline.run_video_extract,
-                    "run_colmap": pipeline.run_colmap,
-                    "run_convert": pipeline.run_convert,
-                    "run_train": pipeline.run_train,
-                    "run_render": pipeline.run_render,
-                    "run_metrics": pipeline.run_metrics,
-                    "launch_viewer": pipeline.launch_viewer,
-                }
-            },
-        )
+        log_dir = str((self.project_root / "engine" / "logs" / scene_name).resolve())
 
-        self._dump(
-            files["train"],
-            {
-                "train": {
-                    "scene_name": scene_name,
-                    "source_path": source_path,
-                    "model_output": model_output,
-                    "active_profile": train.active_profile,
-                    "profiles": {
-                        train.active_profile: {
-                            "eval": train.eval,
-                            "iterations": train.iterations,
-                            "save_iterations": train.save_iterations,
-                            "test_iterations": train.test_iterations,
-                            "checkpoint_iterations": train.checkpoint_iterations,
-                            "start_checkpoint": train.start_checkpoint,
-                            "resume_from_latest": train.resume_from_latest,
-                            "quiet": train.quiet,
-                            "extra_args": train.extra_args,
-                        }
-                    },
-                }
-            },
-        )
+        system_yaml = {
+            "system": {
+                "project_root": str(self.project_root),
+                "gs_repo": system_paths.get("gs_repo", "third_party/gaussian-splatting"),
+                "raw_data": system_paths.get("raw_data", "datasets/raw"),
+                "processed_data": system_paths.get("processed_data", "datasets/processed"),
+                "outputs": system_paths.get("outputs", "outputs"),
+                "logs": system_paths.get("logs", "logs"),
+                "videos_data": system_paths.get("videos_data", "datasets/videos"),
+            }
+        }
 
-        self._dump(
-            files["render"],
-            {
-                "render": {
-                    "scene_name": scene_name,
-                    "model_path": model_output,
-                    "iteration": -1,
-                    "skip_train": True,
-                    "skip_test": False,
-                    "quiet": False,
-                }
-            },
-        )
+        pipeline_yaml = {
+            "pipeline": {
+                "input_mode": pipeline.get("input_mode", "images"),
+                "run_preflight": pipeline.get("run_preflight", True),
+                "run_video_extract": pipeline.get("run_video_extract", False),
+                "run_colmap": pipeline.get("run_colmap", True),
+                "run_convert": pipeline.get("run_convert", True),
+                "run_train": pipeline.get("run_train", True),
+                "run_render": pipeline.get("run_render", True),
+                "run_metrics": pipeline.get("run_metrics", True),
+                "launch_viewer": pipeline.get("launch_viewer", False),
+            }
+        }
 
-        self._dump(
-            files["metrics"],
-            {"metrics": {"scene_name": scene_name, "model_paths": [model_output], "quiet": False}},
-        )
+        train_yaml = {
+            "train": {
+                "scene_name": scene_name,
+                "source_path": source_path,
+                "model_output": output_dir,
+                "active_profile": train.get("active_profile", "low_vram"),
+                "eval": train.get("eval", True),
+                "iterations": train.get("iterations", 30000),
+                "save_iterations": train.get("save_iterations", [7000, 30000]),
+                "test_iterations": train.get("test_iterations", [-1]),
+                "checkpoint_iterations": train.get("checkpoint_iterations", [2000, 15000, 30000]),
+                "start_checkpoint": train.get("start_checkpoint", ""),
+                "resume_from_latest": train.get("resume_from_latest", False),
+                "quiet": train.get("quiet", False),
+                "extra_args": train.get("extra_args", {}),
+            }
+        }
 
-        self._dump(
-            files["preflight"],
-            {
-                "preflight": {
-                    "scene_name": scene_name,
-                    "raw_image_path": raw_image_path,
-                    "processed_image_path": f"{source_path}/images",
-                    "min_images": 10,
-                    "blur_threshold": 100.0,
-                    "fail_on_unreadable": True,
-                }
-            },
-        )
+        render_yaml = {
+            "render": {
+                "scene_name": scene_name,
+                "model_paths": [output_dir] if output_dir else [],
+                "quiet": train.get("quiet", False),
+            }
+        }
 
-        self._dump(
-            files["colmap"],
-            {
-                "colmap": {
-                    "scene_name": scene_name,
-                    "image_path": raw_image_path,
-                    "workspace_path": colmap_workspace,
-                    "colmap_executable": scene.colmap_executable,
-                    "use_gpu": True,
-                }
-            },
-        )
+        metrics_yaml = {
+            "metrics": {
+                "scene_name": scene_name,
+                "model_paths": [output_dir] if output_dir else [],
+                "processed_scene_path": processed_scene_path,
+                "render_dir": output_dir,
+                "log_dir": log_dir,
+                "collect_colmap_stats": True,
+                "collect_resource_stats": True,
+                "collect_gaussian_stats": True,
+                "collect_preview_images": True,
+                "quiet": train.get("quiet", False),
+            }
+        }
 
-        self._dump(
-            files["convert"],
-            {
-                "convert": {
-                    "scene_name": scene_name,
-                    "source_images": raw_image_path,
-                    "colmap_workspace": colmap_workspace,
-                    "gs_input_path": source_path,
-                    "gs_repo": system_paths.gs_repo,
-                    "colmap_executable": scene.colmap_executable,
-                    "skip_matching": True,
-                    "resize": False,
-                    "use_magick": False,
-                    "magick_executable": scene.magick_executable,
-                }
-            },
-        )
+        report_yaml = {
+            "report": {
+                "scene_name": scene_name,
+                "model_paths": [output_dir] if output_dir else [],
+                "report_dir": output_dir,
+                "log_dir": log_dir,
+                "processed_scene_path": processed_scene_path,
+                "quiet": train.get("quiet", False),
+            }
+        }
 
-        self._dump(
-            files["viewer"],
-            {
-                "viewer": {
-                    "mode": "realtime",
-                    "viewer_root": scene.viewer_root,
-                    "model_path": model_output,
-                    "source_path": processed_scene_path,
-                    "rendering_width": 1200,
-                    "rendering_height": 800,
-                    "force_aspect_ratio": False,
-                    "load_images": False,
-                    "device": 0,
-                    "wait_until_close": True,
-                    "detached": False,
-                }
-            },
-        )
+        preflight_yaml = {
+            "preflight": {
+                "scene_name": scene_name,
+                "input_mode": pipeline.get("input_mode", "images"),
+                "raw_image_path": raw_image_path,
+                "processed_scene_path": processed_scene_path,
+                "source_path": source_path,
+                "video_path": video_path,
+                "model_output": output_dir,
+                "quiet": train.get("quiet", False),
+            }
+        }
 
-        self._dump(
-            files["video"],
-            {
-                "video": {
-                    "scene_name": scene_name,
-                    "video_path": video_path,
-                    "output_images": raw_image_path,
-                    "ffmpeg_executable": scene.ffmpeg_executable,
-                    "target_fps": 2,
-                }
-            },
-        )
+        colmap_yaml = {
+            "colmap": {
+                "scene_name": scene_name,
+                "raw_image_path": raw_image_path,
+                "processed_scene_path": processed_scene_path,
+                "source_path": source_path,
+                "colmap_executable": scene.get("colmap_executable", "colmap"),
+                "quiet": train.get("quiet", False),
+            }
+        }
 
-        return {name: str(path) for name, path in files.items()}
+        convert_yaml = {
+            "convert": {
+                "scene_name": scene_name,
+                "processed_scene_path": processed_scene_path,
+                "source_path": source_path,
+                "magick_executable": scene.get("magick_executable", ""),
+                "quiet": train.get("quiet", False),
+            }
+        }
 
-    @staticmethod
-    def _dump(path: Path, data: dict) -> None:
-        with open(path, "w", encoding="utf-8") as f:
-            yaml.safe_dump(data, f, allow_unicode=True, sort_keys=False)
+        viewer_yaml = {
+            "viewer": {
+                "scene_name": scene_name,
+                "model_path": output_dir,
+                "viewer_root": scene.get("viewer_root", "third_party/viewer/bin"),
+                "quiet": train.get("quiet", False),
+            }
+        }
+
+        video_yaml = {
+            "video": {
+                "scene_name": scene_name,
+                "video_path": video_path,
+                "raw_image_path": raw_image_path,
+                "ffmpeg_executable": scene.get("ffmpeg_executable", "ffmpeg"),
+                "quiet": train.get("quiet", False),
+            }
+        }
+
+        self._write_yaml(Path(files["system"]), system_yaml)
+        self._write_yaml(Path(files["pipeline"]), pipeline_yaml)
+        self._write_yaml(Path(files["train"]), train_yaml)
+        self._write_yaml(Path(files["render"]), render_yaml)
+        self._write_yaml(Path(files["metrics"]), metrics_yaml)
+        self._write_yaml(Path(files["report"]), report_yaml)
+        self._write_yaml(Path(files["preflight"]), preflight_yaml)
+        self._write_yaml(Path(files["colmap"]), colmap_yaml)
+        self._write_yaml(Path(files["convert"]), convert_yaml)
+        self._write_yaml(Path(files["viewer"]), viewer_yaml)
+        self._write_yaml(Path(files["video"]), video_yaml)
+
+        return files
 
 
 runtime_config_service = RuntimeConfigService()

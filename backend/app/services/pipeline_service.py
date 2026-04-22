@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import asyncio
 import io
 import json
@@ -7,6 +5,8 @@ import traceback
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
+
+import yaml
 
 from backend.app.services.runtime_config_service import runtime_config_service
 from backend.app.state.task_store import task_store
@@ -55,7 +55,8 @@ class PipelineService:
         {"key": "train", "label": "模型训练", "order": 6},
         {"key": "render", "label": "离线渲染", "order": 7},
         {"key": "metrics", "label": "指标评测", "order": 8},
-        {"key": "viewer", "label": "启动查看器", "order": 9},
+        {"key": "report", "label": "结果报告", "order": 9},
+        {"key": "viewer", "label": "启动查看器", "order": 10},
     ]
 
     def __init__(self) -> None:
@@ -87,22 +88,20 @@ class PipelineService:
 
             capture.flush()
 
-            result = self._build_result(payload.scene.scene_name, config_paths)
+            result = self._build_result(
+                task_id=task_id,
+                scene_name=payload.scene.scene_name,
+                config_paths=config_paths,
+            )
             metrics_summary = result.get("metrics_summary", {})
             result_files = result.get("result_files", {})
-
-            final_status = "success"
-            final_message = "任务执行完成"
-
-            if payload.pipeline.run_train and not payload.pipeline.run_render and not payload.pipeline.run_metrics:
-                final_message = "训练阶段执行完成"
 
             task_store.update_metrics_summary(task_id, metrics_summary)
             task_store.update_result_files(task_id, result_files)
             task_store.mark_finished(
                 task_id,
-                status=final_status,
-                message=final_message,
+                status="success",
+                message="任务执行完成",
                 error=None,
             )
             task_store.update(
@@ -126,7 +125,7 @@ class PipelineService:
                 error=str(exc),
             )
 
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             capture.flush()
             error_type = self._classify_error(exc)
             error_text = "{0}\n{1}".format(exc, traceback.format_exc())
@@ -209,6 +208,13 @@ class PipelineService:
                 action=lambda: self._run_metrics(system_path, config_paths["metrics"]),
             )
 
+        if flags.run_train or flags.run_render or flags.run_metrics:
+            self._execute_stage(
+                task_id=task_id,
+                stage_key="report",
+                action=lambda: self._run_report(system_path, config_paths["report"]),
+            )
+
         if flags.launch_viewer:
             self._execute_stage(
                 task_id=task_id,
@@ -259,7 +265,7 @@ class PipelineService:
                 error_message="任务已停止",
             )
             raise
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             task_store.finish_stage(
                 task_id,
                 stage_key=stage["key"],
@@ -309,14 +315,85 @@ class PipelineService:
             return None
         return str(Path(system_path).resolve().parent)
 
-    def _build_result(self, scene_name: str, config_paths: Dict[str, str]) -> Dict[str, Any]:
-        engine_root = self.project_root / "engine"
-        output_dir = engine_root / "outputs" / scene_name
-        log_dir = engine_root / "logs" / scene_name
-        processed_dir = engine_root / "datasets" / "processed" / scene_name
+    def _read_yaml(self, path: Optional[str]) -> Dict[str, Any]:
+        if not path:
+            return {}
+        yaml_path = Path(path)
+        if not yaml_path.exists():
+            return {}
+        try:
+            with open(yaml_path, "r", encoding="utf-8") as f:
+                data = yaml.safe_load(f) or {}
+            if isinstance(data, dict):
+                return data
+        except Exception:
+            return {}
+        return {}
+
+    def _resolve_output_dir(self, config_paths: Dict[str, str], scene_name: str) -> Path:
+        report_data = self._read_yaml(config_paths.get("report"))
+        report_cfg = report_data.get("report", {}) if isinstance(report_data, dict) else {}
+        report_dir = report_cfg.get("report_dir", "")
+        if report_dir:
+            return Path(report_dir).resolve()
+
+        metrics_data = self._read_yaml(config_paths.get("metrics"))
+        metrics_cfg = metrics_data.get("metrics", {}) if isinstance(metrics_data, dict) else {}
+        model_paths = metrics_cfg.get("model_paths", [])
+        if model_paths:
+            return Path(model_paths[0]).resolve()
+
+        train_data = self._read_yaml(config_paths.get("train"))
+        train_cfg = train_data.get("train", {}) if isinstance(train_data, dict) else {}
+        model_output = train_cfg.get("model_output", "")
+        if model_output:
+            return Path(model_output).resolve()
+
+        return (self.project_root / "engine" / "outputs" / scene_name).resolve()
+
+    def _resolve_log_dir(self, config_paths: Dict[str, str], scene_name: str) -> Path:
+        report_data = self._read_yaml(config_paths.get("report"))
+        report_cfg = report_data.get("report", {}) if isinstance(report_data, dict) else {}
+        log_dir = report_cfg.get("log_dir", "")
+        if log_dir:
+            return Path(log_dir).resolve()
+
+        metrics_data = self._read_yaml(config_paths.get("metrics"))
+        metrics_cfg = metrics_data.get("metrics", {}) if isinstance(metrics_data, dict) else {}
+        metrics_log_dir = metrics_cfg.get("log_dir", "")
+        if metrics_log_dir:
+            return Path(metrics_log_dir).resolve()
+
+        return (self.project_root / "engine" / "logs" / scene_name).resolve()
+
+    def _resolve_processed_dir(self, config_paths: Dict[str, str], scene_name: str) -> Path:
+        report_data = self._read_yaml(config_paths.get("report"))
+        report_cfg = report_data.get("report", {}) if isinstance(report_data, dict) else {}
+        processed_scene_path = report_cfg.get("processed_scene_path", "")
+        if processed_scene_path:
+            return Path(processed_scene_path).resolve()
+
+        metrics_data = self._read_yaml(config_paths.get("metrics"))
+        metrics_cfg = metrics_data.get("metrics", {}) if isinstance(metrics_data, dict) else {}
+        metrics_processed_dir = metrics_cfg.get("processed_scene_path", "")
+        if metrics_processed_dir:
+            return Path(metrics_processed_dir).resolve()
+
+        return (self.project_root / "engine" / "datasets" / "processed" / scene_name).resolve()
+
+    def _build_result(
+        self,
+        task_id: str,
+        scene_name: str,
+        config_paths: Dict[str, str],
+    ) -> Dict[str, Any]:
+        output_dir = self._resolve_output_dir(config_paths, scene_name)
+        log_dir = self._resolve_log_dir(config_paths, scene_name)
+        processed_dir = self._resolve_processed_dir(config_paths, scene_name)
 
         metrics_json = output_dir / "metrics.json"
         report_json = output_dir / "report.json"
+        report_md = output_dir / "report.md"
         summary_csv = output_dir / "summary.csv"
         summary_txt = output_dir / "summary.txt"
 
@@ -327,16 +404,20 @@ class PipelineService:
         result_files = {
             "metrics_json": str(metrics_json) if metrics_json.exists() else "",
             "report_json": str(report_json) if report_json.exists() else "",
+            "report_md": str(report_md) if report_md.exists() else "",
             "summary_csv": str(summary_csv) if summary_csv.exists() else "",
             "summary_txt": str(summary_txt) if summary_txt.exists() else "",
         }
 
-        task = task_store.get(config_paths.get("task_id", ""))  # 兼容占位，不依赖
+        task = task_store.get(task_id)
         stage_history = []
         if task is not None:
             stage_history = task.stage_history
 
-        result = {
+        if not metrics_summary and isinstance(report_summary, dict):
+            metrics_summary = report_summary.get("metrics_summary", {}) or {}
+
+        return {
             "scene_name": scene_name,
             "output_dir": str(output_dir),
             "log_dir": str(log_dir),
@@ -348,15 +429,13 @@ class PipelineService:
             "preview_images": preview_images,
             "stage_history": stage_history,
         }
-        return result
 
     def _read_json(self, path: Path) -> Dict[str, Any]:
         if not path.exists():
             return {}
-
         try:
             return json.loads(path.read_text(encoding="utf-8"))
-        except Exception:  # noqa: BLE001
+        except Exception:
             return {}
 
     def _collect_preview_images(self, output_dir: Path) -> List[str]:
@@ -431,6 +510,15 @@ class PipelineService:
         MetricsService(
             system_config_path=system_path,
             metrics_config_path=metrics_path,
+        ).run()
+
+    @staticmethod
+    def _run_report(system_path: str, report_path: str) -> None:
+        from engine.core.report_service import ReportService
+
+        ReportService(
+            system_config_path=system_path,
+            report_config_path=report_path,
         ).run()
 
     @staticmethod
