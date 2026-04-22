@@ -140,6 +140,14 @@ export function ResultPage() {
     { label: '生成时间', value: 普通显示(metricsSummary.generated_at) },
   ]
 
+  const 文件列表: Array<[string, unknown]> = [
+    ['metrics.json', resultFiles.metrics_json],
+    ['report.json', resultFiles.report_json],
+    ['report.md', resultFiles.report_md],
+    ['summary.csv', resultFiles.summary_csv],
+    ['summary.txt', resultFiles.summary_txt],
+  ]
+
   if (加载中 && !结果) {
     return (
       <div className="page">
@@ -172,37 +180,30 @@ export function ResultPage() {
 
       {结果 ? (
         <>
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-              gap: '16px',
-              marginBottom: '20px',
-            }}
-          >
-            <div className="card" style={{ marginBottom: 0 }}>
+          <div className="info-grid">
+            <div className="card info-card">
               <div className="meta-label">任务编号</div>
               <div className="meta-value">{结果.task_id}</div>
             </div>
-            <div className="card" style={{ marginBottom: 0 }}>
+            <div className="card info-card">
               <div className="meta-label">场景名称</div>
               <div className="meta-value">{结果.scene_name}</div>
             </div>
-            <div className="card" style={{ marginBottom: 0 }}>
+            <div className="card info-card">
               <div className="meta-label">任务状态</div>
               <div className={`status-pill ${状态类名(结果.status)}`}>
                 {状态文本(结果.status)}
               </div>
             </div>
-            <div className="card" style={{ marginBottom: 0 }}>
+            <div className="card info-card">
               <div className="meta-label">当前阶段</div>
               <div className="meta-value">{结果.current_stage || '-'}</div>
             </div>
-            <div className="card" style={{ marginBottom: 0 }}>
+            <div className="card info-card">
               <div className="meta-label">重试次数</div>
               <div className="meta-value">{结果.retry_count}</div>
             </div>
-            <div className="card" style={{ marginBottom: 0 }}>
+            <div className="card info-card">
               <div className="meta-label">停止请求</div>
               <div className="meta-value">{结果.stop_requested ? '是' : '否'}</div>
             </div>
@@ -210,13 +211,7 @@ export function ResultPage() {
 
           <div className="card">
             <h3>结果摘要</h3>
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-                gap: '12px',
-              }}
-            >
+            <div className="details-grid">
               <div>
                 <label>状态说明</label>
                 <div className="meta-value">{结果.message || '-'}</div>
@@ -254,23 +249,9 @@ export function ResultPage() {
 
           <div className="card">
             <h3>评价指标</h3>
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-                gap: '12px',
-              }}
-            >
+            <div className="metric-grid">
               {关键指标卡片.map((item) => (
-                <div
-                  key={item.label}
-                  style={{
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '14px',
-                    padding: '14px 16px',
-                    background: '#ffffff',
-                  }}
-                >
+                <div key={item.label} className="metric-card">
                   <div className="meta-label">{item.label}</div>
                   <div className="meta-value">{item.value}</div>
                 </div>
@@ -280,109 +261,38 @@ export function ResultPage() {
 
           <div className="card">
             <h3>结果文件</h3>
-            {(() => {
-              const 文件列表: Array<[string, unknown]> = [
-                ['metrics.json', resultFiles.metrics_json],
-                ['report.json', resultFiles.report_json],
-                ['report.md', resultFiles.report_md],
-                ['summary.csv', resultFiles.summary_csv],
-                ['summary.txt', resultFiles.summary_txt],
-              ]
-
-              return (
-                <div
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-                    gap: '12px',
-                  }}
-                >
-                  {文件列表.map(([name, value]) => (
-                    <div
-                      key={name}
-                      style={{
-                        border: '1px solid #e5e7eb',
-                        borderRadius: '14px',
-                        padding: '14px 16px',
-                        background: '#ffffff',
-                      }}
-                    >
-                      <div className="meta-label">{name}</div>
-                      <div
-                        style={{
-                          fontWeight: 700,
-                          lineHeight: 1.6,
-                          wordBreak: 'break-word',
-                        }}
-                      >
-                        {普通显示(value)}
-                      </div>
-                    </div>
-                  ))}
+            <div className="file-grid">
+              {文件列表.map(([name, value]) => (
+                <div key={name} className="file-card">
+                  <div className="meta-label">{name}</div>
+                  <div className="file-value">{普通显示(value)}</div>
                 </div>
-              )
-            })()}
+              ))}
+            </div>
           </div>
 
           <div className="card">
             <h3>阶段耗时</h3>
             {stageHistory.length ? (
-              <div style={{ overflowX: 'auto' }}>
-                <table
-                  style={{
-                    width: '100%',
-                    borderCollapse: 'collapse',
-                    minWidth: '900px',
-                  }}
-                >
+              <div className="table-wrap">
+                <table className="data-table">
                   <thead>
                     <tr>
                       {['阶段', '状态', '开始时间', '结束时间', '耗时', '错误类型', '错误信息'].map((text) => (
-                        <th
-                          key={text}
-                          style={{
-                            textAlign: 'left',
-                            padding: '12px 10px',
-                            borderBottom: '1px solid #e5e7eb',
-                            color: '#374151',
-                            fontWeight: 700,
-                          }}
-                        >
-                          {text}
-                        </th>
+                        <th key={text}>{text}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {stageHistory.map((item) => (
                       <tr key={`${item.stage_key}-${item.order}`}>
-                        <td style={{ padding: '12px 10px', borderBottom: '1px solid #f3f4f6' }}>
-                          {item.stage_label}
-                        </td>
-                        <td style={{ padding: '12px 10px', borderBottom: '1px solid #f3f4f6' }}>
-                          {阶段状态文本(String(item.status))}
-                        </td>
-                        <td style={{ padding: '12px 10px', borderBottom: '1px solid #f3f4f6' }}>
-                          {格式化时间(item.started_at)}
-                        </td>
-                        <td style={{ padding: '12px 10px', borderBottom: '1px solid #f3f4f6' }}>
-                          {格式化时间(item.finished_at)}
-                        </td>
-                        <td style={{ padding: '12px 10px', borderBottom: '1px solid #f3f4f6' }}>
-                          {格式化耗时(item.duration_seconds)}
-                        </td>
-                        <td style={{ padding: '12px 10px', borderBottom: '1px solid #f3f4f6' }}>
-                          {item.error_type || '-'}
-                        </td>
-                        <td
-                          style={{
-                            padding: '12px 10px',
-                            borderBottom: '1px solid #f3f4f6',
-                            color: item.error_message ? '#b91c1c' : '#111827',
-                            maxWidth: '320px',
-                            wordBreak: 'break-word',
-                          }}
-                        >
+                        <td>{item.stage_label}</td>
+                        <td>{阶段状态文本(String(item.status))}</td>
+                        <td>{格式化时间(item.started_at)}</td>
+                        <td>{格式化时间(item.finished_at)}</td>
+                        <td>{格式化耗时(item.duration_seconds)}</td>
+                        <td>{item.error_type || '-'}</td>
+                        <td className={item.error_message ? 'table-error-text' : ''}>
                           {item.error_message || '-'}
                         </td>
                       </tr>
@@ -398,45 +308,11 @@ export function ResultPage() {
           <div className="card">
             <h3>预览图像</h3>
             {previewImages.length ? (
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-                  gap: '12px',
-                }}
-              >
+              <div className="preview-grid">
                 {previewImages.map((src) => (
-                  <div
-                    key={src}
-                    style={{
-                      border: '1px solid #e5e7eb',
-                      borderRadius: '14px',
-                      padding: '12px',
-                      background: '#ffffff',
-                    }}
-                  >
-                    <img
-                      src={src}
-                      alt="预览图像"
-                      style={{
-                        width: '100%',
-                        height: '180px',
-                        objectFit: 'cover',
-                        borderRadius: '10px',
-                        display: 'block',
-                        marginBottom: '8px',
-                      }}
-                    />
-                    <div
-                      style={{
-                        fontSize: '13px',
-                        color: '#6b7280',
-                        lineHeight: 1.6,
-                        wordBreak: 'break-word',
-                      }}
-                    >
-                      {src}
-                    </div>
+                  <div key={src} className="preview-card">
+                    <img src={src} alt="预览图像" className="preview-image" />
+                    <div className="preview-path">{src}</div>
                   </div>
                 ))}
               </div>
@@ -448,19 +324,7 @@ export function ResultPage() {
           {结果.error ? (
             <div className="card">
               <h3>错误信息</h3>
-              <div
-                style={{
-                  padding: '12px 14px',
-                  border: '1px solid #fecaca',
-                  background: '#fff7f7',
-                  borderRadius: '12px',
-                  color: '#991b1b',
-                  whiteSpace: 'pre-wrap',
-                  wordBreak: 'break-word',
-                }}
-              >
-                {结果.error}
-              </div>
+              <div className="error-panel">{结果.error}</div>
             </div>
           ) : null}
         </>

@@ -1,12 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { 日志地址 } from '../../api/client'
-import {
-  获取任务,
-  停止任务,
-  重试任务,
-  删除任务,
-} from '../../api/task'
+import { 获取任务, 停止任务, 重试任务, 删除任务 } from '../../api/task'
 import type { 阶段记录, 任务响应 } from '../../types/task'
 
 function 格式化时间(value: string | null | undefined) {
@@ -54,10 +49,14 @@ function 阶段状态文本(status: string) {
 function 状态类名(status: string) {
   if (status === 'success') return 'status-success'
   if (status === 'failed' || status === 'stopped') return 'status-failed'
-  if (status === 'running' || status === 'queued' || status === 'retrying' || status === 'stopping') {
-    return 'status-idle'
-  }
   return 'status-idle'
+}
+
+function 阶段卡片类名(status: string) {
+  if (status === 'success') return 'phase-card phase-card-success'
+  if (status === 'failed' || status === 'stopped') return 'phase-card phase-card-failed'
+  if (status === 'running') return 'phase-card phase-card-running'
+  return 'phase-card'
 }
 
 const 阶段顺序 = [
@@ -89,12 +88,14 @@ const 阶段名称: Record<string, string> = {
 export function TaskRunPage() {
   const { taskId = '' } = useParams()
   const navigate = useNavigate()
+
   const [任务, set任务] = useState<任务响应 | null>(null)
   const [日志列表, set日志列表] = useState<string[]>([])
   const [错误, set错误] = useState('')
   const [提示, set提示] = useState('')
   const [加载中, set加载中] = useState(true)
   const [自动滚动, set自动滚动] = useState(true)
+
   const 日志容器引用 = useRef<HTMLPreElement | null>(null)
 
   const 已结束 = useMemo(() => {
@@ -102,21 +103,18 @@ export function TaskRunPage() {
     return ['success', 'failed', 'stopped', 'partial_success'].includes(任务.status)
   }, [任务])
 
-  const 当前阶段索引 = useMemo(() => {
-    if (!任务?.stage_history?.length) return 0
-    const 最大顺序 = Math.max(...任务.stage_history.map((item) => item.order || 0), 0)
-    return 最大顺序
-  }, [任务])
-
   const 阶段列表 = useMemo(() => {
     const 已有阶段 = new Map<string, 阶段记录>()
-      ; (任务?.stage_history ?? []).forEach((item) => {
-        已有阶段.set(item.stage_key, item)
-      })
+    const history = 任务?.stage_history ?? []
+
+    history.forEach((item) => {
+      已有阶段.set(item.stage_key, item)
+    })
 
     return 阶段顺序.map((key, index) => {
-      const 已存在 = 已有阶段.get(key)
-      if (已存在) return 已存在
+      const existed = 已有阶段.get(key)
+      if (existed) return existed
+
       return {
         stage_key: key,
         stage_label: 阶段名称[key] ?? key,
@@ -129,6 +127,20 @@ export function TaskRunPage() {
         error_message: null,
       } as 阶段记录
     })
+  }, [任务])
+
+  const 当前阶段索引 = useMemo(() => {
+    if (!任务?.stage_history?.length) return 0
+    return Math.max(...任务.stage_history.map((item) => item.order || 0), 0)
+  }, [任务])
+
+  const 成功阶段数 = useMemo(() => {
+    return 阶段列表.filter((item) => item.status === 'success').length
+  }, [阶段列表])
+
+  const 最近失败阶段 = useMemo(() => {
+    const reversed = [...(任务?.stage_history ?? [])].reverse()
+    return reversed.find((item) => item.status === 'failed') ?? null
   }, [任务])
 
   const 刷新任务 = async (静默 = false) => {
@@ -152,7 +164,6 @@ export function TaskRunPage() {
       set加载中(false)
       return
     }
-
     刷新任务()
   }, [taskId])
 
@@ -168,7 +179,7 @@ export function TaskRunPage() {
     }
 
     ws.onerror = () => {
-      // 保持静默，任务轮询仍可继续工作
+      // 保持静默，避免日志连接短暂波动影响页面
     }
 
     return () => {
@@ -195,6 +206,7 @@ export function TaskRunPage() {
 
   const 执行停止 = async () => {
     if (!taskId) return
+
     try {
       const data = await 停止任务(taskId)
       set提示(data.message)
@@ -206,6 +218,7 @@ export function TaskRunPage() {
 
   const 执行重试 = async () => {
     if (!taskId) return
+
     try {
       const data = await 重试任务(taskId)
       set提示(data.message)
@@ -218,6 +231,7 @@ export function TaskRunPage() {
 
   const 执行删除 = async () => {
     if (!taskId) return
+
     try {
       const data = await 删除任务(taskId)
       set提示(data.message)
@@ -228,15 +242,6 @@ export function TaskRunPage() {
       set错误(error instanceof Error ? error.message : '删除任务失败')
     }
   }
-
-  const 最近失败阶段 = useMemo(() => {
-    const 倒序 = [...(任务?.stage_history ?? [])].reverse()
-    return 倒序.find((item) => item.status === 'failed') ?? null
-  }, [任务])
-
-  const 成功阶段数 = useMemo(() => {
-    return 阶段列表.filter((item) => item.status === 'success').length
-  }, [阶段列表])
 
   if (加载中 && !任务) {
     return (
@@ -256,6 +261,7 @@ export function TaskRunPage() {
             本页用于展示任务运行过程，包括阶段进度、实时状态、日志输出和错误信息。
           </p>
         </div>
+
         <div className="inline-actions wrap-actions">
           <button className="ghost-btn" onClick={() => 刷新任务()}>
             刷新状态
@@ -292,37 +298,30 @@ export function TaskRunPage() {
 
       {任务 ? (
         <>
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-              gap: '16px',
-              marginBottom: '20px',
-            }}
-          >
-            <div className="card" style={{ marginBottom: 0 }}>
+          <div className="info-grid">
+            <div className="card info-card">
               <div className="meta-label">任务编号</div>
               <div className="meta-value">{任务.task_id}</div>
             </div>
-            <div className="card" style={{ marginBottom: 0 }}>
+            <div className="card info-card">
               <div className="meta-label">场景名称</div>
               <div className="meta-value">{任务.scene_name}</div>
             </div>
-            <div className="card" style={{ marginBottom: 0 }}>
+            <div className="card info-card">
               <div className="meta-label">当前状态</div>
               <div className={`status-pill ${状态类名(任务.status)}`}>
                 {状态文本(任务.status)}
               </div>
             </div>
-            <div className="card" style={{ marginBottom: 0 }}>
+            <div className="card info-card">
               <div className="meta-label">当前阶段</div>
               <div className="meta-value">{任务.current_stage || '-'}</div>
             </div>
-            <div className="card" style={{ marginBottom: 0 }}>
+            <div className="card info-card">
               <div className="meta-label">重试次数</div>
               <div className="meta-value">{任务.retry_count}</div>
             </div>
-            <div className="card" style={{ marginBottom: 0 }}>
+            <div className="card info-card">
               <div className="meta-label">停止请求</div>
               <div className="meta-value">{任务.stop_requested ? '是' : '否'}</div>
             </div>
@@ -334,60 +333,24 @@ export function TaskRunPage() {
               当前进度根据任务阶段进行估算，用于反映整体执行状态。
             </p>
 
-            <div
-              style={{
-                width: '100%',
-                height: '10px',
-                background: '#e5e7eb',
-                borderRadius: '999px',
-                overflow: 'hidden',
-                marginBottom: '14px',
-              }}
-            >
+            <div className="progress-track">
               <div
+                className="progress-bar"
                 style={{
                   width: `${(成功阶段数 / Math.max(阶段列表.length, 1)) * 100}%`,
-                  height: '100%',
-                  background: '#2563eb',
-                  borderRadius: '999px',
-                  transition: 'width 0.3s ease',
                 }}
               />
             </div>
 
-            <div className="light-tip">
+            <div className="progress-text">
               已完成 {成功阶段数} / {阶段列表.length} 个阶段，当前阶段序号 {当前阶段索引 || 0}
             </div>
 
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-                gap: '12px',
-                marginTop: '16px',
-              }}
-            >
+            <div className="phase-grid">
               {阶段列表.map((item) => (
-                <div
-                  key={item.stage_key}
-                  style={{
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '14px',
-                    padding: '12px 14px',
-                    background:
-                      item.status === 'success'
-                        ? '#ecfdf5'
-                        : item.status === 'failed'
-                          ? '#fef2f2'
-                          : item.status === 'running'
-                            ? '#eff6ff'
-                            : '#ffffff',
-                  }}
-                >
-                  <div style={{ fontSize: 13, color: '#6b7280', marginBottom: 6 }}>
-                    阶段 {item.order}
-                  </div>
-                  <div style={{ fontWeight: 700, marginBottom: 8 }}>{item.stage_label}</div>
+                <div key={item.stage_key} className={阶段卡片类名(String(item.status))}>
+                  <div className="phase-order">阶段 {item.order}</div>
+                  <div className="phase-title">{item.stage_label}</div>
                   <div className={`status-pill ${状态类名(String(item.status))}`}>
                     {阶段状态文本(String(item.status))}
                   </div>
@@ -399,62 +362,25 @@ export function TaskRunPage() {
           <div className="card">
             <h3>阶段历史</h3>
             {阶段列表.length ? (
-              <div style={{ overflowX: 'auto' }}>
-                <table
-                  style={{
-                    width: '100%',
-                    borderCollapse: 'collapse',
-                    minWidth: '900px',
-                  }}
-                >
+              <div className="table-wrap">
+                <table className="data-table">
                   <thead>
                     <tr>
                       {['阶段', '状态', '开始时间', '结束时间', '耗时', '错误类型', '错误信息'].map((text) => (
-                        <th
-                          key={text}
-                          style={{
-                            textAlign: 'left',
-                            padding: '12px 10px',
-                            borderBottom: '1px solid #e5e7eb',
-                            color: '#374151',
-                            fontWeight: 700,
-                          }}
-                        >
-                          {text}
-                        </th>
+                        <th key={text}>{text}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {阶段列表.map((item) => (
                       <tr key={item.stage_key}>
-                        <td style={{ padding: '12px 10px', borderBottom: '1px solid #f3f4f6' }}>
-                          {item.stage_label}
-                        </td>
-                        <td style={{ padding: '12px 10px', borderBottom: '1px solid #f3f4f6' }}>
-                          {阶段状态文本(String(item.status))}
-                        </td>
-                        <td style={{ padding: '12px 10px', borderBottom: '1px solid #f3f4f6' }}>
-                          {格式化时间(item.started_at)}
-                        </td>
-                        <td style={{ padding: '12px 10px', borderBottom: '1px solid #f3f4f6' }}>
-                          {格式化时间(item.finished_at)}
-                        </td>
-                        <td style={{ padding: '12px 10px', borderBottom: '1px solid #f3f4f6' }}>
-                          {格式化耗时(item.duration_seconds)}
-                        </td>
-                        <td style={{ padding: '12px 10px', borderBottom: '1px solid #f3f4f6' }}>
-                          {item.error_type || '-'}
-                        </td>
-                        <td
-                          style={{
-                            padding: '12px 10px',
-                            borderBottom: '1px solid #f3f4f6',
-                            color: item.error_message ? '#b91c1c' : '#111827',
-                            maxWidth: '320px',
-                            wordBreak: 'break-word',
-                          }}
-                        >
+                        <td>{item.stage_label}</td>
+                        <td>{阶段状态文本(String(item.status))}</td>
+                        <td>{格式化时间(item.started_at)}</td>
+                        <td>{格式化时间(item.finished_at)}</td>
+                        <td>{格式化耗时(item.duration_seconds)}</td>
+                        <td>{item.error_type || '-'}</td>
+                        <td className={item.error_message ? 'table-error-text' : ''}>
                           {item.error_message || '-'}
                         </td>
                       </tr>
@@ -470,13 +396,7 @@ export function TaskRunPage() {
           {最近失败阶段 ? (
             <div className="card">
               <h3>失败信息</h3>
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-                  gap: '12px',
-                }}
-              >
+              <div className="details-grid">
                 <div>
                   <label>失败阶段</label>
                   <div className="meta-value">{最近失败阶段.stage_label}</div>
@@ -485,19 +405,9 @@ export function TaskRunPage() {
                   <label>错误类型</label>
                   <div className="meta-value">{最近失败阶段.error_type || '-'}</div>
                 </div>
-                <div style={{ gridColumn: '1 / -1' }}>
+                <div className="details-full">
                   <label>错误摘要</label>
-                  <div
-                    style={{
-                      padding: '12px 14px',
-                      border: '1px solid #fecaca',
-                      background: '#fff7f7',
-                      borderRadius: '12px',
-                      color: '#991b1b',
-                      whiteSpace: 'pre-wrap',
-                      wordBreak: 'break-word',
-                    }}
-                  >
+                  <div className="error-panel">
                     {最近失败阶段.error_message || 任务.error || '-'}
                   </div>
                 </div>
@@ -506,28 +416,15 @@ export function TaskRunPage() {
           ) : null}
 
           <div className="card log-card">
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                gap: '12px',
-                marginBottom: '12px',
-                flexWrap: 'wrap',
-              }}
-            >
+            <div className="log-toolbar">
               <div>
-                <h3 style={{ marginBottom: 8 }}>实时日志</h3>
-                <div className="section-tip">日志通过 WebSocket 推送，并在运行中自动刷新任务状态。</div>
+                <h3 className="section-title-tight">实时日志</h3>
+                <div className="section-tip">
+                  日志通过 WebSocket 推送，并在运行中自动刷新任务状态。
+                </div>
               </div>
-              <label
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  marginBottom: 0,
-                }}
-              >
+
+              <label className="inline-check">
                 <input
                   type="checkbox"
                   checked={自动滚动}
@@ -538,21 +435,13 @@ export function TaskRunPage() {
             </div>
 
             <pre ref={日志容器引用}>
-              {日志列表.length
-                ? 日志列表.join('\n')
-                : '当前尚未收到日志输出。'}
+              {日志列表.length ? 日志列表.join('\n') : '当前尚未收到日志输出。'}
             </pre>
           </div>
 
           <div className="card">
             <h3>时间信息</h3>
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-                gap: '12px',
-              }}
-            >
+            <div className="details-grid">
               <div>
                 <label>创建时间</label>
                 <div className="meta-value">{格式化时间(任务.created_at)}</div>
@@ -577,4 +466,4 @@ export function TaskRunPage() {
       )}
     </div>
   )
-}
+} 
