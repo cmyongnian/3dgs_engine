@@ -1,6 +1,18 @@
-from typing import Any, Dict, List, Literal, Optional
+from typing import Any, Dict, List, Literal, Optional, Union
 
 from pydantic import BaseModel, Field
+
+TaskStatus = Literal[
+    "created",
+    "queued",
+    "running",
+    "stopping",
+    "stopped",
+    "success",
+    "failed",
+    "retrying",
+    "partial_success",
+]
 
 
 class SystemPaths(BaseModel):
@@ -30,7 +42,9 @@ class TrainProfile(BaseModel):
     iterations: int = 30000
     save_iterations: List[int] = Field(default_factory=lambda: [7000, 30000])
     test_iterations: List[int] = Field(default_factory=lambda: [-1])
-    checkpoint_iterations: List[int] = Field(default_factory=lambda: [2000, 15000, 30000])
+    checkpoint_iterations: List[int] = Field(
+        default_factory=lambda: [2000, 15000, 30000]
+    )
     start_checkpoint: str = ""
     resume_from_latest: bool = False
     quiet: bool = False
@@ -65,11 +79,42 @@ class TaskCreateRequest(BaseModel):
     train: TrainProfile = Field(default_factory=TrainProfile)
 
 
+class StageRecord(BaseModel):
+    stage_key: str
+    stage_label: str
+    order: int = 0
+    status: Literal["pending", "running", "success", "failed", "stopped"] = "pending"
+    started_at: Optional[str] = None
+    finished_at: Optional[str] = None
+    duration_seconds: Optional[float] = None
+    error_type: Optional[str] = None
+    error_message: Optional[str] = None
+
+
 class TaskResponse(BaseModel):
     task_id: str
     scene_name: str
-    status: str
+    status: Union[TaskStatus, str]
     current_stage: str
     message: str
     result: Dict[str, Any] = Field(default_factory=dict)
     error: Optional[str] = None
+
+    created_at: Optional[str] = None
+    started_at: Optional[str] = None
+    finished_at: Optional[str] = None
+
+    stop_requested: bool = False
+    retry_count: int = 0
+
+    stage_history: List[StageRecord] = Field(default_factory=list)
+    metrics_summary: Dict[str, Any] = Field(default_factory=dict)
+    result_files: Dict[str, Any] = Field(default_factory=dict)
+
+
+class TaskActionResponse(BaseModel):
+    ok: bool = True
+    task_id: str
+    action: Literal["stop", "retry", "delete"]
+    status: Union[TaskStatus, str]
+    message: str

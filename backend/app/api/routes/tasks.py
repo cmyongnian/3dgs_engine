@@ -1,6 +1,10 @@
 from fastapi import APIRouter, HTTPException
 
-from backend.app.schemas.task import TaskCreateRequest, TaskResponse
+from backend.app.schemas.task import (
+    TaskActionResponse,
+    TaskCreateRequest,
+    TaskResponse,
+)
 from backend.app.services.task_service import task_service
 
 router = APIRouter()
@@ -25,6 +29,30 @@ def start_task(task_id: str) -> TaskResponse:
     if task is None:
         raise HTTPException(status_code=404, detail="任务不存在")
     return task
+
+
+@router.post("/{task_id}/stop", response_model=TaskActionResponse)
+def stop_task(task_id: str) -> TaskActionResponse:
+    action = task_service.stop_task(task_id)
+    if action is None:
+        raise HTTPException(status_code=404, detail="任务不存在")
+    return action
+
+
+@router.post("/{task_id}/retry", response_model=TaskActionResponse)
+def retry_task(task_id: str) -> TaskActionResponse:
+    action = task_service.retry_task(task_id)
+    if action is None:
+        raise HTTPException(status_code=404, detail="任务不存在")
+    return action
+
+
+@router.delete("/{task_id}", response_model=TaskActionResponse)
+def delete_task(task_id: str) -> TaskActionResponse:
+    action = task_service.delete_task(task_id)
+    if action is None:
+        raise HTTPException(status_code=404, detail="任务不存在")
+    return action
 
 
 @router.get("/{task_id}", response_model=TaskResponse)
