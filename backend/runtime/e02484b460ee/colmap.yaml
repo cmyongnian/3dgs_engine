@@ -1,0 +1,7 @@
+colmap:
+  scene_name: video_scene_01
+  raw_image_path: datasets/raw/video_scene_01/images
+  processed_scene_path: datasets/processed/video_scene_02
+  source_path: datasets/processed/video_scene_02/gs_input
+  colmap_executable: third_party/colmap/COLMAP.bat
+  quiet: false

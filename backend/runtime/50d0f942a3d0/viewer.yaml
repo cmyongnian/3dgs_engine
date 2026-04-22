@@ -1,0 +1,5 @@
+viewer:
+  scene_name: video_scene_01
+  model_path: outputs/video_scene_01
+  viewer_root: third_party/viewer/bin
+  quiet: false

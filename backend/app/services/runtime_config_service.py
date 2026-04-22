@@ -65,7 +65,7 @@ class RuntimeConfigService:
         log_dir = str((self.project_root / "engine" / "logs" / scene_name).resolve())
 
         system_yaml = {
-            "system": {
+            "paths": {
                 "project_root": str(self.project_root),
                 "gs_repo": system_paths.get("gs_repo", "third_party/gaussian-splatting"),
                 "raw_data": system_paths.get("raw_data", "datasets/raw"),
@@ -96,15 +96,55 @@ class RuntimeConfigService:
                 "source_path": source_path,
                 "model_output": output_dir,
                 "active_profile": train.get("active_profile", "low_vram"),
-                "eval": train.get("eval", True),
-                "iterations": train.get("iterations", 30000),
-                "save_iterations": train.get("save_iterations", [7000, 30000]),
-                "test_iterations": train.get("test_iterations", [-1]),
-                "checkpoint_iterations": train.get("checkpoint_iterations", [2000, 15000, 30000]),
-                "start_checkpoint": train.get("start_checkpoint", ""),
-                "resume_from_latest": train.get("resume_from_latest", False),
-                "quiet": train.get("quiet", False),
-                "extra_args": train.get("extra_args", {}),
+                "profiles": {
+                    "low_vram": {
+                        "eval": True,
+                        "iterations": 30000,
+                        "save_iterations": [7000, 30000],
+                        "test_iterations": [-1],
+                        "checkpoint_iterations": [2000, 15000, 30000],
+                        "start_checkpoint": "",
+                        "resume_from_latest": False,
+                        "quiet": False,
+                        "extra_args": {
+                            "data_device": "cpu",
+                            "resolution": 4,
+                            "densify_grad_threshold": 0.001,
+                            "densification_interval": 200,
+                            "densify_until_iter": 3000,
+                        },
+                    },
+                    "normal": {
+                        "eval": True,
+                        "iterations": 15000,
+                        "save_iterations": [7000, 15000],
+                        "test_iterations": [7000, 15000],
+                        "checkpoint_iterations": [7000, 15000],
+                        "start_checkpoint": "",
+                        "resume_from_latest": False,
+                        "quiet": False,
+                        "extra_args": {
+                            "resolution": 2,
+                        },
+                    },
+                    "fast_preview": {
+                        "eval": False,
+                        "iterations": 3000,
+                        "save_iterations": [1000, 3000],
+                        "test_iterations": [-1],
+                        "checkpoint_iterations": [1000, 3000],
+                        "start_checkpoint": "",
+                        "resume_from_latest": False,
+                        "quiet": False,
+                        "extra_args": {
+                            "data_device": "cpu",
+                            "resolution": 8,
+                            "densify_grad_threshold": 0.001,
+                            "densification_interval": 250,
+                            "densify_until_iter": 1500,
+                        },
+                    },
+                },
             }
         }
 
@@ -147,7 +187,7 @@ class RuntimeConfigService:
                 "scene_name": scene_name,
                 "input_mode": pipeline.get("input_mode", "images"),
                 "raw_image_path": raw_image_path,
-                "processed_scene_path": processed_scene_path,
+                "processed_image_path": source_path,
                 "source_path": source_path,
                 "video_path": video_path,
                 "model_output": output_dir,
@@ -158,7 +198,9 @@ class RuntimeConfigService:
         colmap_yaml = {
             "colmap": {
                 "scene_name": scene_name,
+                "image_path": raw_image_path,
                 "raw_image_path": raw_image_path,
+                "workspace_path": processed_scene_path,
                 "processed_scene_path": processed_scene_path,
                 "source_path": source_path,
                 "colmap_executable": scene.get("colmap_executable", "colmap"),
@@ -169,9 +211,15 @@ class RuntimeConfigService:
         convert_yaml = {
             "convert": {
                 "scene_name": scene_name,
-                "processed_scene_path": processed_scene_path,
-                "source_path": source_path,
+                "source_images": raw_image_path,
+                "colmap_workspace": processed_scene_path,
+                "gs_input_path": source_path,
+                "colmap_executable": scene.get("colmap_executable", ""),
                 "magick_executable": scene.get("magick_executable", ""),
+                "skip_matching": True,
+                "resize": False,
+                "use_magick": bool(scene.get("magick_executable", "")),
+                "gs_repo": system_paths.get("gs_repo", "third_party/gaussian-splatting"),
                 "quiet": train.get("quiet", False),
             }
         }
@@ -189,8 +237,9 @@ class RuntimeConfigService:
             "video": {
                 "scene_name": scene_name,
                 "video_path": video_path,
-                "raw_image_path": raw_image_path,
+                "output_images": raw_image_path,
                 "ffmpeg_executable": scene.get("ffmpeg_executable", "ffmpeg"),
+                "target_fps": 2,
                 "quiet": train.get("quiet", False),
             }
         }

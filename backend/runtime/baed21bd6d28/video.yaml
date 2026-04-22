@@ -1,0 +1,6 @@
+video:
+  scene_name: video_scene_01
+  video_path: datasets/videos/video_scene_01.mp4
+  raw_image_path: datasets/raw/video_scene_01/images
+  ffmpeg_executable: third_party/ffmpey/bin/ffmpeg.exe
+  quiet: false

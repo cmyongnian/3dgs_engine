@@ -1,0 +1,64 @@
+train:
+  scene_name: video_scene_01
+  source_path: datasets/processed/video_scene_01/gs_input
+  model_output: outputs/video_scene_01
+  active_profile: low_vram
+  profiles:
+    low_vram:
+      eval: true
+      iterations: 30000
+      save_iterations:
+      - 7000
+      - 30000
+      test_iterations:
+      - -1
+      checkpoint_iterations:
+      - 2000
+      - 15000
+      - 30000
+      start_checkpoint: ''
+      resume_from_latest: false
+      quiet: false
+      extra_args:
+        data_device: cpu
+        resolution: 4
+        densify_grad_threshold: 0.001
+        densification_interval: 200
+        densify_until_iter: 3000
+    normal:
+      eval: true
+      iterations: 15000
+      save_iterations:
+      - 7000
+      - 15000
+      test_iterations:
+      - 7000
+      - 15000
+      checkpoint_iterations:
+      - 7000
+      - 15000
+      start_checkpoint: ''
+      resume_from_latest: false
+      quiet: false
+      extra_args:
+        resolution: 2
+    fast_preview:
+      eval: false
+      iterations: 3000
+      save_iterations:
+      - 1000
+      - 3000
+      test_iterations:
+      - -1
+      checkpoint_iterations:
+      - 1000
+      - 3000
+      start_checkpoint: ''
+      resume_from_latest: false
+      quiet: false
+      extra_args:
+        data_device: cpu
+        resolution: 8
+        densify_grad_threshold: 0.001
+        densification_interval: 250
+        densify_until_iter: 1500

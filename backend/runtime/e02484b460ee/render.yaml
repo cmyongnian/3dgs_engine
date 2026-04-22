@@ -1,0 +1,5 @@
+render:
+  scene_name: video_scene_01
+  model_paths:
+  - outputs/video_scene_02
+  quiet: false

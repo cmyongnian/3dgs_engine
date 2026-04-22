@@ -1,0 +1,12 @@
+metrics:
+  scene_name: video_scene_01
+  model_paths:
+  - outputs/video_scene_02
+  processed_scene_path: datasets/processed/video_scene_02
+  render_dir: outputs/video_scene_02
+  log_dir: E:\3dgs\3dgs_platform\engine\logs\video_scene_01
+  collect_colmap_stats: true
+  collect_resource_stats: true
+  collect_gaussian_stats: true
+  collect_preview_images: true
+  quiet: false

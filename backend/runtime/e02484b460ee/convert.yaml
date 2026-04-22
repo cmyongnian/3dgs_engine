@@ -1,0 +1,6 @@
+convert:
+  scene_name: video_scene_01
+  processed_scene_path: datasets/processed/video_scene_02
+  source_path: datasets/processed/video_scene_02/gs_input
+  magick_executable: ''
+  quiet: false

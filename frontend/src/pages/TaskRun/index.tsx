@@ -152,7 +152,14 @@ export function TaskRunPage() {
       set任务(data)
       set错误('')
     } catch (error) {
-      set错误(error instanceof Error ? error.message : '获取任务失败')
+      const message = error instanceof Error ? error.message : '获取任务失败'
+
+      if (!静默) {
+        set错误(message)
+      } else {
+        // 静默刷新时，不用短暂 404 覆盖页面
+        console.warn('静默刷新失败:', message)
+      }
     } finally {
       if (!静默) set加载中(false)
     }
@@ -221,9 +228,27 @@ export function TaskRunPage() {
 
     try {
       const data = await 重试任务(taskId)
+
       set提示(data.message)
+      set错误('')
       set日志列表([])
-      await 刷新任务(true)
+
+      set任务((prev) => {
+        if (!prev) return prev
+        return {
+          ...prev,
+          status: String(data.status) as typeof prev.status,
+          current_stage: '等待重试',
+          message: data.message,
+          error: null,
+        }
+      })
+
+      window.setTimeout(() => {
+        刷新任务(true).catch(() => {
+          // 重试刚触发时，后端若短暂不可读，不立刻报错
+        })
+      }, 800)
     } catch (error) {
       set错误(error instanceof Error ? error.message : '重试任务失败')
     }

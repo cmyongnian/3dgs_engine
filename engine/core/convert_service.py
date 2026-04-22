@@ -74,9 +74,6 @@ class ConvertService:
         shutil.copytree(sparse_src, sparse_dst)
 
     def _clean_previous_outputs(self, gs_input_path: Path):
-        """
-        清理 convert.py 可能生成的旧产物，避免脏数据残留。
-        """
         to_remove = [
             gs_input_path / "input",
             gs_input_path / "distorted",
@@ -122,6 +119,52 @@ class ConvertService:
                 f"convert 生成的训练图片存在损坏文件，共 {len(bad_files)} 张：\n{msg}"
             )
 
+    def _ensure_sparse_layout(self, gs_input_path: Path, distorted_dir: Path, logger):
+        expected_sparse = gs_input_path / "sparse" / "0"
+        if expected_sparse.exists():
+            return
+
+        fallback_sparse = distorted_dir / "sparse" / "0"
+        if fallback_sparse.exists():
+            sparse_root = gs_input_path / "sparse"
+            sparse_root.mkdir(parents=True, exist_ok=True)
+
+            if expected_sparse.exists():
+                shutil.rmtree(expected_sparse)
+
+            shutil.copytree(fallback_sparse, expected_sparse)
+            logger.warning("convert 后未直接生成 gs_input/sparse/0，已从 distorted/sparse/0 自动补齐")
+            print("convert 后未直接生成 gs_input/sparse/0，已从 distorted/sparse/0 自动补齐")
+            return
+
+        raise FileNotFoundError(
+            f"convert 后未找到训练所需的 sparse/0 目录：{expected_sparse}"
+        )
+
+    def _validate_generated_sparse(self, gs_input_path: Path):
+        sparse_root = gs_input_path / "sparse"
+        sparse_zero = sparse_root / "0"
+
+        if not sparse_root.exists():
+            raise FileNotFoundError(f"convert 输出的 sparse 目录不存在: {sparse_root}")
+
+        if not sparse_zero.exists():
+            raise FileNotFoundError(f"convert 输出的 sparse/0 目录不存在: {sparse_zero}")
+
+        has_bin = all(
+            (sparse_zero / name).exists()
+            for name in ["cameras.bin", "images.bin", "points3D.bin"]
+        )
+        has_txt = all(
+            (sparse_zero / name).exists()
+            for name in ["cameras.txt", "images.txt", "points3D.txt"]
+        )
+
+        if not has_bin and not has_txt:
+            raise RuntimeError(
+                f"sparse/0 中未找到 COLMAP 所需文件（bin 或 txt）：{sparse_zero}"
+            )
+
     def run(self):
         scene_name = self.convert_cfg["scene_name"]
         source_images = self._resolve_user_path(self.convert_cfg["source_images"])
@@ -155,10 +198,8 @@ class ConvertService:
         distorted_dir = gs_input_path / "distorted"
         gs_input_path.mkdir(parents=True, exist_ok=True)
 
-        # 先彻底清理旧产物，避免残留坏图/旧 sparse/images
         self._clean_previous_outputs(gs_input_path)
 
-        # 重新准备输入
         self._copy_images(source_images, input_dir)
         self._prepare_distorted(colmap_workspace, distorted_dir)
 
@@ -216,10 +257,13 @@ class ConvertService:
 
         if process.returncode == 0:
             generated_images_dir = gs_input_path / "images"
-            self._validate_generated_images(generated_images_dir)
 
-            logger.info("convert.py 执行完成，且训练图片完整性校验通过")
-            print("convert.py 执行完成，且训练图片完整性校验通过")
+            self._ensure_sparse_layout(gs_input_path, distorted_dir, logger)
+            self._validate_generated_images(generated_images_dir)
+            self._validate_generated_sparse(gs_input_path)
+
+            logger.info("convert.py 执行完成，训练图片与 sparse 结构校验通过")
+            print("convert.py 执行完成，训练图片与 sparse 结构校验通过")
         else:
             logger.error("convert.py 执行失败，返回码: %s", process.returncode)
             raise RuntimeError(f"convert.py 执行失败，返回码: {process.returncode}")

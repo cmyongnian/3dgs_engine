@@ -81,6 +81,7 @@ export function ResultPage() {
   const [结果, set结果] = useState<结果响应 | null>(null)
   const [加载中, set加载中] = useState(true)
   const [错误, set错误] = useState('')
+  const [提示, set提示] = useState('')
 
   const 刷新结果 = async () => {
     if (!taskId) {
@@ -104,6 +105,24 @@ export function ResultPage() {
   useEffect(() => {
     刷新结果()
   }, [taskId])
+
+  const 复制路径 = async (value: unknown, label: string) => {
+    const text = value === null || value === undefined ? '' : String(value).trim()
+    if (!text || text === '-') {
+      set提示(`${label} 当前没有可复制的路径`)
+      window.setTimeout(() => set提示(''), 1500)
+      return
+    }
+
+    try {
+      await navigator.clipboard.writeText(text)
+      set提示(`${label} 路径已复制`)
+      window.setTimeout(() => set提示(''), 1500)
+    } catch {
+      set提示('复制失败，请检查浏览器权限')
+      window.setTimeout(() => set提示(''), 1500)
+    }
+  }
 
   const metricsSummary = useMemo(() => {
     return (结果?.metrics_summary ?? {}) as Record<string, unknown>
@@ -176,6 +195,7 @@ export function ResultPage() {
         </div>
       </div>
 
+      {提示 ? <div className="success-box">{提示}</div> : null}
       {错误 ? <div className="error-box">{错误}</div> : null}
 
       {结果 ? (
@@ -264,7 +284,16 @@ export function ResultPage() {
             <div className="file-grid">
               {文件列表.map(([name, value]) => (
                 <div key={name} className="file-card">
-                  <div className="meta-label">{name}</div>
+                  <div className="file-card-head">
+                    <div className="meta-label">{name}</div>
+                    <button
+                      type="button"
+                      className="ghost-btn small-copy-btn"
+                      onClick={() => 复制路径(value, name)}
+                    >
+                      复制路径
+                    </button>
+                  </div>
                   <div className="file-value">{普通显示(value)}</div>
                 </div>
               ))}
