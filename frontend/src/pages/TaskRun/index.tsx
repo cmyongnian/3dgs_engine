@@ -151,7 +151,7 @@ export function TaskRunPage() {
         <div>
           <h1>任务运行</h1>
           <p className="page-subtitle">
-            这里重点强化了运行过程展示：阶段进度、实时状态、日志高亮、自动滚动和失败定位都在这一页完成。
+            本页用于展示任务运行过程，包括阶段进度、实时状态、日志输出和错误信息。
           </p>
         </div>
         <div className="inline-actions wrap-actions">
@@ -177,13 +177,12 @@ export function TaskRunPage() {
         <div className="card compact-card">
           <h3>状态</h3>
           <span
-            className={`status-pill ${
-              任务?.status === 'success'
+            className={`status-pill ${任务?.status === 'success'
                 ? 'status-success'
                 : 任务?.status === 'failed'
                   ? 'status-failed'
                   : 'status-idle'
-            }`}
+              }`}
           >
             {任务?.status || '加载中'}
           </span>
@@ -203,7 +202,7 @@ export function TaskRunPage() {
           <div>
             <h3>执行进度</h3>
             <p className="section-tip">
-              当前使用阶段映射估算进度，答辩展示已经足够直观。
+              当前进度根据任务阶段进行估算，用于反映整体执行状态。
             </p>
           </div>
           <div className="progress-text">{任务?.message || '正在获取任务信息'}</div>

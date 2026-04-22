@@ -56,8 +56,8 @@ export function TaskCreatePage() {
 
   const 当前输入模式说明 =
     表单.pipeline.input_mode === 'video'
-      ? '当前是视频模式，系统会优先使用视频路径，并通常建议启用“视频抽帧”。'
-      : '当前是图片模式，系统会直接读取原始图片目录。'
+      ? '当前为视频模式，系统优先读取视频路径，通常配合“视频抽帧”流程使用。'
+      : '当前为图片模式，系统直接读取原始图片目录。'
 
   const 刷新路径 = (sceneName: string) => {
     set表单((prev) => 根据场景名更新路径(prev, 系统设置, sceneName))
@@ -167,7 +167,7 @@ export function TaskCreatePage() {
         <div>
           <h1>新建任务</h1>
           <p className="page-subtitle">
-            本页会自动读取系统设置中的默认路径和工具配置。你可以直接创建，也可以先切换模板后再提交。
+            本页会自动读取系统设置中的默认路径和工具配置，可根据需要调整参数后创建任务。
           </p>
         </div>
         <div className="inline-actions wrap-actions">
@@ -185,7 +185,7 @@ export function TaskCreatePage() {
           <div>
             <h3>快速模板</h3>
             <p className="section-tip">
-              这三个按钮最适合答辩现场使用，减少手动改参数。
+              可通过预设模板快速加载常用训练参数，减少重复输入。
             </p>
           </div>
           <div className="inline-actions wrap-actions">
@@ -469,7 +469,7 @@ export function TaskCreatePage() {
           <div>
             <h3>流程开关</h3>
             <p className="section-tip">
-              这里建议只保留你答辩时会展示的关键步骤，避免一次跑太久。
+              可根据实际需要启用或关闭对应处理流程。
             </p>
           </div>
         </div>

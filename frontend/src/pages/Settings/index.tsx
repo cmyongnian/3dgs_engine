@@ -83,7 +83,7 @@ export function SettingsPage() {
         <div>
           <h1>系统设置</h1>
           <p className="page-subtitle">
-            这里保存平台默认值。保存后，新建任务页会自动读取这些路径、工具位置和训练模板；接口请求也会优先使用这里的地址配置。
+            用于配置系统默认参数。保存后，新建任务页会自动读取这些路径、工具位置和训练模板；接口请求也会优先使用这里的地址配置。
           </p>
         </div>
         <div className="inline-actions wrap-actions">
@@ -115,7 +115,7 @@ export function SettingsPage() {
         <section className="card settings-section">
           <h3>连接设置</h3>
           <p className="section-tip">
-            地址单独成行显示，避免你现在这种横向挤压导致看不全。
+            用于配置前后端通信地址，建议根据实际部署环境填写。
           </p>
           <div className="field-grid two-columns">
             <div>
@@ -147,13 +147,12 @@ export function SettingsPage() {
           </div>
           <div className="status-row">
             <span
-              className={`status-pill ${
-                健康状态 === 'ok'
-                  ? 'status-success'
-                  : 健康状态 === 'failed'
-                    ? 'status-failed'
-                    : 'status-idle'
-              }`}
+              className={`status-pill ${健康状态 === 'ok'
+                ? 'status-success'
+                : 健康状态 === 'failed'
+                  ? 'status-failed'
+                  : 'status-idle'
+                }`}
             >
               {健康状态 === 'idle'
                 ? '尚未检测'
@@ -381,7 +380,7 @@ export function SettingsPage() {
         <section className="card settings-section">
           <h3>训练与流程默认值</h3>
           <p className="section-tip">
-            这一块改成分组布局，不再一行塞很多输入框，所以不会再出现你截图里那种显示不全的问题。
+            用于设置训练参数和流程默认开关，页面采用分组布局便于查看与修改。
           </p>
 
           <div className="settings-subsection-grid">
@@ -662,7 +661,7 @@ export function SettingsPage() {
       <section className="card settings-section">
         <h3>项目结构检测结果</h3>
         <p className="section-tip">
-          这里读取后端 /system/layout 返回，方便你答辩前自查环境。
+          本区域显示后端 /system/layout 接口返回的项目结构检查结果。
         </p>
 
         {布局信息 ? (
@@ -693,7 +692,7 @@ export function SettingsPage() {
           </div>
         ) : (
           <div className="empty-tip">
-            点击“检测后端”后，这里会显示项目目录和引擎结构检查结果。
+            点击“检测后端”后，这里显示项目目录和引擎结构检查结果。
           </div>
         )}
       </section>

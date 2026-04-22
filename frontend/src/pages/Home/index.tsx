@@ -3,24 +3,29 @@ import { Link } from 'react-router-dom'
 export function HomePage() {
   return (
     <div className="page">
-      <h1>三维重建平台前后端分离版</h1>
-      <p>这一版结构已经按标准拆成前端、后端、引擎三层，适合后续继续扩展图形化界面和任务管理。</p>
+      <h1>三维重建平台</h1>
+      <p>
+        本系统采用前后端分离架构，由前端界面、后端服务和重建引擎组成，
+        支持任务配置、流程调度、日志查看与结果展示。
+      </p>
+
       <div className="card-grid">
         <div className="card">
-          <h3>前端</h3>
-          <p>参数配置、任务运行、日志查看、结果展示。</p>
+          <h3>前端界面</h3>
+          <p>提供参数配置、任务创建、运行监控和结果展示功能。</p>
         </div>
         <div className="card">
-          <h3>后端</h3>
-          <p>任务创建、运行时配置生成、状态管理、日志推送。</p>
+          <h3>后端服务</h3>
+          <p>负责任务创建、状态管理、配置生成和日志推送。</p>
         </div>
         <div className="card">
-          <h3>引擎</h3>
-          <p>保留你现有的 COLMAP、转换、训练、渲染、评测、查看器能力。</p>
+          <h3>重建引擎</h3>
+          <p>集成 COLMAP、数据转换、模型训练、渲染、评测与查看器功能。</p>
         </div>
       </div>
+
       <Link className="primary-btn" to="/tasks/create">
-        去创建任务
+        创建任务
       </Link>
     </div>
   )

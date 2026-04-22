@@ -1,46 +1,64 @@
-# 3DGS 平台前后端分离重构版
+# 3DGS 三维重建平台
 
-这个目录不是空壳建议，而是一版按你当前仓库结构整理好的目标工程：
+本项目面向 3D Gaussian Splatting 三维重建流程，采用前后端分离架构实现任务管理、流程调度与结果展示。系统由算法引擎、后端服务和前端界面三部分组成，支持数据预检查、视频抽帧、COLMAP 重建、数据转换、模型训练、离线渲染、指标评测和结果查看等功能。
 
-- `engine/`：保留你原来的算法与流程引擎
-- `backend/`：FastAPI 后端，负责任务、配置生成、状态查询、日志流
-- `frontend/`：React + TypeScript 前端，负责参数配置、任务运行、结果展示
-
-## 最终目录
+## 项目结构
 
 ```text
 3dgs_engine/
-├─ backend/
-├─ frontend/
-└─ engine/
+├─ backend/   # FastAPI 后端，负责任务调度、状态查询、日志服务与接口封装
+├─ frontend/  # React + TypeScript 前端，负责参数配置、任务运行与结果展示
+├─ engine/    # 三维重建流程引擎与相关配置、数据目录、第三方依赖
+└─ scripts/   # 辅助脚本
 ```
 
-## 迁移原则
+## 系统功能
 
-1. 把你当前仓库中的 `app`、`core`、`configs`、`datasets`、`docs`、`logs`、`outputs`、`third_party`、`scrips` 整体移动到 `engine/`。
-2. 把 `scrips` 统一改名为 `scripts`。
-3. 把原来所有 `from core...` 改为 `from engine.core...`。
-4. 把原来所有 `from app...` 改为 `from engine.app...`。
-5. 以后命令行调试走 `python -m engine.app.pipeline_main` 这类入口；平台使用走 `backend + frontend`。
+- 任务创建与启动
+- 运行时配置生成
+- 任务状态查询与任务列表获取
+- WebSocket 日志推送
+- 三维重建流程调度
+- 结果信息展示
+- 系统健康检查与目录结构检查
 
-## 直接使用方法
+## 处理流程
 
-### 方式一：把这个目录当成目标结构手动迁移
-对照 `MIGRATION_MAP.md` 和 `scripts/apply_split_refactor.py` 修改你的原仓库。
+1. 数据预检查
+2. 视频抽帧（可选）
+3. COLMAP 重建
+4. 数据转换
+5. 模型训练
+6. 离线渲染
+7. 指标评测
+8. 查看器启动（可选）
 
-### 方式二：把当前仓库内容复制到这个目录，再运行迁移脚本
-```bash
-python scripts/apply_split_refactor.py /你的仓库路径
-```
+## 环境要求
 
-## 后端启动
+### 后端
+
+- Python 3.10 及以上
+- FastAPI
+- Uvicorn
+
+安装依赖：
 
 ```bash
 pip install -r backend/requirements.txt
+```
+
+启动服务：
+
+```bash
 uvicorn backend.app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-## 前端启动
+### 前端
+
+- Node.js 18 及以上
+- npm 9 及以上
+
+安装与启动：
 
 ```bash
 cd frontend
@@ -48,18 +66,9 @@ npm install
 npm run dev
 ```
 
-## 当前这版已经包含
+## 引擎说明
 
-- 任务创建
-- 一键流水线启动
-- 任务状态轮询
-- WebSocket 日志推送
-- 结果页骨架
-- 运行时 YAML 配置自动生成
-
-## 你需要接入的位置
-
-如果你已经把原项目迁移到 `engine/`，这版后端会优先调用：
+`engine/` 目录保留了三维重建相关流程实现，主要包括：
 
 - `engine.core.preflight_service.PreflightService`
 - `engine.core.video_service.VideoService`
@@ -70,4 +79,29 @@ npm run dev
 - `engine.core.metrics_service.MetricsService`
 - `engine.core.viewer_service.ViewerService`
 
-如果其中个别文件暂时还没迁移完整，后端会在对应阶段报出明确错误，方便继续补齐。
+## 接口概览
+
+### 任务接口
+
+- `POST /api/tasks/create`：创建任务
+- `POST /api/tasks/{task_id}/start`：启动任务
+- `GET /api/tasks/{task_id}`：获取任务状态
+- `GET /api/tasks/{task_id}/result`：获取任务结果
+- `GET /api/tasks`：获取任务列表
+- `GET /api/ws/logs/{task_id}`：获取任务日志流
+
+### 系统接口
+
+- `GET /api/system/health`：服务健康检查
+- `GET /api/system/layout`：项目目录结构检查
+
+## 使用建议
+
+- 首次使用时，先在“系统设置”中配置默认目录与工具路径。
+- 创建任务前，建议确认输入模式、数据路径和输出目录。
+- 运行任务后，可在任务运行页查看阶段进度与实时日志。
+- 任务完成后，可在结果页查看输出目录与结果信息。
+
+## 许可协议
+
+本项目采用仓库中 `LICENSE` 文件所示协议。
