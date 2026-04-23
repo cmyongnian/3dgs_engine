@@ -151,6 +151,7 @@ class RuntimeConfigService:
         render_yaml = {
             "render": {
                 "scene_name": scene_name,
+                "model_path": output_dir,
                 "model_paths": [output_dir] if output_dir else [],
                 "quiet": train.get("quiet", False),
             }
@@ -227,6 +228,7 @@ class RuntimeConfigService:
         viewer_yaml = {
             "viewer": {
                 "scene_name": scene_name,
+                "source_path": source_path,
                 "model_path": output_dir,
                 "viewer_root": scene.get("viewer_root", "third_party/viewer/bin"),
                 "quiet": train.get("quiet", False),

@@ -1,0 +1,8 @@
+paths:
+  project_root: E:\3dgs\3dgs_platform
+  gs_repo: third_party/gaussian-splatting
+  raw_data: datasets/raw
+  processed_data: datasets/processed
+  outputs: outputs
+  logs: logs
+  videos_data: datasets/videos
