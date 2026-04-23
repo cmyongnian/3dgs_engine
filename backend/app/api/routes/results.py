@@ -1,13 +1,13 @@
 from pathlib import Path
 import json
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional, List, Tuple
 
 import yaml
 from fastapi import APIRouter, HTTPException
 
-from backend.app.services.pipeline_service import pipeline_service
+from backend.app.services.task_service import task_service
 
-router = APIRouter(prefix="/results", tags=["结果"])
+router = APIRouter()
 
 PROJECT_ROOT = Path(__file__).resolve().parents[4]
 ENGINE_ROOT = PROJECT_ROOT / "engine"
@@ -27,22 +27,23 @@ def _task_to_dict(task: Any) -> Dict[str, Any]:
 
 
 def _safe_read_json(path: Optional[Path]) -> Dict[str, Any]:
-    if not path or not path.exists():
+    if not path or not path.exists() or not path.is_file():
         return {}
     try:
         with open(path, "r", encoding="utf-8") as f:
-            return json.load(f)
+            data = json.load(f)
+        return data if isinstance(data, dict) else {}
     except Exception:
         return {}
 
 
 def _safe_read_yaml(path: Optional[Path]) -> Dict[str, Any]:
-    if not path or not path.exists():
+    if not path or not path.exists() or not path.is_file():
         return {}
     try:
         with open(path, "r", encoding="utf-8") as f:
             data = yaml.safe_load(f)
-            return data if isinstance(data, dict) else {}
+        return data if isinstance(data, dict) else {}
     except Exception:
         return {}
 
@@ -76,7 +77,7 @@ def _find_file(base_dir: Optional[Path], filename: str) -> Optional[Path]:
         return None
 
     direct = base_dir / filename
-    if direct.exists():
+    if direct.exists() and direct.is_file():
         return direct
 
     try:
@@ -89,30 +90,35 @@ def _find_file(base_dir: Optional[Path], filename: str) -> Optional[Path]:
     return None
 
 
-def _find_preview_images(output_dir: Optional[Path]) -> list[str]:
-    if not output_dir or not output_dir.exists():
-        return []
-
+def _find_preview_images(*base_dirs: Optional[Path]) -> List[str]:
     candidates = []
 
-    preferred_dirs = [
-        output_dir / "renders",
-        output_dir / "render",
-        output_dir / "preview",
-        output_dir / "previews",
-    ]
+    for base_dir in base_dirs:
+        if not base_dir or not base_dir.exists():
+            continue
 
-    for d in preferred_dirs:
-        if d.exists() and d.is_dir():
-            for ext in ("*.png", "*.jpg", "*.jpeg", "*.webp"):
-                candidates.extend(sorted(d.glob(ext)))
+        preferred_dirs = [
+            base_dir / "renders",
+            base_dir / "render",
+            base_dir / "preview",
+            base_dir / "previews",
+        ]
 
-    if not candidates:
-        try:
-            for ext in ("*.png", "*.jpg", "*.jpeg", "*.webp"):
-                candidates.extend(sorted(output_dir.rglob(ext)))
-        except Exception:
-            return []
+        current_candidates = []
+
+        for d in preferred_dirs:
+            if d.exists() and d.is_dir():
+                for ext in ("*.png", "*.jpg", "*.jpeg", "*.webp"):
+                    current_candidates.extend(sorted(d.glob(ext)))
+
+        if not current_candidates:
+            try:
+                for ext in ("*.png", "*.jpg", "*.jpeg", "*.webp"):
+                    current_candidates.extend(sorted(base_dir.rglob(ext)))
+            except Exception:
+                current_candidates = []
+
+        candidates.extend(current_candidates)
 
     seen = set()
     result = []
@@ -127,20 +133,20 @@ def _find_preview_images(output_dir: Optional[Path]) -> list[str]:
     return result
 
 
-def _pick_value(metrics_data: Dict[str, Any], report_data: Dict[str, Any], *keys: str) -> Any:
-    for source in (metrics_data, report_data):
+def _pick_value(*sources: Dict[str, Any], keys: Tuple[str, ...]) -> Any:
+    for source in sources:
         if not isinstance(source, dict):
             continue
 
         for key in keys:
-            if key in source:
+            if key in source and source[key] not in (None, ""):
                 return source[key]
 
         for nested_key in ("metrics_summary", "metrics", "summary", "result"):
             nested = source.get(nested_key)
             if isinstance(nested, dict):
                 for key in keys:
-                    if key in nested:
+                    if key in nested and nested[key] not in (None, ""):
                         return nested[key]
 
     return None
@@ -166,23 +172,34 @@ def _infer_from_runtime(task_id: str) -> Dict[str, Any]:
         or task_id
     )
 
+    model_paths = report_cfg.get("model_paths") or metrics_cfg.get("model_paths") or []
+    first_model_path = model_paths[0] if model_paths else None
+
     output_dir = _resolve_engine_path(
         train_cfg.get("model_output")
         or report_cfg.get("report_dir")
-        or metrics_cfg.get("render_dir")
+        or first_model_path
     )
-
+    report_dir = _resolve_engine_path(
+        report_cfg.get("report_dir")
+        or first_model_path
+    )
+    log_dir = _resolve_engine_path(
+        report_cfg.get("log_dir")
+        or metrics_cfg.get("log_dir")
+    )
     processed_dir = _resolve_engine_path(
         report_cfg.get("processed_scene_path")
         or metrics_cfg.get("processed_scene_path")
     )
-
     source_dir = _resolve_engine_path(train_cfg.get("source_path"))
 
     return {
         "runtime_dir": runtime_dir,
         "scene_name": scene_name,
         "output_dir": output_dir,
+        "report_dir": report_dir,
+        "log_dir": log_dir,
         "processed_dir": processed_dir,
         "source_dir": source_dir,
     }
@@ -190,88 +207,107 @@ def _infer_from_runtime(task_id: str) -> Dict[str, Any]:
 
 @router.get("/{task_id}")
 def get_result(task_id: str):
-    task = pipeline_service.get_task(task_id)
+    task = task_service.get_task(task_id)
     task_data = _task_to_dict(task)
-
     runtime_meta = _infer_from_runtime(task_id)
 
     if not task_data and not runtime_meta:
         raise HTTPException(status_code=404, detail="任务不存在，且未找到运行时目录")
 
-    scene = task_data.get("scene", {}) or {}
-    runtime_files = task_data.get("runtime_files", {}) or {}
+    stored_result = task_data.get("result", {}) or {}
+    stored_metrics = task_data.get("metrics_summary", {}) or {}
+    stored_files = task_data.get("result_files", {}) or {}
 
     scene_name = (
         task_data.get("scene_name")
-        or scene.get("scene_name")
         or runtime_meta.get("scene_name")
         or task_id
     )
 
     output_dir = (
-        _resolve_engine_path(scene.get("model_output"))
+        _resolve_engine_path(stored_result.get("output_dir"))
         or runtime_meta.get("output_dir")
     )
+    report_dir = (
+        _resolve_engine_path(stored_result.get("report_dir"))
+        or runtime_meta.get("report_dir")
+        or output_dir
+    )
     processed_dir = (
-        _resolve_engine_path(scene.get("processed_scene_path"))
+        _resolve_engine_path(stored_result.get("processed_dir"))
         or runtime_meta.get("processed_dir")
     )
     source_dir = (
-        _resolve_engine_path(scene.get("source_path"))
+        _resolve_engine_path(stored_result.get("source_dir"))
         or runtime_meta.get("source_dir")
     )
-    raw_image_dir = _resolve_engine_path(scene.get("raw_image_path"))
-
+    raw_image_dir = _resolve_engine_path(stored_result.get("raw_image_dir"))
     runtime_dir = (
-        _resolve_project_path(runtime_files.get("runtime_dir"))
+        _resolve_project_path(stored_result.get("runtime_dir"))
         or runtime_meta.get("runtime_dir")
     )
-    log_dir = (ENGINE_ROOT / "logs" / scene_name).resolve()
+    log_dir = (
+        _resolve_engine_path(stored_result.get("log_dir"))
+        or runtime_meta.get("log_dir")
+        or (ENGINE_ROOT / "logs" / scene_name).resolve()
+    )
 
-    metrics_json = _find_file(output_dir, "metrics.json")
-    report_json = _find_file(output_dir, "report.json")
-    report_md = _find_file(output_dir, "report.md")
-    summary_csv = _find_file(output_dir, "summary.csv")
-    summary_txt = _find_file(output_dir, "summary.txt")
+    search_dirs = [report_dir, output_dir]
+
+    metrics_json = None
+    report_json = None
+    report_md = None
+    summary_csv = None
+    summary_txt = None
+
+    for base_dir in search_dirs:
+        metrics_json = metrics_json or _find_file(base_dir, "metrics.json")
+        report_json = report_json or _find_file(base_dir, "report.json")
+        report_md = report_md or _find_file(base_dir, "report.md")
+        summary_csv = summary_csv or _find_file(base_dir, "summary.csv")
+        summary_txt = summary_txt or _find_file(base_dir, "summary.txt")
 
     metrics_data = _safe_read_json(metrics_json)
     report_data = _safe_read_json(report_json)
 
     result_files = {
-        "metrics_json": _existing_str(metrics_json),
-        "report_json": _existing_str(report_json),
-        "report_md": _existing_str(report_md),
-        "summary_csv": _existing_str(summary_csv),
-        "summary_txt": _existing_str(summary_txt),
+        "metrics_json": stored_files.get("metrics_json") or _existing_str(metrics_json),
+        "report_json": stored_files.get("report_json") or _existing_str(report_json),
+        "report_md": stored_files.get("report_md") or _existing_str(report_md),
+        "summary_csv": stored_files.get("summary_csv") or _existing_str(summary_csv),
+        "summary_txt": stored_files.get("summary_txt") or _existing_str(summary_txt),
     }
 
     metrics_summary = {
-        "psnr": _pick_value(metrics_data, report_data, "psnr", "PSNR"),
-        "ssim": _pick_value(metrics_data, report_data, "ssim", "SSIM"),
-        "lpips": _pick_value(metrics_data, report_data, "lpips", "LPIPS"),
-        "mse": _pick_value(metrics_data, report_data, "mse", "MSE"),
-        "mae": _pick_value(metrics_data, report_data, "mae", "MAE"),
-        "gaussian_count": _pick_value(metrics_data, report_data, "gaussian_count", "num_gaussians"),
-        "latest_iteration": _pick_value(metrics_data, report_data, "latest_iteration", "iteration"),
-        "generated_at": _pick_value(metrics_data, report_data, "generated_at", "created_at"),
+        "psnr": stored_metrics.get("psnr") or _pick_value(metrics_data, report_data, stored_result, keys=("psnr", "PSNR")),
+        "ssim": stored_metrics.get("ssim") or _pick_value(metrics_data, report_data, stored_result, keys=("ssim", "SSIM")),
+        "lpips": stored_metrics.get("lpips") or _pick_value(metrics_data, report_data, stored_result, keys=("lpips", "LPIPS")),
+        "mse": stored_metrics.get("mse") or _pick_value(metrics_data, report_data, stored_result, keys=("mse", "MSE")),
+        "mae": stored_metrics.get("mae") or _pick_value(metrics_data, report_data, stored_result, keys=("mae", "MAE")),
+        "gaussian_count": stored_metrics.get("gaussian_count") or _pick_value(metrics_data, report_data, stored_result, keys=("gaussian_count", "num_gaussians")),
+        "latest_iteration": stored_metrics.get("latest_iteration") or _pick_value(metrics_data, report_data, stored_result, keys=("latest_iteration", "iteration")),
+        "generated_at": stored_metrics.get("generated_at") or _pick_value(metrics_data, report_data, stored_result, keys=("generated_at", "created_at")),
     }
+
+    preview_images = stored_result.get("preview_images") or _find_preview_images(report_dir, output_dir)
 
     result_payload = {
         "output_dir": _existing_str(output_dir) or (str(output_dir) if output_dir else None),
-        "log_dir": _existing_str(log_dir) or str(log_dir),
+        "report_dir": _existing_str(report_dir) or (str(report_dir) if report_dir else None),
+        "log_dir": _existing_str(log_dir) or (str(log_dir) if log_dir else None),
         "processed_dir": _existing_str(processed_dir) or (str(processed_dir) if processed_dir else None),
         "runtime_dir": _existing_str(runtime_dir) or (str(runtime_dir) if runtime_dir else None),
         "source_dir": _existing_str(source_dir) or (str(source_dir) if source_dir else None),
         "raw_image_dir": _existing_str(raw_image_dir) or (str(raw_image_dir) if raw_image_dir else None),
-        "preview_images": _find_preview_images(output_dir),
+        "preview_images": preview_images,
     }
 
-    inferred_status = "success" if any(result_files.values()) else "unknown"
+    inferred_status = "success" if any(result_files.values()) else (task_data.get("status") or "unknown")
 
     return {
         "task_id": task_data.get("task_id", task_id),
         "scene_name": scene_name,
-        "status": task_data.get("status", inferred_status),
+        "status": inferred_status,
         "current_stage": task_data.get("current_stage", "结果查看"),
         "retry_count": task_data.get("retry_count", 0),
         "stop_requested": task_data.get("stop_requested", False),
