@@ -45,7 +45,7 @@ class TrainProfile(BaseModel):
     checkpoint_iterations: List[int] = Field(
         default_factory=lambda: [2000, 15000, 30000]
     )
-    start_checkpoint: str = ""
+    start_checkpoint: Optional[str] = ""
     resume_from_latest: bool = False
     quiet: bool = False
     extra_args: Dict[str, Any] = Field(
@@ -57,7 +57,6 @@ class TrainProfile(BaseModel):
             "densify_until_iter": 3000,
         }
     )
-
 
 class SceneConfig(BaseModel):
     scene_name: str
