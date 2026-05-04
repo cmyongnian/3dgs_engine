@@ -34,6 +34,12 @@ export function 停止任务(taskId: string) {
   })
 }
 
+export function 立即停止任务(taskId: string) {
+  return 请求<任务动作响应>(`/tasks/${taskId}/force-stop`, {
+    method: 'POST',
+  })
+}
+
 export function 重试任务(taskId: string) {
   return 请求<任务动作响应>(`/tasks/${taskId}/retry`, {
     method: 'POST',

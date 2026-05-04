@@ -104,6 +104,7 @@ class TaskResponse(BaseModel):
     finished_at: Optional[str] = None
 
     stop_requested: bool = False
+    force_stop_requested: bool = False
     retry_count: int = 0
 
     stage_history: List[StageRecord] = Field(default_factory=list)
@@ -114,7 +115,7 @@ class TaskResponse(BaseModel):
 class TaskActionResponse(BaseModel):
     ok: bool = True
     task_id: str
-    action: Literal["stop", "retry", "delete"]
+    action: Literal["stop", "force_stop", "retry", "delete"]
     status: Union[TaskStatus, str]
     message: str
 

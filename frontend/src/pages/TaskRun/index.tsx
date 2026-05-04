@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { 日志地址 } from '../../api/client'
-import { 获取任务, 获取任务日志, 停止任务, 重试任务, 删除任务 } from '../../api/task'
+import { 获取任务, 获取任务日志, 停止任务, 立即停止任务, 重试任务, 删除任务 } from '../../api/task'
 import type { 阶段记录, 任务响应 } from '../../types/task'
 
 type 日志连接状态 = 'connecting' | 'connected' | 'closed' | 'error'
-type 操作类型 = 'stop' | 'retry' | 'delete' | 'refresh' | null
+type 操作类型 = 'stop' | 'force_stop' | 'retry' | 'delete' | 'refresh' | null
 
 const 结束状态 = new Set(['success', 'failed', 'stopped', 'partial_success'])
 const 可重试状态 = new Set(['failed', 'stopped', 'partial_success'])
@@ -249,19 +249,41 @@ export function TaskRunPage() {
     }
   }
 
-  const 关闭日志连接 = () => {
-    清理重连计时器()
+ const 关闭日志连接 = () => {
+   清理重连计时器()
 
-    if (ws引用.current) {
-      ws引用.current.onopen = null
-      ws引用.current.onmessage = null
-      ws引用.current.onerror = null
-      ws引用.current.onclose = null
-      ws引用.current.close()
-      ws引用.current = null
-    }
-  }
+   const ws = ws引用.current
+   if (!ws) return
 
+   ws引用.current = null
+
+   ws.onmessage = null
+   ws.onerror = null
+   ws.onclose = null
+
+   if (ws.readyState === WebSocket.CONNECTING) {
+    // 避免浏览器提示：WebSocket is closed before the connection is established.
+    // 等连接建立后再关闭，不影响页面功能。
+     ws.onopen = () => {
+       try {
+         ws.close()
+       } catch {
+        // 忽略关闭过程中的浏览器差异
+       }
+     }
+     return
+   }
+
+   ws.onopen = null
+
+   if (ws.readyState === WebSocket.OPEN) {
+     try {
+       ws.close()
+     } catch {
+      // 忽略关闭过程中的浏览器差异
+     }
+   }
+ }
   const 刷新任务 = async (静默 = false) => {
     if (!taskId) return
 
@@ -361,25 +383,28 @@ export function TaskRunPage() {
     已结束引用.current = 已结束
   }, [已结束])
 
-  useEffect(() => {
-    if (!taskId) return
+ useEffect(() => {
+   if (!taskId || 已结束) {
+     关闭日志连接()
+     return
+   }
 
-    连接日志()
+   连接日志()
 
-    const pingTimer = window.setInterval(() => {
-      const ws = ws引用.current
-      if (ws && ws.readyState === WebSocket.OPEN) {
-        ws.send('ping')
-      }
-    }, 15000)
+   const pingTimer = window.setInterval(() => {
+     const ws = ws引用.current
+     if (ws && ws.readyState === WebSocket.OPEN) {
+       ws.send('ping')
+     }
+   }, 15000)
 
-    return () => {
-      window.clearInterval(pingTimer)
-      关闭日志连接()
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [taskId])
-
+   return () => {
+     window.clearInterval(pingTimer)
+     关闭日志连接()
+   }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+ }, [taskId, 已结束])
+ 
   useEffect(() => {
     if (!taskId || 已结束) return
 
@@ -414,6 +439,24 @@ export function TaskRunPage() {
       await 刷新任务(true)
     } catch (error) {
       set错误(error instanceof Error ? error.message : '停止任务失败')
+    } finally {
+      set当前操作(null)
+    }
+  }
+
+  const 执行立即停止 = async () => {
+    if (!taskId || 当前操作) return
+
+    const confirmed = window.confirm('立即停止会尝试终止当前正在运行的外部子进程。确定要立即停止吗？')
+    if (!confirmed) return
+
+    try {
+      set当前操作('force_stop')
+      const data = await 立即停止任务(taskId)
+      set提示(data.message)
+      await 刷新任务(true)
+    } catch (error) {
+      set错误(error instanceof Error ? error.message : '立即停止任务失败')
     } finally {
       set当前操作(null)
     }
@@ -534,9 +577,14 @@ export function TaskRunPage() {
           </button>
 
           {!已结束 ? (
-            <button className="ghost-btn danger-btn" onClick={执行停止} disabled={当前操作 !== null}>
-              {当前操作 === 'stop' ? '停止中…' : '停止任务'}
-            </button>
+            <>
+              <button className="ghost-btn danger-btn" onClick={执行停止} disabled={当前操作 !== null}>
+                {当前操作 === 'stop' ? '提交中…' : '下一步停止'}
+              </button>
+              <button className="ghost-btn danger-btn" onClick={执行立即停止} disabled={当前操作 !== null}>
+                {当前操作 === 'force_stop' ? '立即停止中…' : '立即停止'}
+              </button>
+            </>
           ) : null}
 
           {任务 && 可重试状态.has(任务.status) ? (
@@ -588,8 +636,12 @@ export function TaskRunPage() {
               <div className="meta-value">{任务.retry_count}</div>
             </div>
             <div className="card info-card">
-              <div className="meta-label">停止请求</div>
+              <div className="meta-label">下一步停止请求</div>
               <div className="meta-value">{任务.stop_requested ? '是' : '否'}</div>
+            </div>
+            <div className="card info-card">
+              <div className="meta-label">立即停止请求</div>
+              <div className="meta-value">{任务.force_stop_requested ? '是' : '否'}</div>
             </div>
           </div>
 

@@ -40,6 +40,14 @@ def stop_task(task_id: str) -> TaskActionResponse:
     return action
 
 
+@router.post("/{task_id}/force-stop", response_model=TaskActionResponse)
+def force_stop_task(task_id: str) -> TaskActionResponse:
+    action = task_service.force_stop_task(task_id)
+    if action is None:
+        raise HTTPException(status_code=404, detail="任务不存在")
+    return action
+
+
 @router.post("/{task_id}/retry", response_model=TaskActionResponse)
 def retry_task(task_id: str) -> TaskActionResponse:
     action = task_service.retry_task(task_id)

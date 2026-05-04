@@ -97,6 +97,7 @@ export interface 任务响应 {
   finished_at: string | null
 
   stop_requested: boolean
+  force_stop_requested: boolean
   retry_count: number
 
   stage_history: 阶段记录[]
@@ -107,7 +108,7 @@ export interface 任务响应 {
 export interface 任务动作响应 {
   ok: boolean
   task_id: string
-  action: 'stop' | 'retry' | 'delete'
+  action: 'stop' | 'force_stop' | 'retry' | 'delete'
   status: 任务状态 | string
   message: string
 }
@@ -129,6 +130,7 @@ export interface 结果响应 {
   finished_at: string | null
 
   stop_requested: boolean
+  force_stop_requested: boolean
   retry_count: number
 
   stage_history: 阶段记录[]

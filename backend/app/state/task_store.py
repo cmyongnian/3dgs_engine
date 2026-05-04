@@ -34,6 +34,7 @@ class TaskRecord:
     finished_at: str | None = None
 
     stop_requested: bool = False
+    force_stop_requested: bool = False
     retry_count: int = 0
 
     stage_history: list[dict[str, Any]] = field(default_factory=list)
@@ -106,6 +107,7 @@ class TaskStore:
             "started_at": task.started_at,
             "finished_at": task.finished_at,
             "stop_requested": task.stop_requested,
+            "force_stop_requested": task.force_stop_requested,
             "retry_count": task.retry_count,
             "stage_history": task.stage_history,
             "runtime_dir": task.runtime_dir,
@@ -145,6 +147,7 @@ class TaskStore:
         current_stage = str(data.get("current_stage", "未开始"))
         finished_at = data.get("finished_at")
         stop_requested = bool(data.get("stop_requested", False))
+        force_stop_requested = bool(data.get("force_stop_requested", False))
 
         # 后端重启后，原先正在执行的线程已经不存在。
         # 为避免页面一直显示“运行中”，将这类任务恢复为“已停止”，用户可直接重试。
@@ -154,6 +157,7 @@ class TaskStore:
             message = "服务重启后任务已中断，可点击重试重新执行"
             finished_at = finished_at or _utc_now_iso()
             stop_requested = False
+            force_stop_requested = False
 
         task = TaskRecord(
             task_id=task_id,
@@ -170,6 +174,7 @@ class TaskStore:
             started_at=data.get("started_at"),
             finished_at=finished_at,
             stop_requested=stop_requested,
+            force_stop_requested=force_stop_requested,
             retry_count=int(data.get("retry_count", 0) or 0),
             stage_history=list(data.get("stage_history", []) or []),
             runtime_dir=data.get("runtime_dir"),
@@ -287,6 +292,18 @@ class TaskStore:
             self._persist_locked()
             return task
 
+    def request_force_stop(self, task_id: str) -> TaskRecord | None:
+        with self._lock:
+            task = self._items.get(task_id)
+            if task is None:
+                return None
+
+            task.stop_requested = True
+            task.force_stop_requested = True
+            task.updated_at = _utc_now_iso()
+            self._persist_locked()
+            return task
+
     def reset_for_retry(self, task_id: str) -> TaskRecord | None:
         with self._lock:
             task = self._items.get(task_id)
@@ -303,6 +320,7 @@ class TaskStore:
             task.finished_at = None
             task.started_at = None
             task.stop_requested = False
+            task.force_stop_requested = False
             task.stage_history.clear()
             task.result_files.clear()
             task.metrics_summary.clear()
