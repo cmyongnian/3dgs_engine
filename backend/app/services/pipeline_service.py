@@ -25,24 +25,30 @@ class _StreamCapture(io.TextIOBase):
 
     def write(self, text: str) -> int:
         self.buffer += text
+
         while "\n" in self.buffer:
             line, self.buffer = self.buffer.split("\n", 1)
+
             if line.strip():
                 task_store.append_log(self.task_id, line)
+
                 try:
                     asyncio.run(log_hub.broadcast(self.task_id, line))
                 except RuntimeError:
                     pass
+
         return len(text)
 
     def flush(self) -> None:
         if self.buffer.strip():
             line = self.buffer.strip()
             task_store.append_log(self.task_id, line)
+
             try:
                 asyncio.run(log_hub.broadcast(self.task_id, line))
             except RuntimeError:
                 pass
+
         self.buffer = ""
 
 
@@ -51,13 +57,14 @@ class PipelineService:
         {"key": "video_extract", "label": "视频抽帧", "order": 1},
         {"key": "preflight_raw", "label": "原始数据预检查", "order": 2},
         {"key": "colmap", "label": "COLMAP 重建", "order": 3},
-        {"key": "convert", "label": "数据转换", "order": 4},
-        {"key": "preflight_processed", "label": "训练前复检", "order": 5},
-        {"key": "train", "label": "模型训练", "order": 6},
-        {"key": "render", "label": "离线渲染", "order": 7},
-        {"key": "metrics", "label": "指标评测", "order": 8},
-        {"key": "report", "label": "结果报告", "order": 9},
-        {"key": "viewer", "label": "启动查看器", "order": 10},
+        {"key": "colmap_quality", "label": "COLMAP 质量分析", "order": 4},
+        {"key": "convert", "label": "数据转换", "order": 5},
+        {"key": "preflight_processed", "label": "训练前复检", "order": 6},
+        {"key": "train", "label": "模型训练", "order": 7},
+        {"key": "render", "label": "离线渲染", "order": 8},
+        {"key": "metrics", "label": "指标评测", "order": 9},
+        {"key": "report", "label": "结果报告", "order": 10},
+        {"key": "viewer", "label": "启动查看器", "order": 11},
     ]
 
     def __init__(self) -> None:
@@ -65,6 +72,7 @@ class PipelineService:
 
     def run_task(self, task_id: str) -> None:
         task = task_store.get(task_id)
+
         if task is None:
             return
 
@@ -73,9 +81,10 @@ class PipelineService:
 
         try:
             task_store.mark_started(task_id, stage="准备配置")
-            config_paths = runtime_config_service.build(task_id, payload)
 
+            config_paths = runtime_config_service.build(task_id, payload)
             runtime_dir = self._guess_runtime_dir(config_paths)
+
             task_store.update(
                 task_id,
                 status="running",
@@ -94,65 +103,80 @@ class PipelineService:
                 scene_name=payload.scene.scene_name,
                 config_paths=config_paths,
             )
+
             metrics_summary = result.get("metrics_summary", {})
             result_files = result.get("result_files", {})
 
             task_store.update_metrics_summary(task_id, metrics_summary)
             task_store.update_result_files(task_id, result_files)
+
             task_store.mark_finished(
                 task_id,
                 status="success",
                 message="任务执行完成",
                 error=None,
             )
+
             task_store.update(
                 task_id,
                 current_stage="已完成",
                 result=result,
             )
+
             process_registry.clear_task(task_id)
 
         except (TaskStoppedError, ImmediateStopRequested) as exc:
             capture.flush()
+
             if isinstance(exc, ImmediateStopRequested):
                 stop_message = "任务已立即停止"
             else:
                 stop_message = "任务已停止"
+
             task_store.append_log(task_id, stop_message)
+
             task_store.mark_finished(
                 task_id,
                 status="stopped",
                 message=stop_message,
                 error=str(exc),
             )
+
             task_store.update(
                 task_id,
                 current_stage="已停止",
                 error=str(exc),
             )
+
             process_registry.clear_task(task_id)
 
         except Exception as exc:
             capture.flush()
+
             error_type = self._classify_error(exc)
             error_text = "{0}\n{1}".format(exc, traceback.format_exc())
+
             task_store.append_log(task_id, error_text)
+
             task_store.mark_finished(
                 task_id,
                 status="failed",
                 message="任务执行失败",
                 error=str(exc),
             )
+
             task_store.update(
                 task_id,
                 current_stage="执行失败",
                 error=str(exc),
                 last_error_type=error_type,
             )
+
             process_registry.clear_task(task_id)
 
     def _run_pipeline(self, task_id: str, config_paths: Dict[str, str]) -> None:
         task = task_store.get(task_id)
+
         if task is None:
             raise RuntimeError("任务不存在")
 
@@ -164,70 +188,116 @@ class PipelineService:
             self._execute_stage(
                 task_id=task_id,
                 stage_key="video_extract",
-                action=lambda: self._run_video(task_id, system_path, config_paths["video"]),
+                action=lambda: self._run_video(
+                    task_id,
+                    system_path,
+                    config_paths["video"],
+                ),
             )
 
         if flags.run_preflight:
             self._execute_stage(
                 task_id=task_id,
                 stage_key="preflight_raw",
-                action=lambda: self._run_preflight(system_path, config_paths["preflight"]),
+                action=lambda: self._run_preflight(
+                    system_path,
+                    config_paths["preflight"],
+                ),
             )
 
         if flags.run_colmap:
             self._execute_stage(
                 task_id=task_id,
                 stage_key="colmap",
-                action=lambda: self._run_colmap(task_id, system_path, config_paths["colmap"]),
+                action=lambda: self._run_colmap(
+                    task_id,
+                    system_path,
+                    config_paths["colmap"],
+                ),
+            )
+
+            self._execute_stage(
+                task_id=task_id,
+                stage_key="colmap_quality",
+                action=lambda: self._run_colmap_quality(
+                    system_path,
+                    config_paths["colmap"],
+                ),
             )
 
         if flags.run_convert:
             self._execute_stage(
                 task_id=task_id,
                 stage_key="convert",
-                action=lambda: self._run_convert(task_id, system_path, config_paths["convert"]),
+                action=lambda: self._run_convert(
+                    task_id,
+                    system_path,
+                    config_paths["convert"],
+                ),
             )
 
         if flags.run_preflight:
             self._execute_stage(
                 task_id=task_id,
                 stage_key="preflight_processed",
-                action=lambda: self._run_preflight(system_path, config_paths["preflight"]),
+                action=lambda: self._run_preflight(
+                    system_path,
+                    config_paths["preflight"],
+                ),
             )
 
         if flags.run_train:
             self._execute_stage(
                 task_id=task_id,
                 stage_key="train",
-                action=lambda: self._run_train(task_id, system_path, config_paths["train"]),
+                action=lambda: self._run_train(
+                    task_id,
+                    system_path,
+                    config_paths["train"],
+                ),
             )
 
         if flags.run_render:
             self._execute_stage(
                 task_id=task_id,
                 stage_key="render",
-                action=lambda: self._run_render(task_id, system_path, config_paths["render"]),
+                action=lambda: self._run_render(
+                    task_id,
+                    system_path,
+                    config_paths["render"],
+                ),
             )
 
         if flags.run_metrics:
             self._execute_stage(
                 task_id=task_id,
                 stage_key="metrics",
-                action=lambda: self._run_metrics(task_id, system_path, config_paths["metrics"]),
+                action=lambda: self._run_metrics(
+                    task_id,
+                    system_path,
+                    config_paths["metrics"],
+                ),
             )
 
         if flags.run_train or flags.run_render or flags.run_metrics:
             self._execute_stage(
                 task_id=task_id,
                 stage_key="report",
-                action=lambda: self._run_report(system_path, config_paths["report"]),
+                action=lambda: self._run_report(
+                    system_path,
+                    config_paths["report"],
+                ),
             )
 
         if flags.launch_viewer:
             self._execute_stage(
                 task_id=task_id,
                 stage_key="viewer",
-                action=lambda: self._run_viewer(task_id, system_path, config_paths["viewer"]),
+                action=lambda: self._run_viewer(
+                    task_id,
+                    system_path,
+                    config_paths["viewer"],
+                ),
             )
 
     def _execute_stage(
@@ -237,10 +307,12 @@ class PipelineService:
         action: Callable[[], None],
     ) -> None:
         task = task_store.get(task_id)
+
         if task is None:
             raise RuntimeError("任务不存在")
 
         stage = self._stage_meta(stage_key)
+
         self._ensure_not_stopped(task_id)
 
         task_store.start_stage(
@@ -249,30 +321,41 @@ class PipelineService:
             stage_label=stage["label"],
             order=stage["order"],
         )
+
         task_store.update(
             task_id,
             current_stage=stage["label"],
             message="正在执行：{0}".format(stage["label"]),
         )
+
         task_store.append_log(task_id, "===== {0} =====".format(stage["label"]))
 
         try:
             action()
+
             task_store.finish_stage(
                 task_id,
                 stage_key=stage["key"],
                 status="success",
             )
+
             self._ensure_not_stopped(task_id)
+
         except (TaskStoppedError, ImmediateStopRequested) as exc:
             task_store.finish_stage(
                 task_id,
                 stage_key=stage["key"],
                 status="stopped",
-                error_type="user_force_stop" if isinstance(exc, ImmediateStopRequested) else "user_stop",
+                error_type=(
+                    "user_force_stop"
+                    if isinstance(exc, ImmediateStopRequested)
+                    else "user_stop"
+                ),
                 error_message=str(exc) or "任务已停止",
             )
+
             raise
+
         except Exception as exc:
             task_store.finish_stage(
                 task_id,
@@ -281,10 +364,12 @@ class PipelineService:
                 error_type=self._classify_error(exc),
                 error_message=str(exc),
             )
+
             raise
 
     def _ensure_not_stopped(self, task_id: str) -> None:
         task = task_store.get(task_id)
+
         if task is None:
             raise RuntimeError("任务不存在")
 
@@ -298,6 +383,7 @@ class PipelineService:
         for item in self.STAGES:
             if item["key"] == stage_key:
                 return item
+
         raise KeyError("未知阶段：{0}".format(stage_key))
 
     def _classify_error(self, exc: Exception) -> str:
@@ -325,41 +411,55 @@ class PipelineService:
 
     def _guess_runtime_dir(self, config_paths: Dict[str, str]) -> Optional[str]:
         system_path = config_paths.get("system")
+
         if not system_path:
             return None
+
         return str(Path(system_path).resolve().parent)
 
     def _read_yaml(self, path: Optional[str]) -> Dict[str, Any]:
         if not path:
             return {}
+
         yaml_path = Path(path)
+
         if not yaml_path.exists():
             return {}
+
         try:
             with open(yaml_path, "r", encoding="utf-8") as f:
                 data = yaml.safe_load(f) or {}
+
             if isinstance(data, dict):
                 return data
+
         except Exception:
             return {}
+
         return {}
 
     def _resolve_output_dir(self, config_paths: Dict[str, str], scene_name: str) -> Path:
         report_data = self._read_yaml(config_paths.get("report"))
         report_cfg = report_data.get("report", {}) if isinstance(report_data, dict) else {}
+
         report_dir = report_cfg.get("report_dir", "")
+
         if report_dir:
             return Path(report_dir).resolve()
 
         metrics_data = self._read_yaml(config_paths.get("metrics"))
         metrics_cfg = metrics_data.get("metrics", {}) if isinstance(metrics_data, dict) else {}
+
         model_paths = metrics_cfg.get("model_paths", [])
+
         if model_paths:
             return Path(model_paths[0]).resolve()
 
         train_data = self._read_yaml(config_paths.get("train"))
         train_cfg = train_data.get("train", {}) if isinstance(train_data, dict) else {}
+
         model_output = train_cfg.get("model_output", "")
+
         if model_output:
             return Path(model_output).resolve()
 
@@ -368,13 +468,17 @@ class PipelineService:
     def _resolve_log_dir(self, config_paths: Dict[str, str], scene_name: str) -> Path:
         report_data = self._read_yaml(config_paths.get("report"))
         report_cfg = report_data.get("report", {}) if isinstance(report_data, dict) else {}
+
         log_dir = report_cfg.get("log_dir", "")
+
         if log_dir:
             return Path(log_dir).resolve()
 
         metrics_data = self._read_yaml(config_paths.get("metrics"))
         metrics_cfg = metrics_data.get("metrics", {}) if isinstance(metrics_data, dict) else {}
+
         metrics_log_dir = metrics_cfg.get("log_dir", "")
+
         if metrics_log_dir:
             return Path(metrics_log_dir).resolve()
 
@@ -383,13 +487,17 @@ class PipelineService:
     def _resolve_processed_dir(self, config_paths: Dict[str, str], scene_name: str) -> Path:
         report_data = self._read_yaml(config_paths.get("report"))
         report_cfg = report_data.get("report", {}) if isinstance(report_data, dict) else {}
+
         processed_scene_path = report_cfg.get("processed_scene_path", "")
+
         if processed_scene_path:
             return Path(processed_scene_path).resolve()
 
         metrics_data = self._read_yaml(config_paths.get("metrics"))
         metrics_cfg = metrics_data.get("metrics", {}) if isinstance(metrics_data, dict) else {}
+
         metrics_processed_dir = metrics_cfg.get("processed_scene_path", "")
+
         if metrics_processed_dir:
             return Path(metrics_processed_dir).resolve()
 
@@ -411,9 +519,23 @@ class PipelineService:
         summary_csv = output_dir / "summary.csv"
         summary_txt = output_dir / "summary.txt"
 
+        colmap_quality_json = self._find_existing_file(
+            processed_dir / "colmap_quality.json",
+            output_dir / "colmap_quality.json",
+            log_dir / "colmap_quality.json",
+        )
+
+        colmap_quality_txt = self._find_existing_file(
+            processed_dir / "colmap_quality.txt",
+            output_dir / "colmap_quality.txt",
+            log_dir / "colmap_quality.txt",
+        )
+
         preview_images = self._collect_preview_images(output_dir)
+
         metrics_summary = self._read_json(metrics_json)
         report_summary = self._read_json(report_json)
+        colmap_quality = self._read_json(colmap_quality_json) if colmap_quality_json else {}
 
         result_files = {
             "metrics_json": str(metrics_json) if metrics_json.exists() else "",
@@ -421,15 +543,29 @@ class PipelineService:
             "report_md": str(report_md) if report_md.exists() else "",
             "summary_csv": str(summary_csv) if summary_csv.exists() else "",
             "summary_txt": str(summary_txt) if summary_txt.exists() else "",
+            "colmap_quality_json": str(colmap_quality_json) if colmap_quality_json else "",
+            "colmap_quality_txt": str(colmap_quality_txt) if colmap_quality_txt else "",
         }
 
         task = task_store.get(task_id)
         stage_history = []
+
         if task is not None:
             stage_history = task.stage_history
 
         if not metrics_summary and isinstance(report_summary, dict):
             metrics_summary = report_summary.get("metrics_summary", {}) or {}
+
+        if colmap_quality:
+            metrics_summary = dict(metrics_summary or {})
+            metrics_summary["colmap_registration_rate"] = colmap_quality.get(
+                "registration_rate_percent"
+            )
+            metrics_summary["colmap_registered_images"] = colmap_quality.get(
+                "registered_image_count"
+            )
+            metrics_summary["colmap_point3d_count"] = colmap_quality.get("point3d_count")
+            metrics_summary["colmap_quality_level"] = colmap_quality.get("quality_level")
 
         return {
             "scene_name": scene_name,
@@ -441,12 +577,21 @@ class PipelineService:
             "report_summary": report_summary,
             "result_files": result_files,
             "preview_images": preview_images,
+            "colmap_quality": colmap_quality,
             "stage_history": stage_history,
         }
 
-    def _read_json(self, path: Path) -> Dict[str, Any]:
-        if not path.exists():
+    def _find_existing_file(self, *paths: Path) -> Optional[Path]:
+        for path in paths:
+            if path and path.exists() and path.is_file():
+                return path
+
+        return None
+
+    def _read_json(self, path: Optional[Path]) -> Dict[str, Any]:
+        if not path or not path.exists():
             return {}
+
         try:
             return json.loads(path.read_text(encoding="utf-8"))
         except Exception:
@@ -457,10 +602,12 @@ class PipelineService:
             return []
 
         image_files = []
+
         for pattern in ("*.png", "*.jpg", "*.jpeg", "*.webp"):
             image_files.extend(output_dir.rglob(pattern))
 
         image_files = sorted(image_files)[:6]
+
         return [str(item) for item in image_files]
 
     @staticmethod
@@ -490,6 +637,15 @@ class PipelineService:
             system_config_path=system_path,
             colmap_config_path=colmap_path,
             task_id=task_id,
+        ).run()
+
+    @staticmethod
+    def _run_colmap_quality(system_path: str, colmap_path: str) -> None:
+        from engine.core.colmap_quality_service import ColmapQualityService
+
+        ColmapQualityService(
+            system_config_path=system_path,
+            colmap_config_path=colmap_path,
         ).run()
 
     @staticmethod

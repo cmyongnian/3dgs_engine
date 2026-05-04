@@ -69,7 +69,9 @@ function 状态类名(status: string) {
   if (status === 'success') return 'status-success'
   if (status === 'failed' || status === 'stopped') return 'status-failed'
   if (status === 'partial_success') return 'status-warning'
-  if (status === 'running' || status === 'queued' || status === 'retrying' || status === 'stopping') return 'status-running'
+  if (status === 'running' || status === 'queued' || status === 'retrying' || status === 'stopping') {
+    return 'status-running'
+  }
   return 'status-idle'
 }
 
@@ -89,15 +91,24 @@ function 阶段卡片类名(status: string) {
 
 function 日志级别类名(line: string) {
   const lower = line.toLowerCase()
-  if (lower.includes('traceback') || lower.includes('error') || lower.includes('failed') || lower.includes('失败')) {
+
+  if (
+    lower.includes('traceback') ||
+    lower.includes('error') ||
+    lower.includes('failed') ||
+    lower.includes('失败')
+  ) {
     return 'log-row log-row-error'
   }
+
   if (lower.includes('warning') || lower.includes('warn') || lower.includes('警告')) {
     return 'log-row log-row-warning'
   }
+
   if (lower.includes('success') || lower.includes('done') || lower.includes('完成')) {
     return 'log-row log-row-success'
   }
+
   return 'log-row'
 }
 
@@ -112,6 +123,7 @@ const 阶段顺序 = [
   'video_extract',
   'preflight_raw',
   'colmap',
+  'colmap_quality',
   'convert',
   'preflight_processed',
   'train',
@@ -125,6 +137,7 @@ const 阶段名称: Record<string, string> = {
   video_extract: '视频抽帧',
   preflight_raw: '原始数据预检查',
   colmap: 'COLMAP 重建',
+  colmap_quality: 'COLMAP 质量分析',
   convert: '数据转换',
   preflight_processed: '训练前复检',
   train: '模型训练',
@@ -200,6 +213,7 @@ export function TaskRunPage() {
   const 进度百分比 = useMemo(() => {
     if (!任务) return 0
     if (任务.status === 'success') return 100
+
     const base = 成功阶段数 + 运行中阶段数 * 0.5
     return Math.min(99, Math.max(0, Math.round((base / Math.max(阶段列表.length, 1)) * 100)))
   }, [任务, 成功阶段数, 运行中阶段数, 阶段列表.length])
@@ -249,41 +263,45 @@ export function TaskRunPage() {
     }
   }
 
- const 关闭日志连接 = () => {
-   清理重连计时器()
+  const 关闭日志连接 = () => {
+    清理重连计时器()
 
-   const ws = ws引用.current
-   if (!ws) return
+    const ws = ws引用.current
 
-   ws引用.current = null
+    if (!ws) {
+      set日志状态('closed')
+      return
+    }
 
-   ws.onmessage = null
-   ws.onerror = null
-   ws.onclose = null
+    ws引用.current = null
+    set日志状态('closed')
 
-   if (ws.readyState === WebSocket.CONNECTING) {
-    // 避免浏览器提示：WebSocket is closed before the connection is established.
-    // 等连接建立后再关闭，不影响页面功能。
-     ws.onopen = () => {
-       try {
-         ws.close()
-       } catch {
-        // 忽略关闭过程中的浏览器差异
-       }
-     }
-     return
-   }
+    ws.onmessage = null
+    ws.onerror = null
+    ws.onclose = null
 
-   ws.onopen = null
+    if (ws.readyState === WebSocket.CONNECTING) {
+      ws.onopen = () => {
+        try {
+          ws.close()
+        } catch {
+          // 忽略关闭过程中的浏览器差异。
+        }
+      }
+      return
+    }
 
-   if (ws.readyState === WebSocket.OPEN) {
-     try {
-       ws.close()
-     } catch {
-      // 忽略关闭过程中的浏览器差异
-     }
-   }
- }
+    ws.onopen = null
+
+    if (ws.readyState === WebSocket.OPEN) {
+      try {
+        ws.close()
+      } catch {
+        // 忽略关闭过程中的浏览器差异。
+      }
+    }
+  }
+
   const 刷新任务 = async (静默 = false) => {
     if (!taskId) return
 
@@ -319,12 +337,12 @@ export function TaskRunPage() {
     try {
       const data = await 获取任务日志(taskId)
       const lines = data.lines ?? []
+
       if (!lines.length) return
 
       日志签名集合引用.current = new Set(lines)
       set日志列表(lines.slice(-3000))
     } catch (error) {
-      // 兼容尚未升级后端的情况：历史日志失败不影响实时日志。
       console.warn('历史日志加载失败:', error instanceof Error ? error.message : error)
     }
   }
@@ -340,6 +358,7 @@ export function TaskRunPage() {
 
     ws.onopen = () => {
       set日志状态('connected')
+
       if (ws.readyState === WebSocket.OPEN) {
         ws.send('ping')
       }
@@ -383,28 +402,28 @@ export function TaskRunPage() {
     已结束引用.current = 已结束
   }, [已结束])
 
- useEffect(() => {
-   if (!taskId || 已结束) {
-     关闭日志连接()
-     return
-   }
+  useEffect(() => {
+    if (!taskId || 已结束) {
+      关闭日志连接()
+      return
+    }
 
-   连接日志()
+    连接日志()
 
-   const pingTimer = window.setInterval(() => {
-     const ws = ws引用.current
-     if (ws && ws.readyState === WebSocket.OPEN) {
-       ws.send('ping')
-     }
-   }, 15000)
+    const pingTimer = window.setInterval(() => {
+      const ws = ws引用.current
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send('ping')
+      }
+    }, 15000)
 
-   return () => {
-     window.clearInterval(pingTimer)
-     关闭日志连接()
-   }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
- }, [taskId, 已结束])
- 
+    return () => {
+      window.clearInterval(pingTimer)
+      关闭日志连接()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [taskId, 已结束])
+
   useEffect(() => {
     if (!taskId || 已结束) return
 
@@ -425,7 +444,11 @@ export function TaskRunPage() {
 
   useEffect(() => {
     if (!提示) return
-    const timer = window.setTimeout(() => set提示(''), 3000)
+
+    const timer = window.setTimeout(() => {
+      set提示('')
+    }, 3000)
+
     return () => window.clearTimeout(timer)
   }, [提示])
 
@@ -447,7 +470,10 @@ export function TaskRunPage() {
   const 执行立即停止 = async () => {
     if (!taskId || 当前操作) return
 
-    const confirmed = window.confirm('立即停止会尝试终止当前正在运行的外部子进程。确定要立即停止吗？')
+    const confirmed = window.confirm(
+      '立即停止会中断当前正在运行的外部子进程，可能导致当前阶段结果不完整。确定继续吗？',
+    )
+
     if (!confirmed) return
 
     try {
@@ -477,6 +503,7 @@ export function TaskRunPage() {
 
       set任务((prev) => {
         if (!prev) return prev
+
         return {
           ...prev,
           status: String(data.status) as typeof prev.status,
@@ -522,6 +549,7 @@ export function TaskRunPage() {
       }
 
       set提示(data.message)
+
       window.setTimeout(() => {
         navigate('/')
       }, 800)
@@ -548,6 +576,13 @@ export function TaskRunPage() {
   }
 
   const 重新连接日志 = () => {
+    if (已结束) {
+      关闭日志连接()
+      加载历史日志()
+      set提示('已刷新历史日志')
+      return
+    }
+
     已结束引用.current = false
     连接日志()
   }
@@ -581,6 +616,7 @@ export function TaskRunPage() {
               <button className="ghost-btn danger-btn" onClick={执行停止} disabled={当前操作 !== null}>
                 {当前操作 === 'stop' ? '提交中…' : '下一步停止'}
               </button>
+
               <button className="ghost-btn danger-btn" onClick={执行立即停止} disabled={当前操作 !== null}>
                 {当前操作 === 'force_stop' ? '立即停止中…' : '立即停止'}
               </button>
@@ -617,31 +653,68 @@ export function TaskRunPage() {
               <div className="meta-label">任务编号</div>
               <div className="meta-value">{任务.task_id}</div>
             </div>
+
             <div className="card info-card">
               <div className="meta-label">场景名称</div>
               <div className="meta-value">{任务.scene_name}</div>
             </div>
+
             <div className="card info-card">
               <div className="meta-label">当前状态</div>
               <div className={`status-pill ${状态类名(任务.status)}`}>
                 {状态文本(任务.status)}
               </div>
             </div>
+
             <div className="card info-card">
               <div className="meta-label">当前阶段</div>
               <div className="meta-value">{任务.current_stage || '-'}</div>
             </div>
+
             <div className="card info-card">
               <div className="meta-label">重试次数</div>
               <div className="meta-value">{任务.retry_count}</div>
             </div>
+
             <div className="card info-card">
               <div className="meta-label">下一步停止请求</div>
               <div className="meta-value">{任务.stop_requested ? '是' : '否'}</div>
             </div>
+
             <div className="card info-card">
               <div className="meta-label">立即停止请求</div>
               <div className="meta-value">{任务.force_stop_requested ? '是' : '否'}</div>
+            </div>
+          </div>
+
+          <div className="card stop-strategy-card">
+            <div className="toolbar-row">
+              <div>
+                <h3>停止策略说明</h3>
+                <p className="section-tip">
+                  系统提供两种停止方式：安全停止用于保证当前阶段完整结束，立即停止用于紧急中断长时间外部进程。
+                </p>
+              </div>
+
+              <div className={`status-pill ${状态类名(任务.status)}`}>
+                {状态文本(任务.status)}
+              </div>
+            </div>
+
+            <div className="stop-strategy-grid">
+              <div className="stop-strategy-item">
+                <div className="stop-strategy-title">下一步停止</div>
+                <p>
+                  保留原有逻辑：当前阶段继续执行，阶段结束后再停止整个任务，适合希望保留当前阶段输出结果的情况。
+                </p>
+              </div>
+
+              <div className="stop-strategy-item stop-strategy-danger">
+                <div className="stop-strategy-title">立即停止</div>
+                <p>
+                  新增强制逻辑：尝试立刻终止当前 ffmpeg、COLMAP、训练、渲染或评测子进程，可能导致当前阶段结果不完整。
+                </p>
+              </div>
             </div>
           </div>
 
@@ -653,6 +726,7 @@ export function TaskRunPage() {
                   当前进度根据阶段成功数和运行中阶段估算，用于反映整体执行状态。
                 </p>
               </div>
+
               <div className="progress-text">{进度百分比}%</div>
             </div>
 
@@ -679,6 +753,7 @@ export function TaskRunPage() {
 
           <div className="card">
             <h3>阶段历史</h3>
+
             {阶段列表.length ? (
               <div className="table-wrap">
                 <table className="data-table">
@@ -689,6 +764,7 @@ export function TaskRunPage() {
                       ))}
                     </tr>
                   </thead>
+
                   <tbody>
                     {阶段列表.map((item) => (
                       <tr key={item.stage_key}>
@@ -714,21 +790,25 @@ export function TaskRunPage() {
           {最近失败阶段 ? (
             <div className="card">
               <h3>失败信息</h3>
+
               <div className="details-grid">
                 <div>
                   <label>失败阶段</label>
                   <div className="meta-value">{最近失败阶段.stage_label}</div>
                 </div>
+
                 <div>
                   <label>错误类型</label>
                   <div className="meta-value">{最近失败阶段.error_type || '-'}</div>
                 </div>
+
                 <div className="details-full">
                   <label>错误摘要</label>
                   <div className="error-panel">
                     {最近失败阶段.error_message || 任务.error || '-'}
                   </div>
                 </div>
+
                 {最近错误日志 ? (
                   <div className="details-full">
                     <label>最近错误日志</label>
@@ -744,8 +824,10 @@ export function TaskRunPage() {
               <div>
                 <h3 className="section-title-tight">实时日志</h3>
                 <div className="section-tip">
-                  日志通过 WebSocket 推送；页面打开时会优先加载后端已缓存的历史日志。
-                  <span className={日志连接状态类名(日志状态)}>{日志连接状态文本(日志状态)}</span>
+                  运行中的任务使用 WebSocket 实时推送；已结束任务只读取后端保存的历史日志。
+                  <span className={日志连接状态类名(日志状态)}>
+                    {日志连接状态文本(日志状态)}
+                  </span>
                 </div>
               </div>
 
@@ -760,7 +842,7 @@ export function TaskRunPage() {
                 </label>
 
                 <button className="ghost-btn" type="button" onClick={重新连接日志}>
-                  重连日志
+                  {已结束 ? '刷新历史日志' : '重连日志'}
                 </button>
 
                 <button
@@ -799,19 +881,23 @@ export function TaskRunPage() {
 
           <div className="card">
             <h3>时间信息</h3>
+
             <div className="details-grid">
               <div>
                 <label>创建时间</label>
                 <div className="meta-value">{格式化时间(任务.created_at)}</div>
               </div>
+
               <div>
                 <label>开始时间</label>
                 <div className="meta-value">{格式化时间(任务.started_at)}</div>
               </div>
+
               <div>
                 <label>结束时间</label>
                 <div className="meta-value">{格式化时间(任务.finished_at)}</div>
               </div>
+
               <div>
                 <label>状态说明</label>
                 <div className="meta-value">{任务.message || '-'}</div>

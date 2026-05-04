@@ -1,0 +1,10 @@
+pipeline:
+  input_mode: images
+  run_preflight: true
+  run_video_extract: false
+  run_colmap: false
+  run_convert: true
+  run_train: false
+  run_render: false
+  run_metrics: false
+  launch_viewer: false

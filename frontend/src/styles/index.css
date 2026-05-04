@@ -876,3 +876,381 @@ textarea:disabled {
     flex: 1;
   }
 }
+
+/* ===== 任务详情页：停止策略说明 ===== */
+.stop-strategy-card {
+  border: 1px solid #e5e7eb;
+}
+
+.stop-strategy-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.stop-strategy-item {
+  border: 1px solid #dbeafe;
+  border-radius: 14px;
+  background: #eff6ff;
+  padding: 14px 16px;
+}
+
+.stop-strategy-danger {
+  border-color: #fecaca;
+  background: #fff7f7;
+}
+
+.stop-strategy-title {
+  font-weight: 800;
+  color: #111827;
+  margin-bottom: 8px;
+}
+
+.stop-strategy-item p {
+  margin: 0;
+  color: #4b5563;
+  line-height: 1.7;
+  font-size: 14px;
+}
+
+/* ===== 任务运行页优化：停止策略、日志状态、COLMAP 质量分析阶段 ===== */
+
+.status-running {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.status-warning {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.primary-btn:disabled,
+.ghost-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* 通用工具行 */
+.toolbar-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.section-title-tight {
+  margin-bottom: 6px;
+}
+
+/* 停止策略说明卡片 */
+.stop-strategy-card {
+  border-left: 4px solid #2563eb;
+}
+
+.stop-strategy-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+  margin-top: 12px;
+}
+
+.stop-strategy-item {
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.stop-strategy-item p {
+  margin: 8px 0 0;
+  color: #4b5563;
+  line-height: 1.6;
+}
+
+.stop-strategy-title {
+  font-weight: 700;
+  color: #111827;
+}
+
+.stop-strategy-danger {
+  background: #fff7ed;
+  border-color: #fed7aa;
+}
+
+.stop-strategy-danger .stop-strategy-title {
+  color: #c2410c;
+}
+
+/* 实时日志区域 */
+.log-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* WebSocket 状态标签 */
+.ws-status {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 10px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  vertical-align: middle;
+}
+
+.ws-connected {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.ws-connecting {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.ws-error {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.ws-closed {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+/* 日志流样式 */
+.log-stream {
+  height: 460px;
+  max-height: 460px;
+  overflow: auto;
+  background: #0f172a;
+  color: #e2e8f0;
+  padding: 14px;
+  border-radius: 14px;
+  white-space: normal;
+  font-family: Consolas, Monaco, 'Courier New', monospace;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.log-row {
+  display: grid;
+  grid-template-columns: 54px minmax(0, 1fr);
+  gap: 10px;
+  padding: 2px 0;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.log-row-error .log-text {
+  color: #fecaca;
+}
+
+.log-row-warning .log-text {
+  color: #fde68a;
+}
+
+.log-row-success .log-text {
+  color: #bbf7d0;
+}
+
+.log-index {
+  color: #64748b;
+  user-select: none;
+}
+
+.log-text {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.log-empty {
+  color: #94a3b8;
+  padding: 14px;
+}
+
+/* COLMAP 质量分析阶段相关强调 */
+.phase-card-running {
+  border-color: #93c5fd;
+  background: #eff6ff;
+}
+
+.phase-card-success {
+  border-color: #86efac;
+  background: #f0fdf4;
+}
+
+.phase-card-failed {
+  border-color: #fca5a5;
+  background: #fef2f2;
+}
+
+/* 小屏适配 */
+@media (max-width: 960px) {
+  .toolbar-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .log-actions {
+    width: 100%;
+    align-items: stretch;
+  }
+
+  .log-actions .ghost-btn {
+    flex: 1;
+  }
+
+  .stop-strategy-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ===== 结果页优化：COLMAP 重建质量分析展示 ===== */
+
+.colmap-quality-card {
+  border-left: 4px solid #2563eb;
+}
+
+.quality-suggestion-box {
+  margin-top: 18px;
+  padding: 16px;
+  border-radius: 14px;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+}
+
+.quality-suggestion-box h4 {
+  margin: 0 0 10px;
+  color: #111827;
+  font-size: 15px;
+}
+
+.quality-suggestion-box ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.quality-suggestion-box li {
+  margin: 6px 0;
+  color: #4b5563;
+  line-height: 1.6;
+}
+
+/* 如果原 CSS 中已经有这些样式，下面内容不会破坏原功能，只是补充兼容 */
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.metric-card {
+  padding: 14px;
+  border-radius: 14px;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+}
+
+.file-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.file-card {
+  padding: 14px;
+  border-radius: 14px;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+}
+
+.file-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.file-value {
+  color: #374151;
+  font-family: Consolas, Monaco, 'Courier New', monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  word-break: break-all;
+  white-space: pre-wrap;
+}
+
+.small-copy-btn {
+  padding: 6px 10px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.preview-card {
+  padding: 12px;
+  border-radius: 14px;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+}
+
+.preview-image {
+  width: 100%;
+  max-height: 220px;
+  object-fit: contain;
+  border-radius: 12px;
+  background: #111827;
+}
+
+.preview-path {
+  margin: 10px 0;
+  color: #4b5563;
+  font-family: Consolas, Monaco, 'Courier New', monospace;
+  font-size: 12px;
+  word-break: break-all;
+}
+
+/* 状态补充 */
+.status-running {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.status-warning {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+/* 工具行补充 */
+.toolbar-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+@media (max-width: 960px) {
+  .toolbar-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .file-card-head {
+    align-items: flex-start;
+  }
+}

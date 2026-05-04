@@ -17,22 +17,29 @@ BACKEND_RUNTIME_ROOT = PROJECT_ROOT / "backend" / "runtime"
 def _task_to_dict(task: Any) -> Dict[str, Any]:
     if task is None:
         return {}
+
     if hasattr(task, "model_dump"):
         return task.model_dump()
+
     if hasattr(task, "dict"):
         return task.dict()
+
     if isinstance(task, dict):
         return task
+
     return {}
 
 
 def _safe_read_json(path: Optional[Path]) -> Dict[str, Any]:
     if not path or not path.exists() or not path.is_file():
         return {}
+
     try:
         with open(path, "r", encoding="utf-8") as f:
             data = json.load(f)
+
         return data if isinstance(data, dict) else {}
+
     except Exception:
         return {}
 
@@ -40,10 +47,13 @@ def _safe_read_json(path: Optional[Path]) -> Dict[str, Any]:
 def _safe_read_yaml(path: Optional[Path]) -> Dict[str, Any]:
     if not path or not path.exists() or not path.is_file():
         return {}
+
     try:
         with open(path, "r", encoding="utf-8") as f:
             data = yaml.safe_load(f)
+
         return data if isinstance(data, dict) else {}
+
     except Exception:
         return {}
 
@@ -51,24 +61,31 @@ def _safe_read_yaml(path: Optional[Path]) -> Dict[str, Any]:
 def _resolve_engine_path(value: Optional[str]) -> Optional[Path]:
     if not value:
         return None
-    p = Path(str(value))
-    if p.is_absolute():
-        return p
-    return (ENGINE_ROOT / p).resolve()
+
+    path = Path(str(value))
+
+    if path.is_absolute():
+        return path
+
+    return (ENGINE_ROOT / path).resolve()
 
 
 def _resolve_project_path(value: Optional[str]) -> Optional[Path]:
     if not value:
         return None
-    p = Path(str(value))
-    if p.is_absolute():
-        return p
-    return (PROJECT_ROOT / p).resolve()
+
+    path = Path(str(value))
+
+    if path.is_absolute():
+        return path
+
+    return (PROJECT_ROOT / path).resolve()
 
 
 def _existing_str(path: Optional[Path]) -> Optional[str]:
     if path and path.exists():
         return str(path)
+
     return None
 
 
@@ -77,13 +94,15 @@ def _find_file(base_dir: Optional[Path], filename: str) -> Optional[Path]:
         return None
 
     direct = base_dir / filename
+
     if direct.exists() and direct.is_file():
         return direct
 
     try:
-        for p in base_dir.rglob(filename):
-            if p.is_file():
-                return p
+        for path in base_dir.rglob(filename):
+            if path.is_file():
+                return path
+
     except Exception:
         return None
 
@@ -91,7 +110,7 @@ def _find_file(base_dir: Optional[Path], filename: str) -> Optional[Path]:
 
 
 def _find_preview_images(*base_dirs: Optional[Path]) -> List[str]:
-    candidates = []
+    candidates: List[Path] = []
 
     for base_dir in base_dirs:
         if not base_dir or not base_dir.exists():
@@ -104,29 +123,33 @@ def _find_preview_images(*base_dirs: Optional[Path]) -> List[str]:
             base_dir / "previews",
         ]
 
-        current_candidates = []
+        current_candidates: List[Path] = []
 
-        for d in preferred_dirs:
-            if d.exists() and d.is_dir():
+        for directory in preferred_dirs:
+            if directory.exists() and directory.is_dir():
                 for ext in ("*.png", "*.jpg", "*.jpeg", "*.webp"):
-                    current_candidates.extend(sorted(d.glob(ext)))
+                    current_candidates.extend(sorted(directory.glob(ext)))
 
         if not current_candidates:
             try:
                 for ext in ("*.png", "*.jpg", "*.jpeg", "*.webp"):
                     current_candidates.extend(sorted(base_dir.rglob(ext)))
+
             except Exception:
                 current_candidates = []
 
         candidates.extend(current_candidates)
 
     seen = set()
-    result = []
-    for p in candidates:
-        s = str(p)
-        if s not in seen:
-            seen.add(s)
-            result.append(s)
+    result: List[str] = []
+
+    for path in candidates:
+        text = str(path)
+
+        if text not in seen:
+            seen.add(text)
+            result.append(text)
+
         if len(result) >= 8:
             break
 
@@ -144,6 +167,7 @@ def _pick_value(*sources: Dict[str, Any], keys: Tuple[str, ...]) -> Any:
 
         for nested_key in ("metrics_summary", "metrics", "summary", "result"):
             nested = source.get(nested_key)
+
             if isinstance(nested, dict):
                 for key in keys:
                     if key in nested and nested[key] not in (None, ""):
@@ -154,6 +178,7 @@ def _pick_value(*sources: Dict[str, Any], keys: Tuple[str, ...]) -> Any:
 
 def _infer_from_runtime(task_id: str) -> Dict[str, Any]:
     runtime_dir = (BACKEND_RUNTIME_ROOT / task_id).resolve()
+
     if not runtime_dir.exists():
         return {}
 
@@ -180,18 +205,22 @@ def _infer_from_runtime(task_id: str) -> Dict[str, Any]:
         or report_cfg.get("report_dir")
         or first_model_path
     )
+
     report_dir = _resolve_engine_path(
         report_cfg.get("report_dir")
         or first_model_path
     )
+
     log_dir = _resolve_engine_path(
         report_cfg.get("log_dir")
         or metrics_cfg.get("log_dir")
     )
+
     processed_dir = _resolve_engine_path(
         report_cfg.get("processed_scene_path")
         or metrics_cfg.get("processed_scene_path")
     )
+
     source_dir = _resolve_engine_path(train_cfg.get("source_path"))
 
     return {
@@ -228,24 +257,30 @@ def get_result(task_id: str):
         _resolve_engine_path(stored_result.get("output_dir"))
         or runtime_meta.get("output_dir")
     )
+
     report_dir = (
         _resolve_engine_path(stored_result.get("report_dir"))
         or runtime_meta.get("report_dir")
         or output_dir
     )
+
     processed_dir = (
         _resolve_engine_path(stored_result.get("processed_dir"))
         or runtime_meta.get("processed_dir")
     )
+
     source_dir = (
         _resolve_engine_path(stored_result.get("source_dir"))
         or runtime_meta.get("source_dir")
     )
+
     raw_image_dir = _resolve_engine_path(stored_result.get("raw_image_dir"))
+
     runtime_dir = (
         _resolve_project_path(stored_result.get("runtime_dir"))
         or runtime_meta.get("runtime_dir")
     )
+
     log_dir = (
         _resolve_engine_path(stored_result.get("log_dir"))
         or runtime_meta.get("log_dir")
@@ -259,6 +294,8 @@ def get_result(task_id: str):
     report_md = None
     summary_csv = None
     summary_txt = None
+    colmap_quality_json = None
+    colmap_quality_txt = None
 
     for base_dir in search_dirs:
         metrics_json = metrics_json or _find_file(base_dir, "metrics.json")
@@ -266,9 +303,38 @@ def get_result(task_id: str):
         report_md = report_md or _find_file(base_dir, "report.md")
         summary_csv = summary_csv or _find_file(base_dir, "summary.csv")
         summary_txt = summary_txt or _find_file(base_dir, "summary.txt")
+        colmap_quality_json = colmap_quality_json or _find_file(
+            base_dir,
+            "colmap_quality.json",
+        )
+        colmap_quality_txt = colmap_quality_txt or _find_file(
+            base_dir,
+            "colmap_quality.txt",
+        )
+
+    if processed_dir:
+        colmap_quality_json = colmap_quality_json or _find_file(
+            processed_dir,
+            "colmap_quality.json",
+        )
+        colmap_quality_txt = colmap_quality_txt or _find_file(
+            processed_dir,
+            "colmap_quality.txt",
+        )
+
+    if log_dir:
+        colmap_quality_json = colmap_quality_json or _find_file(
+            log_dir,
+            "colmap_quality.json",
+        )
+        colmap_quality_txt = colmap_quality_txt or _find_file(
+            log_dir,
+            "colmap_quality.txt",
+        )
 
     metrics_data = _safe_read_json(metrics_json)
     report_data = _safe_read_json(report_json)
+    colmap_quality_data = _safe_read_json(colmap_quality_json)
 
     result_files = {
         "metrics_json": stored_files.get("metrics_json") or _existing_str(metrics_json),
@@ -276,33 +342,104 @@ def get_result(task_id: str):
         "report_md": stored_files.get("report_md") or _existing_str(report_md),
         "summary_csv": stored_files.get("summary_csv") or _existing_str(summary_csv),
         "summary_txt": stored_files.get("summary_txt") or _existing_str(summary_txt),
+        "colmap_quality_json": (
+            stored_files.get("colmap_quality_json")
+            or _existing_str(colmap_quality_json)
+        ),
+        "colmap_quality_txt": (
+            stored_files.get("colmap_quality_txt")
+            or _existing_str(colmap_quality_txt)
+        ),
     }
 
     metrics_summary = {
-        "psnr": stored_metrics.get("psnr") or _pick_value(metrics_data, report_data, stored_result, keys=("psnr", "PSNR")),
-        "ssim": stored_metrics.get("ssim") or _pick_value(metrics_data, report_data, stored_result, keys=("ssim", "SSIM")),
-        "lpips": stored_metrics.get("lpips") or _pick_value(metrics_data, report_data, stored_result, keys=("lpips", "LPIPS")),
-        "mse": stored_metrics.get("mse") or _pick_value(metrics_data, report_data, stored_result, keys=("mse", "MSE")),
-        "mae": stored_metrics.get("mae") or _pick_value(metrics_data, report_data, stored_result, keys=("mae", "MAE")),
-        "gaussian_count": stored_metrics.get("gaussian_count") or _pick_value(metrics_data, report_data, stored_result, keys=("gaussian_count", "num_gaussians")),
-        "latest_iteration": stored_metrics.get("latest_iteration") or _pick_value(metrics_data, report_data, stored_result, keys=("latest_iteration", "iteration")),
-        "generated_at": stored_metrics.get("generated_at") or _pick_value(metrics_data, report_data, stored_result, keys=("generated_at", "created_at")),
+        "psnr": (
+            stored_metrics.get("psnr")
+            or _pick_value(metrics_data, report_data, stored_result, keys=("psnr", "PSNR"))
+        ),
+        "ssim": (
+            stored_metrics.get("ssim")
+            or _pick_value(metrics_data, report_data, stored_result, keys=("ssim", "SSIM"))
+        ),
+        "lpips": (
+            stored_metrics.get("lpips")
+            or _pick_value(metrics_data, report_data, stored_result, keys=("lpips", "LPIPS"))
+        ),
+        "mse": (
+            stored_metrics.get("mse")
+            or _pick_value(metrics_data, report_data, stored_result, keys=("mse", "MSE"))
+        ),
+        "mae": (
+            stored_metrics.get("mae")
+            or _pick_value(metrics_data, report_data, stored_result, keys=("mae", "MAE"))
+        ),
+        "gaussian_count": (
+            stored_metrics.get("gaussian_count")
+            or _pick_value(
+                metrics_data,
+                report_data,
+                stored_result,
+                keys=("gaussian_count", "num_gaussians"),
+            )
+        ),
+        "latest_iteration": (
+            stored_metrics.get("latest_iteration")
+            or _pick_value(
+                metrics_data,
+                report_data,
+                stored_result,
+                keys=("latest_iteration", "iteration"),
+            )
+        ),
+        "generated_at": (
+            stored_metrics.get("generated_at")
+            or _pick_value(
+                metrics_data,
+                report_data,
+                stored_result,
+                keys=("generated_at", "created_at"),
+            )
+        ),
+        "colmap_registration_rate": colmap_quality_data.get("registration_rate_percent"),
+        "colmap_registered_images": colmap_quality_data.get("registered_image_count"),
+        "colmap_input_images": colmap_quality_data.get("input_image_count"),
+        "colmap_point3d_count": colmap_quality_data.get("point3d_count"),
+        "colmap_camera_count": colmap_quality_data.get("camera_count"),
+        "colmap_mean_track_length": colmap_quality_data.get("mean_track_length"),
+        "colmap_mean_reprojection_error": colmap_quality_data.get(
+            "mean_reprojection_error"
+        ),
+        "colmap_quality_level": colmap_quality_data.get("quality_level"),
     }
 
-    preview_images = stored_result.get("preview_images") or _find_preview_images(report_dir, output_dir)
+    preview_images = stored_result.get("preview_images") or _find_preview_images(
+        report_dir,
+        output_dir,
+    )
 
     result_payload = {
         "output_dir": _existing_str(output_dir) or (str(output_dir) if output_dir else None),
         "report_dir": _existing_str(report_dir) or (str(report_dir) if report_dir else None),
         "log_dir": _existing_str(log_dir) or (str(log_dir) if log_dir else None),
-        "processed_dir": _existing_str(processed_dir) or (str(processed_dir) if processed_dir else None),
+        "processed_dir": (
+            _existing_str(processed_dir)
+            or (str(processed_dir) if processed_dir else None)
+        ),
         "runtime_dir": _existing_str(runtime_dir) or (str(runtime_dir) if runtime_dir else None),
         "source_dir": _existing_str(source_dir) or (str(source_dir) if source_dir else None),
-        "raw_image_dir": _existing_str(raw_image_dir) or (str(raw_image_dir) if raw_image_dir else None),
+        "raw_image_dir": (
+            _existing_str(raw_image_dir)
+            or (str(raw_image_dir) if raw_image_dir else None)
+        ),
         "preview_images": preview_images,
+        "colmap_quality": colmap_quality_data or stored_result.get("colmap_quality", {}),
     }
 
-    inferred_status = "success" if any(result_files.values()) else (task_data.get("status") or "unknown")
+    inferred_status = (
+        "success"
+        if any(value for value in result_files.values())
+        else (task_data.get("status") or "unknown")
+    )
 
     return {
         "task_id": task_data.get("task_id", task_id),
@@ -311,6 +448,7 @@ def get_result(task_id: str):
         "current_stage": task_data.get("current_stage", "结果查看"),
         "retry_count": task_data.get("retry_count", 0),
         "stop_requested": task_data.get("stop_requested", False),
+        "force_stop_requested": task_data.get("force_stop_requested", False),
         "message": task_data.get("message", "结果已从磁盘恢复"),
         "error": task_data.get("error"),
         "created_at": task_data.get("created_at"),
