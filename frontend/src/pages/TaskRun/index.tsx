@@ -1,8 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { 日志地址 } from '../../api/client'
-import { 获取任务, 停止任务, 重试任务, 删除任务 } from '../../api/task'
+import { 获取任务, 获取任务日志, 停止任务, 重试任务, 删除任务 } from '../../api/task'
 import type { 阶段记录, 任务响应 } from '../../types/task'
+
+type 日志连接状态 = 'connecting' | 'connected' | 'closed' | 'error'
+type 操作类型 = 'stop' | 'retry' | 'delete' | 'refresh' | null
+
+const 结束状态 = new Set(['success', 'failed', 'stopped', 'partial_success'])
+const 可重试状态 = new Set(['failed', 'stopped', 'partial_success'])
+const 可查看结果状态 = new Set(['success', 'partial_success', 'failed', 'stopped'])
+const 可删除状态 = new Set(['success', 'failed', 'stopped', 'partial_success'])
+const 不可删除状态 = new Set(['running', 'queued', 'stopping', 'retrying'])
 
 function 格式化时间(value: string | null | undefined) {
   if (!value) return '-'
@@ -46,10 +55,29 @@ function 阶段状态文本(status: string) {
   return map[status] ?? status
 }
 
+function 日志连接状态文本(status: 日志连接状态) {
+  const map: Record<日志连接状态, string> = {
+    connecting: '日志连接中',
+    connected: '日志已连接',
+    closed: '日志已关闭',
+    error: '日志连接异常',
+  }
+  return map[status]
+}
+
 function 状态类名(status: string) {
   if (status === 'success') return 'status-success'
   if (status === 'failed' || status === 'stopped') return 'status-failed'
+  if (status === 'partial_success') return 'status-warning'
+  if (status === 'running' || status === 'queued' || status === 'retrying' || status === 'stopping') return 'status-running'
   return 'status-idle'
+}
+
+function 日志连接状态类名(status: 日志连接状态) {
+  if (status === 'connected') return 'ws-status ws-connected'
+  if (status === 'error') return 'ws-status ws-error'
+  if (status === 'closed') return 'ws-status ws-closed'
+  return 'ws-status ws-connecting'
 }
 
 function 阶段卡片类名(status: string) {
@@ -57,6 +85,27 @@ function 阶段卡片类名(status: string) {
   if (status === 'failed' || status === 'stopped') return 'phase-card phase-card-failed'
   if (status === 'running') return 'phase-card phase-card-running'
   return 'phase-card'
+}
+
+function 日志级别类名(line: string) {
+  const lower = line.toLowerCase()
+  if (lower.includes('traceback') || lower.includes('error') || lower.includes('failed') || lower.includes('失败')) {
+    return 'log-row log-row-error'
+  }
+  if (lower.includes('warning') || lower.includes('warn') || lower.includes('警告')) {
+    return 'log-row log-row-warning'
+  }
+  if (lower.includes('success') || lower.includes('done') || lower.includes('完成')) {
+    return 'log-row log-row-success'
+  }
+  return 'log-row'
+}
+
+function 归一化日志文本(text: string) {
+  return text
+    .split(/\r?\n/)
+    .map((line) => line.trimEnd())
+    .filter(Boolean)
 }
 
 const 阶段顺序 = [
@@ -95,12 +144,18 @@ export function TaskRunPage() {
   const [提示, set提示] = useState('')
   const [加载中, set加载中] = useState(true)
   const [自动滚动, set自动滚动] = useState(true)
+  const [日志状态, set日志状态] = useState<日志连接状态>('connecting')
+  const [当前操作, set当前操作] = useState<操作类型>(null)
 
-  const 日志容器引用 = useRef<HTMLPreElement | null>(null)
+  const 日志容器引用 = useRef<HTMLDivElement | null>(null)
+  const ws引用 = useRef<WebSocket | null>(null)
+  const 重连计时器引用 = useRef<number | null>(null)
+  const 已结束引用 = useRef(false)
+  const 日志签名集合引用 = useRef<Set<string>>(new Set())
 
   const 已结束 = useMemo(() => {
     if (!任务) return false
-    return ['success', 'failed', 'stopped', 'partial_success'].includes(任务.status)
+    return 结束状态.has(任务.status)
   }, [任务])
 
   const 阶段列表 = useMemo(() => {
@@ -138,18 +193,87 @@ export function TaskRunPage() {
     return 阶段列表.filter((item) => item.status === 'success').length
   }, [阶段列表])
 
+  const 运行中阶段数 = useMemo(() => {
+    return 阶段列表.filter((item) => item.status === 'running').length
+  }, [阶段列表])
+
+  const 进度百分比 = useMemo(() => {
+    if (!任务) return 0
+    if (任务.status === 'success') return 100
+    const base = 成功阶段数 + 运行中阶段数 * 0.5
+    return Math.min(99, Math.max(0, Math.round((base / Math.max(阶段列表.length, 1)) * 100)))
+  }, [任务, 成功阶段数, 运行中阶段数, 阶段列表.length])
+
   const 最近失败阶段 = useMemo(() => {
     const reversed = [...(任务?.stage_history ?? [])].reverse()
     return reversed.find((item) => item.status === 'failed') ?? null
   }, [任务])
 
+  const 最近错误日志 = useMemo(() => {
+    return [...日志列表].reverse().find((line) => 日志级别类名(line).includes('error')) ?? ''
+  }, [日志列表])
+
+  const 追加日志 = (text: string, options?: { dedupe?: boolean }) => {
+    const lines = 归一化日志文本(text)
+    if (!lines.length) return
+
+    set日志列表((prev) => {
+      const next = [...prev]
+
+      for (const line of lines) {
+        const signature = `${next.length}:${line}`
+        const dedupeSignature = line
+
+        if (options?.dedupe && 日志签名集合引用.current.has(dedupeSignature)) {
+          continue
+        }
+
+        日志签名集合引用.current.add(options?.dedupe ? dedupeSignature : signature)
+        next.push(line)
+      }
+
+      if (next.length > 3000) {
+        const sliced = next.slice(next.length - 3000)
+        日志签名集合引用.current = new Set(sliced)
+        return sliced
+      }
+
+      return next
+    })
+  }
+
+  const 清理重连计时器 = () => {
+    if (重连计时器引用.current) {
+      window.clearTimeout(重连计时器引用.current)
+      重连计时器引用.current = null
+    }
+  }
+
+  const 关闭日志连接 = () => {
+    清理重连计时器()
+
+    if (ws引用.current) {
+      ws引用.current.onopen = null
+      ws引用.current.onmessage = null
+      ws引用.current.onerror = null
+      ws引用.current.onclose = null
+      ws引用.current.close()
+      ws引用.current = null
+    }
+  }
+
   const 刷新任务 = async (静默 = false) => {
     if (!taskId) return
 
     try {
-      if (!静默) set加载中(true)
+      if (!静默) {
+        set加载中(true)
+        set当前操作('refresh')
+      }
+
       const data = await 获取任务(taskId)
       set任务(data)
+      已结束引用.current = 结束状态.has(data.status)
       set错误('')
     } catch (error) {
       const message = error instanceof Error ? error.message : '获取任务失败'
@@ -157,11 +281,67 @@ export function TaskRunPage() {
       if (!静默) {
         set错误(message)
       } else {
-        // 静默刷新时，不用短暂 404 覆盖页面
         console.warn('静默刷新失败:', message)
       }
     } finally {
-      if (!静默) set加载中(false)
+      if (!静默) {
+        set加载中(false)
+        set当前操作(null)
+      }
+    }
+  }
+
+  const 加载历史日志 = async () => {
+    if (!taskId) return
+
+    try {
+      const data = await 获取任务日志(taskId)
+      const lines = data.lines ?? []
+      if (!lines.length) return
+
+      日志签名集合引用.current = new Set(lines)
+      set日志列表(lines.slice(-3000))
+    } catch (error) {
+      // 兼容尚未升级后端的情况：历史日志失败不影响实时日志。
+      console.warn('历史日志加载失败:', error instanceof Error ? error.message : error)
+    }
+  }
+
+  const 连接日志 = () => {
+    if (!taskId) return
+
+    关闭日志连接()
+    set日志状态('connecting')
+
+    const ws = new WebSocket(日志地址(taskId))
+    ws引用.current = ws
+
+    ws.onopen = () => {
+      set日志状态('connected')
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send('ping')
+      }
+    }
+
+    ws.onmessage = (event) => {
+      追加日志(String(event.data ?? ''))
+    }
+
+    ws.onerror = () => {
+      set日志状态('error')
+    }
+
+    ws.onclose = () => {
+      set日志状态('closed')
+
+      if (已结束引用.current) {
+        return
+      }
+
+      清理重连计时器()
+      重连计时器引用.current = window.setTimeout(() => {
+        连接日志()
+      }, 2000)
     }
   }
 
@@ -171,27 +351,33 @@ export function TaskRunPage() {
       set加载中(false)
       return
     }
+
     刷新任务()
+    加载历史日志()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [taskId])
+
+  useEffect(() => {
+    已结束引用.current = 已结束
+  }, [已结束])
 
   useEffect(() => {
     if (!taskId) return
 
-    const ws = new WebSocket(日志地址(taskId))
+    连接日志()
 
-    ws.onmessage = (event) => {
-      const text = String(event.data ?? '').trim()
-      if (!text) return
-      set日志列表((prev) => [...prev, text])
-    }
-
-    ws.onerror = () => {
-      // 保持静默，避免日志连接短暂波动影响页面
-    }
+    const pingTimer = window.setInterval(() => {
+      const ws = ws引用.current
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send('ping')
+      }
+    }, 15000)
 
     return () => {
-      ws.close()
+      window.clearInterval(pingTimer)
+      关闭日志连接()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [taskId])
 
   useEffect(() => {
@@ -202,6 +388,7 @@ export function TaskRunPage() {
     }, 2000)
 
     return () => window.clearInterval(timer)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [taskId, 已结束])
 
   useEffect(() => {
@@ -211,27 +398,39 @@ export function TaskRunPage() {
     el.scrollTop = el.scrollHeight
   }, [日志列表, 自动滚动])
 
+  useEffect(() => {
+    if (!提示) return
+    const timer = window.setTimeout(() => set提示(''), 3000)
+    return () => window.clearTimeout(timer)
+  }, [提示])
+
   const 执行停止 = async () => {
-    if (!taskId) return
+    if (!taskId || 当前操作) return
 
     try {
+      set当前操作('stop')
       const data = await 停止任务(taskId)
       set提示(data.message)
       await 刷新任务(true)
     } catch (error) {
       set错误(error instanceof Error ? error.message : '停止任务失败')
+    } finally {
+      set当前操作(null)
     }
   }
 
   const 执行重试 = async () => {
-    if (!taskId) return
+    if (!taskId || 当前操作) return
 
     try {
+      set当前操作('retry')
       const data = await 重试任务(taskId)
 
       set提示(data.message)
       set错误('')
       set日志列表([])
+      日志签名集合引用.current = new Set()
+      已结束引用.current = false
 
       set任务((prev) => {
         if (!prev) return prev
@@ -241,31 +440,73 @@ export function TaskRunPage() {
           current_stage: '等待重试',
           message: data.message,
           error: null,
+          stage_history: [],
         }
       })
 
+      连接日志()
+
       window.setTimeout(() => {
         刷新任务(true).catch(() => {
-          // 重试刚触发时，后端若短暂不可读，不立刻报错
+          // 重试刚触发时，后端若短暂不可读，不立刻报错。
         })
       }, 800)
     } catch (error) {
       set错误(error instanceof Error ? error.message : '重试任务失败')
+    } finally {
+      set当前操作(null)
     }
   }
 
   const 执行删除 = async () => {
-    if (!taskId) return
+    if (!taskId || 当前操作) return
+
+    if (任务 && 不可删除状态.has(任务.status)) {
+      set错误('任务正在执行，不能删除。请先停止任务或等待任务结束。')
+      return
+    }
+
+    const confirmed = window.confirm('确定要删除该任务记录吗？该操作不会自动删除输出文件。')
+    if (!confirmed) return
 
     try {
+      set当前操作('delete')
       const data = await 删除任务(taskId)
+
+      if (!data.ok) {
+        set错误(data.message)
+        return
+      }
+
       set提示(data.message)
       window.setTimeout(() => {
         navigate('/')
       }, 800)
     } catch (error) {
       set错误(error instanceof Error ? error.message : '删除任务失败')
+    } finally {
+      set当前操作(null)
     }
+  }
+
+  const 复制日志 = async () => {
+    try {
+      await navigator.clipboard.writeText(日志列表.join('\n'))
+      set提示('日志已复制到剪贴板')
+    } catch {
+      set错误('复制失败：浏览器不允许访问剪贴板')
+    }
+  }
+
+  const 清空日志窗口 = () => {
+    set日志列表([])
+    日志签名集合引用.current = new Set()
+    set提示('前端日志窗口已清空，不影响后端任务日志')
+  }
+
+  const 重新连接日志 = () => {
+    已结束引用.current = false
+    连接日志()
   }
 
   if (加载中 && !任务) {
@@ -288,31 +529,31 @@ export function TaskRunPage() {
         </div>
 
         <div className="inline-actions wrap-actions">
-          <button className="ghost-btn" onClick={() => 刷新任务()}>
-            刷新状态
+          <button className="ghost-btn" onClick={() => 刷新任务()} disabled={当前操作 !== null}>
+            {当前操作 === 'refresh' ? '刷新中…' : '刷新状态'}
           </button>
 
           {!已结束 ? (
-            <button className="ghost-btn danger-btn" onClick={执行停止}>
-              停止任务
+            <button className="ghost-btn danger-btn" onClick={执行停止} disabled={当前操作 !== null}>
+              {当前操作 === 'stop' ? '停止中…' : '停止任务'}
             </button>
           ) : null}
 
-          {任务 && ['failed', 'stopped', 'partial_success'].includes(任务.status) ? (
-            <button className="ghost-btn" onClick={执行重试}>
-              重试任务
+          {任务 && 可重试状态.has(任务.status) ? (
+            <button className="ghost-btn" onClick={执行重试} disabled={当前操作 !== null}>
+              {当前操作 === 'retry' ? '重试中…' : '重试任务'}
             </button>
           ) : null}
 
-          {任务 && ['success', 'partial_success', 'failed', 'stopped'].includes(任务.status) ? (
+          {任务 && 可查看结果状态.has(任务.status) ? (
             <Link className="primary-btn" to={`/results/${taskId}`}>
               查看结果
             </Link>
           ) : null}
 
-          {任务 && ['success', 'failed', 'stopped', 'partial_success'].includes(任务.status) ? (
-            <button className="ghost-btn danger-btn" onClick={执行删除}>
-              删除记录
+          {任务 && 可删除状态.has(任务.status) ? (
+            <button className="ghost-btn danger-btn" onClick={执行删除} disabled={当前操作 !== null}>
+              {当前操作 === 'delete' ? '删除中…' : '删除记录'}
             </button>
           ) : null}
         </div>
@@ -353,18 +594,18 @@ export function TaskRunPage() {
           </div>
 
           <div className="card">
-            <h3>执行进度</h3>
-            <p className="section-tip">
-              当前进度根据任务阶段进行估算，用于反映整体执行状态。
-            </p>
+            <div className="toolbar-row">
+              <div>
+                <h3>执行进度</h3>
+                <p className="section-tip">
+                  当前进度根据阶段成功数和运行中阶段估算，用于反映整体执行状态。
+                </p>
+              </div>
+              <div className="progress-text">{进度百分比}%</div>
+            </div>
 
             <div className="progress-track">
-              <div
-                className="progress-bar"
-                style={{
-                  width: `${(成功阶段数 / Math.max(阶段列表.length, 1)) * 100}%`,
-                }}
-              />
+              <div className="progress-bar" style={{ width: `${进度百分比}%` }} />
             </div>
 
             <div className="progress-text">
@@ -436,6 +677,12 @@ export function TaskRunPage() {
                     {最近失败阶段.error_message || 任务.error || '-'}
                   </div>
                 </div>
+                {最近错误日志 ? (
+                  <div className="details-full">
+                    <label>最近错误日志</label>
+                    <div className="error-panel">{最近错误日志}</div>
+                  </div>
+                ) : null}
               </div>
             </div>
           ) : null}
@@ -445,23 +692,57 @@ export function TaskRunPage() {
               <div>
                 <h3 className="section-title-tight">实时日志</h3>
                 <div className="section-tip">
-                  日志通过 WebSocket 推送，并在运行中自动刷新任务状态。
+                  日志通过 WebSocket 推送；页面打开时会优先加载后端已缓存的历史日志。
+                  <span className={日志连接状态类名(日志状态)}>{日志连接状态文本(日志状态)}</span>
                 </div>
               </div>
 
-              <label className="inline-check">
-                <input
-                  type="checkbox"
-                  checked={自动滚动}
-                  onChange={(e) => set自动滚动(e.target.checked)}
-                />
-                <span>自动滚动</span>
-              </label>
+              <div className="log-actions">
+                <label className="inline-check">
+                  <input
+                    type="checkbox"
+                    checked={自动滚动}
+                    onChange={(e) => set自动滚动(e.target.checked)}
+                  />
+                  <span>自动滚动</span>
+                </label>
+
+                <button className="ghost-btn" type="button" onClick={重新连接日志}>
+                  重连日志
+                </button>
+
+                <button
+                  className="ghost-btn"
+                  type="button"
+                  onClick={复制日志}
+                  disabled={日志列表.length === 0}
+                >
+                  复制日志
+                </button>
+
+                <button
+                  className="ghost-btn danger-btn"
+                  type="button"
+                  onClick={清空日志窗口}
+                  disabled={日志列表.length === 0}
+                >
+                  清空窗口
+                </button>
+              </div>
             </div>
 
-            <pre ref={日志容器引用}>
-              {日志列表.length ? 日志列表.join('\n') : '当前尚未收到日志输出。'}
-            </pre>
+            <div className="log-stream" ref={日志容器引用}>
+              {日志列表.length ? (
+                日志列表.map((line, index) => (
+                  <div className={日志级别类名(line)} key={`${index}-${line.slice(0, 32)}`}>
+                    <span className="log-index">{String(index + 1).padStart(4, '0')}</span>
+                    <span className="log-text">{line}</span>
+                  </div>
+                ))
+              ) : (
+                <div className="log-empty">当前尚未收到日志输出。</div>
+              )}
+            </div>
           </div>
 
           <div className="card">
@@ -491,4 +772,4 @@ export function TaskRunPage() {
       )}
     </div>
   )
-} 
+}

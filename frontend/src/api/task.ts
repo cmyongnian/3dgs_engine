@@ -5,6 +5,7 @@ import type {
   任务列表响应,
   任务响应,
   结果响应,
+  任务日志响应,
 } from '../types/task'
 
 export function 创建任务(payload: 创建任务请求) {
@@ -51,6 +52,10 @@ export function 获取任务(taskId: string) {
 
 export function 获取结果(taskId: string) {
   return 请求<结果响应>(`/results/${taskId}`)
+}
+
+export function 获取任务日志(taskId: string) {
+  return 请求<任务日志响应>(`/tasks/${taskId}/logs`)
 }
 
 export async function 获取任务列表() {

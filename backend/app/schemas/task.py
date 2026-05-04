@@ -117,3 +117,8 @@ class TaskActionResponse(BaseModel):
     action: Literal["stop", "retry", "delete"]
     status: Union[TaskStatus, str]
     message: str
+
+class TaskLogResponse(BaseModel):
+    task_id: str
+    lines: List[str] = Field(default_factory=list)
+    count: int = 0

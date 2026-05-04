@@ -161,6 +161,12 @@ class TaskService:
         record = task_store.get(task_id)
         return self._to_response(record) if record else None
 
+    def get_task_logs(self, task_id: str) -> Optional[List[str]]:
+        record = task_store.get(task_id)
+        if record is None:
+            return None
+        return list(record.logs)
+
     def list_tasks(self) -> List[TaskResponse]:
         return [self._to_response(item) for item in task_store.list() if item is not None]
 

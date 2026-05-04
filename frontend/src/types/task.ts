@@ -136,3 +136,9 @@ export interface 结果响应 {
   result_files: Record<string, unknown>
   result: Record<string, unknown>
 }
+
+export interface 任务日志响应 {
+  task_id: string
+  lines: string[]
+  count: number
+}

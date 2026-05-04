@@ -4,6 +4,7 @@ from backend.app.schemas.task import (
     TaskActionResponse,
     TaskCreateRequest,
     TaskResponse,
+    TaskLogResponse,
 )
 from backend.app.services.task_service import task_service
 
@@ -53,6 +54,14 @@ def delete_task(task_id: str) -> TaskActionResponse:
     if action is None:
         raise HTTPException(status_code=404, detail="任务不存在")
     return action
+
+
+@router.get("/{task_id}/logs", response_model=TaskLogResponse)
+def get_task_logs(task_id: str) -> TaskLogResponse:
+    lines = task_service.get_task_logs(task_id)
+    if lines is None:
+        raise HTTPException(status_code=404, detail="任务不存在")
+    return TaskLogResponse(task_id=task_id, lines=lines, count=len(lines))
 
 
 @router.get("/{task_id}", response_model=TaskResponse)
