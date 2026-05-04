@@ -9,15 +9,18 @@ from typing import Any, Dict, List, Optional, Tuple
 from engine.core.config import load_yaml
 from engine.core.paths import PathManager
 from engine.core.logger import setup_logger
+from engine.core.process_utils import popen_registered, process_registry, raise_if_force_stopped
 
 
 class MetricsService:
     def __init__(
         self,
         system_config_path="configs/system.yaml",
-        metrics_config_path="configs/metrics.yaml"
+        metrics_config_path="configs/metrics.yaml",
+        task_id: str | None = None,
     ):
         self.pm = PathManager(system_config_path)
+        self.task_id = task_id
 
         metrics_config_path = Path(metrics_config_path)
         if not metrics_config_path.is_absolute():
@@ -286,7 +289,8 @@ class MetricsService:
         for p in resolved_model_paths:
             print("模型目录: {0}".format(p))
 
-        process = subprocess.Popen(
+        process = popen_registered(
+            self.task_id,
             cmd,
             cwd=str(self.pm.gs_repo),
             stdout=subprocess.PIPE,
@@ -297,13 +301,18 @@ class MetricsService:
         )
 
         output_lines = []
-        for line in process.stdout:
-            line = line.rstrip()
-            output_lines.append(line)
-            print(line)
-            logger.info(line)
+        try:
+            for line in process.stdout:
+                line = line.rstrip()
+                output_lines.append(line)
+                print(line)
+                logger.info(line)
 
-        process.wait()
+            process.wait()
+        finally:
+            process_registry.unregister(self.task_id, process)
+
+        raise_if_force_stopped(self.task_id)
 
         if process.returncode != 0:
             logger.error("评测失败，返回码: %s", process.returncode)

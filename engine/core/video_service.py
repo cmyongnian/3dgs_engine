@@ -5,15 +5,18 @@ import shutil
 from engine.core.config import load_yaml
 from engine.core.paths import PathManager
 from engine.core.logger import setup_logger
+from engine.core.process_utils import popen_registered, process_registry, raise_if_force_stopped
 
 
 class VideoService:
     def __init__(
         self,
         system_config_path="configs/system.yaml",
-        video_config_path="configs/video.yaml"
+        video_config_path="configs/video.yaml",
+        task_id: str | None = None,
     ):
         self.pm = PathManager(system_config_path)
+        self.task_id = task_id
 
         video_config_path = Path(video_config_path)
         if not video_config_path.is_absolute():
@@ -84,7 +87,37 @@ class VideoService:
         print("输出目录:", output_images)
         print("目标帧率:", target_fps)
 
-        subprocess.run(cmd, check=True)
+        try:
+            process = popen_registered(
+                self.task_id,
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+            )
+        except FileNotFoundError:
+            raise FileNotFoundError(
+                f"找不到 ffmpeg 可执行程序: {ffmpeg_executable}\n"
+                "请检查 video.yaml 中的 ffmpeg_executable 配置。"
+            )
+
+        try:
+            for line in process.stdout:
+                line = line.rstrip()
+                print(line)
+                logger.info(line)
+
+            process.wait()
+        finally:
+            process_registry.unregister(self.task_id, process)
+
+        raise_if_force_stopped(self.task_id)
+
+        if process.returncode != 0:
+            logger.error("视频抽帧失败，返回码: %s", process.returncode)
+            raise RuntimeError(f"视频抽帧失败，返回码: {process.returncode}")
 
         logger.info("视频抽帧完成")
         print("视频抽帧完成")

@@ -11,6 +11,7 @@ from backend.app.schemas.task import (
 )
 from backend.app.services.pipeline_service import pipeline_service
 from backend.app.state.task_store import TaskRecord, task_store
+from engine.core.process_utils import process_registry
 
 
 class TaskService:
@@ -83,6 +84,48 @@ class TaskService:
             ok=True,
             task_id=updated.task_id,
             action="stop",
+            status=updated.status,
+            message=updated.message,
+        )
+
+
+    def force_stop_task(self, task_id: str) -> Optional[TaskActionResponse]:
+        record = task_store.get(task_id)
+        if record is None:
+            return None
+
+        if record.status in {"success", "failed", "stopped"}:
+            return TaskActionResponse(
+                ok=True,
+                task_id=record.task_id,
+                action="force_stop",
+                status=record.status,
+                message="任务当前状态无需立即停止",
+            )
+
+        task_store.request_force_stop(task_id)
+        terminated_count = process_registry.request_force_stop(task_id)
+
+        if terminated_count > 0:
+            message = "已请求立即停止，正在终止当前子进程"
+        else:
+            message = "已请求立即停止；当前没有可终止的外部子进程，将在最近检查点停止"
+
+        task_store.append_log(task_id, message)
+        task_store.update(
+            task_id,
+            status="stopping",
+            message=message,
+        )
+
+        updated = task_store.get(task_id)
+        if updated is None:
+            return None
+
+        return TaskActionResponse(
+            ok=True,
+            task_id=updated.task_id,
+            action="force_stop",
             status=updated.status,
             message=updated.message,
         )
@@ -187,6 +230,7 @@ class TaskService:
             started_at=record.started_at,
             finished_at=record.finished_at,
             stop_requested=record.stop_requested,
+            force_stop_requested=record.force_stop_requested,
             retry_count=record.retry_count,
             stage_history=record.stage_history,
             metrics_summary=record.metrics_summary,

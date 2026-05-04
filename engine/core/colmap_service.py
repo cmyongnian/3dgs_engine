@@ -4,15 +4,18 @@ import subprocess
 from engine.core.config import load_yaml
 from engine.core.paths import PathManager
 from engine.core.logger import setup_logger
+from engine.core.process_utils import popen_registered, process_registry, raise_if_force_stopped
 
 
 class ColmapService:
     def __init__(
         self,
         system_config_path="configs/system.yaml",
-        colmap_config_path="configs/colmap.yaml"
+        colmap_config_path="configs/colmap.yaml",
+        task_id: str | None = None,
     ):
         self.pm = PathManager(system_config_path)
+        self.task_id = task_id
 
         colmap_config_path = Path(colmap_config_path)
         if not colmap_config_path.is_absolute():
@@ -93,7 +96,8 @@ class ColmapService:
         print("执行命令:", " ".join(cmd))
 
         try:
-            process = subprocess.Popen(
+            process = popen_registered(
+                self.task_id,
                 cmd,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
@@ -107,12 +111,17 @@ class ColmapService:
                 f"请检查 configs/colmap.yaml 里的 colmap_executable 配置。"
             )
 
-        for line in process.stdout:
-            line = line.rstrip()
-            print(line)
-            logger.info(line)
+        try:
+            for line in process.stdout:
+                line = line.rstrip()
+                print(line)
+                logger.info(line)
 
-        process.wait()
+            process.wait()
+        finally:
+            process_registry.unregister(self.task_id, process)
+
+        raise_if_force_stopped(self.task_id)
 
         if process.returncode == 0:
             logger.info("COLMAP 重建完成")

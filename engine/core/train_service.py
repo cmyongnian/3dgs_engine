@@ -6,14 +6,17 @@ from PIL import Image, UnidentifiedImageError
 from engine.core.config import load_yaml
 from engine.core.paths import PathManager
 from engine.core.logger import setup_logger
+from engine.core.process_utils import popen_registered, process_registry, raise_if_force_stopped
 
 class TrainerService:
     def __init__(
         self,
         system_config_path="configs/system.yaml",
-        train_config_path="configs/train.yaml"
+        train_config_path="configs/train.yaml",
+        task_id: str | None = None,
     ):
         self.pm = PathManager(system_config_path)
+        self.task_id = task_id
 
         train_config_path = Path(train_config_path)
         if not train_config_path.is_absolute():
@@ -192,7 +195,8 @@ class TrainerService:
         print(f"模型输出目录: {model_output}")
 
 
-        process = subprocess.Popen(
+        process = popen_registered(
+            self.task_id,
             cmd,
             cwd=str(self.pm.gs_repo),
             stdout=subprocess.PIPE,
@@ -202,12 +206,17 @@ class TrainerService:
             errors="replace"
         )
 
-        for line in process.stdout:
-            line = line.rstrip()
-            print(line)
-            logger.info(line)
+        try:
+            for line in process.stdout:
+                line = line.rstrip()
+                print(line)
+                logger.info(line)
 
-        process.wait()
+            process.wait()
+        finally:
+            process_registry.unregister(self.task_id, process)
+
+        raise_if_force_stopped(self.task_id)
 
         if process.returncode == 0:
             logger.info("训练完成")

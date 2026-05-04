@@ -4,15 +4,18 @@ import os
 
 from engine.core.config import load_yaml
 from engine.core.paths import PathManager
+from engine.core.process_utils import popen_registered, process_registry, raise_if_force_stopped
 
 
 class ViewerService:
     def __init__(
         self,
         system_config_path="configs/system.yaml",
-        viewer_config_path="configs/viewer.yaml"
+        viewer_config_path="configs/viewer.yaml",
+        task_id: str | None = None,
     ):
         self.pm = PathManager(system_config_path)
+        self.task_id = task_id
 
         viewer_config_path = Path(viewer_config_path)
         if not viewer_config_path.is_absolute():
@@ -96,8 +99,14 @@ class ViewerService:
             popen_kwargs["stdout"] = subprocess.DEVNULL
             popen_kwargs["stderr"] = subprocess.DEVNULL
 
-        process = subprocess.Popen(cmd, **popen_kwargs)
+        process = popen_registered(self.task_id, cmd, **popen_kwargs)
 
         if wait_until_close and not detached:
-            process.wait()
+            try:
+                process.wait()
+            finally:
+                process_registry.unregister(self.task_id, process)
+            raise_if_force_stopped(self.task_id)
             print("Viewer 已关闭，程序结束")
+        else:
+            process_registry.unregister(self.task_id, process)

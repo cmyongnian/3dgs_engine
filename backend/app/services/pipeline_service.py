@@ -11,6 +11,7 @@ import yaml
 from backend.app.services.runtime_config_service import runtime_config_service
 from backend.app.state.task_store import task_store
 from backend.app.ws.log_ws import log_hub
+from engine.core.process_utils import ImmediateStopRequested, process_registry
 
 
 class TaskStoppedError(RuntimeError):
@@ -109,14 +110,19 @@ class PipelineService:
                 current_stage="已完成",
                 result=result,
             )
+            process_registry.clear_task(task_id)
 
-        except TaskStoppedError as exc:
+        except (TaskStoppedError, ImmediateStopRequested) as exc:
             capture.flush()
-            task_store.append_log(task_id, "任务已停止")
+            if isinstance(exc, ImmediateStopRequested):
+                stop_message = "任务已立即停止"
+            else:
+                stop_message = "任务已停止"
+            task_store.append_log(task_id, stop_message)
             task_store.mark_finished(
                 task_id,
                 status="stopped",
-                message="任务已停止",
+                message=stop_message,
                 error=str(exc),
             )
             task_store.update(
@@ -124,6 +130,7 @@ class PipelineService:
                 current_stage="已停止",
                 error=str(exc),
             )
+            process_registry.clear_task(task_id)
 
         except Exception as exc:
             capture.flush()
@@ -142,6 +149,7 @@ class PipelineService:
                 error=str(exc),
                 last_error_type=error_type,
             )
+            process_registry.clear_task(task_id)
 
     def _run_pipeline(self, task_id: str, config_paths: Dict[str, str]) -> None:
         task = task_store.get(task_id)
@@ -156,7 +164,7 @@ class PipelineService:
             self._execute_stage(
                 task_id=task_id,
                 stage_key="video_extract",
-                action=lambda: self._run_video(system_path, config_paths["video"]),
+                action=lambda: self._run_video(task_id, system_path, config_paths["video"]),
             )
 
         if flags.run_preflight:
@@ -170,14 +178,14 @@ class PipelineService:
             self._execute_stage(
                 task_id=task_id,
                 stage_key="colmap",
-                action=lambda: self._run_colmap(system_path, config_paths["colmap"]),
+                action=lambda: self._run_colmap(task_id, system_path, config_paths["colmap"]),
             )
 
         if flags.run_convert:
             self._execute_stage(
                 task_id=task_id,
                 stage_key="convert",
-                action=lambda: self._run_convert(system_path, config_paths["convert"]),
+                action=lambda: self._run_convert(task_id, system_path, config_paths["convert"]),
             )
 
         if flags.run_preflight:
@@ -191,21 +199,21 @@ class PipelineService:
             self._execute_stage(
                 task_id=task_id,
                 stage_key="train",
-                action=lambda: self._run_train(system_path, config_paths["train"]),
+                action=lambda: self._run_train(task_id, system_path, config_paths["train"]),
             )
 
         if flags.run_render:
             self._execute_stage(
                 task_id=task_id,
                 stage_key="render",
-                action=lambda: self._run_render(system_path, config_paths["render"]),
+                action=lambda: self._run_render(task_id, system_path, config_paths["render"]),
             )
 
         if flags.run_metrics:
             self._execute_stage(
                 task_id=task_id,
                 stage_key="metrics",
-                action=lambda: self._run_metrics(system_path, config_paths["metrics"]),
+                action=lambda: self._run_metrics(task_id, system_path, config_paths["metrics"]),
             )
 
         if flags.run_train or flags.run_render or flags.run_metrics:
@@ -219,7 +227,7 @@ class PipelineService:
             self._execute_stage(
                 task_id=task_id,
                 stage_key="viewer",
-                action=lambda: self._run_viewer(system_path, config_paths["viewer"]),
+                action=lambda: self._run_viewer(task_id, system_path, config_paths["viewer"]),
             )
 
     def _execute_stage(
@@ -256,13 +264,13 @@ class PipelineService:
                 status="success",
             )
             self._ensure_not_stopped(task_id)
-        except TaskStoppedError:
+        except (TaskStoppedError, ImmediateStopRequested) as exc:
             task_store.finish_stage(
                 task_id,
                 stage_key=stage["key"],
                 status="stopped",
-                error_type="user_stop",
-                error_message="任务已停止",
+                error_type="user_force_stop" if isinstance(exc, ImmediateStopRequested) else "user_stop",
+                error_message=str(exc) or "任务已停止",
             )
             raise
         except Exception as exc:
@@ -280,6 +288,9 @@ class PipelineService:
         if task is None:
             raise RuntimeError("任务不存在")
 
+        if getattr(task, "force_stop_requested", False):
+            raise TaskStoppedError("已收到立即停止请求")
+
         if task.stop_requested:
             raise TaskStoppedError("已收到停止请求")
 
@@ -291,6 +302,9 @@ class PipelineService:
 
     def _classify_error(self, exc: Exception) -> str:
         message = str(exc).lower()
+
+        if isinstance(exc, ImmediateStopRequested):
+            return "user_force_stop"
 
         if isinstance(exc, TaskStoppedError):
             return "user_stop"
@@ -450,12 +464,13 @@ class PipelineService:
         return [str(item) for item in image_files]
 
     @staticmethod
-    def _run_video(system_path: str, video_path: str) -> None:
+    def _run_video(task_id: str, system_path: str, video_path: str) -> None:
         from engine.core.video_service import VideoService
 
         VideoService(
             system_config_path=system_path,
             video_config_path=video_path,
+            task_id=task_id,
         ).run()
 
     @staticmethod
@@ -468,48 +483,53 @@ class PipelineService:
         ).run()
 
     @staticmethod
-    def _run_colmap(system_path: str, colmap_path: str) -> None:
+    def _run_colmap(task_id: str, system_path: str, colmap_path: str) -> None:
         from engine.core.colmap_service import ColmapService
 
         ColmapService(
             system_config_path=system_path,
             colmap_config_path=colmap_path,
+            task_id=task_id,
         ).run()
 
     @staticmethod
-    def _run_convert(system_path: str, convert_path: str) -> None:
+    def _run_convert(task_id: str, system_path: str, convert_path: str) -> None:
         from engine.core.convert_service import ConvertService
 
         ConvertService(
             system_config_path=system_path,
             convert_config_path=convert_path,
+            task_id=task_id,
         ).run()
 
     @staticmethod
-    def _run_train(system_path: str, train_path: str) -> None:
+    def _run_train(task_id: str, system_path: str, train_path: str) -> None:
         from engine.core.train_service import TrainerService
 
         TrainerService(
             system_config_path=system_path,
             train_config_path=train_path,
+            task_id=task_id,
         ).run()
 
     @staticmethod
-    def _run_render(system_path: str, render_path: str) -> None:
+    def _run_render(task_id: str, system_path: str, render_path: str) -> None:
         from engine.core.render_service import RenderService
 
         RenderService(
             system_config_path=system_path,
             render_config_path=render_path,
+            task_id=task_id,
         ).run()
 
     @staticmethod
-    def _run_metrics(system_path: str, metrics_path: str) -> None:
+    def _run_metrics(task_id: str, system_path: str, metrics_path: str) -> None:
         from engine.core.metrics_service import MetricsService
 
         MetricsService(
             system_config_path=system_path,
             metrics_config_path=metrics_path,
+            task_id=task_id,
         ).run()
 
     @staticmethod
@@ -522,12 +542,13 @@ class PipelineService:
         ).run()
 
     @staticmethod
-    def _run_viewer(system_path: str, viewer_path: str) -> None:
+    def _run_viewer(task_id: str, system_path: str, viewer_path: str) -> None:
         from engine.core.viewer_service import ViewerService
 
         ViewerService(
             system_config_path=system_path,
             viewer_config_path=viewer_path,
+            task_id=task_id,
         ).run()
 
 

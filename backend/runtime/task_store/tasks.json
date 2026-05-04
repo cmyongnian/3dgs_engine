@@ -1,0 +1,157 @@
+{
+  "version": 1,
+  "updated_at": "2026-05-04T10:05:54.219462+00:00",
+  "items": [
+    {
+      "task_id": "dc19f88d70e5",
+      "scene_name": "video_scene_01",
+      "payload": {
+        "model": {
+          "scene": {
+            "scene_name": "video_scene_01",
+            "raw_image_path": "datasets/raw/video_scene_01/images",
+            "processed_scene_path": "datasets/processed/video_scene_01",
+            "source_path": "datasets/processed/video_scene_01/gs_input",
+            "model_output": "outputs/video_scene_01",
+            "video_path": "datasets/videos/video_scene_01.mp4",
+            "colmap_executable": "third_party/colmap/COLMAP.bat",
+            "magick_executable": "",
+            "ffmpeg_executable": "ffmpeg",
+            "viewer_root": "third_party/viewer/bin"
+          },
+          "system_paths": {
+            "gs_repo": "third_party/gaussian-splatting",
+            "raw_data": "datasets/raw",
+            "processed_data": "datasets/processed",
+            "outputs": "outputs",
+            "logs": "logs",
+            "videos_data": "datasets/videos"
+          },
+          "pipeline": {
+            "input_mode": "images",
+            "run_preflight": true,
+            "run_video_extract": false,
+            "run_colmap": false,
+            "run_convert": false,
+            "run_train": false,
+            "run_render": false,
+            "run_metrics": false,
+            "launch_viewer": false
+          },
+          "train": {
+            "active_profile": "fast_preview",
+            "eval": true,
+            "iterations": 7000,
+            "save_iterations": [
+              2000,
+              7000
+            ],
+            "test_iterations": [
+              -1
+            ],
+            "checkpoint_iterations": [
+              2000,
+              7000
+            ],
+            "start_checkpoint": "",
+            "resume_from_latest": false,
+            "quiet": false,
+            "extra_args": {
+              "data_device": "cpu",
+              "resolution": 8,
+              "densify_grad_threshold": 0.001,
+              "densification_interval": 300,
+              "densify_until_iter": 1500
+            }
+          }
+        }
+      },
+      "status": "success",
+      "current_stage": "已完成",
+      "message": "任务执行完成",
+      "result": {
+        "scene_name": "video_scene_01",
+        "output_dir": "outputs\\video_scene_01",
+        "log_dir": "E:\\3dgs\\3dgs_platform\\engine\\logs\\video_scene_01",
+        "processed_dir": "datasets\\processed\\video_scene_01",
+        "runtime_dir": "E:\\3dgs\\3dgs_platform\\backend\\runtime\\dc19f88d70e5",
+        "metrics_summary": {},
+        "report_summary": {},
+        "result_files": {
+          "metrics_json": "",
+          "report_json": "",
+          "report_md": "",
+          "summary_csv": "",
+          "summary_txt": ""
+        },
+        "preview_images": [],
+        "stage_history": [
+          {
+            "stage_key": "preflight_raw",
+            "stage_label": "原始数据预检查",
+            "order": 2,
+            "status": "success",
+            "started_at": "2026-05-04T10:05:47.919199+00:00",
+            "finished_at": "2026-05-04T10:05:51.220842+00:00",
+            "duration_seconds": 3.302,
+            "error_type": null,
+            "error_message": null
+          },
+          {
+            "stage_key": "preflight_processed",
+            "stage_label": "训练前复检",
+            "order": 5,
+            "status": "success",
+            "started_at": "2026-05-04T10:05:51.223846+00:00",
+            "finished_at": "2026-05-04T10:05:54.202347+00:00",
+            "duration_seconds": 2.979,
+            "error_type": null,
+            "error_message": null
+          }
+        ]
+      },
+      "error": null,
+      "created_at": "2026-05-04T10:05:47.855128+00:00",
+      "updated_at": "2026-05-04T10:05:54.219462+00:00",
+      "started_at": "2026-05-04T10:05:47.879114+00:00",
+      "finished_at": "2026-05-04T10:05:54.216378+00:00",
+      "stop_requested": false,
+      "retry_count": 0,
+      "stage_history": [
+        {
+          "stage_key": "preflight_raw",
+          "stage_label": "原始数据预检查",
+          "order": 2,
+          "status": "success",
+          "started_at": "2026-05-04T10:05:47.919199+00:00",
+          "finished_at": "2026-05-04T10:05:51.220842+00:00",
+          "duration_seconds": 3.302,
+          "error_type": null,
+          "error_message": null
+        },
+        {
+          "stage_key": "preflight_processed",
+          "stage_label": "训练前复检",
+          "order": 5,
+          "status": "success",
+          "started_at": "2026-05-04T10:05:51.223846+00:00",
+          "finished_at": "2026-05-04T10:05:54.202347+00:00",
+          "duration_seconds": 2.979,
+          "error_type": null,
+          "error_message": null
+        }
+      ],
+      "runtime_dir": "E:\\3dgs\\3dgs_platform\\backend\\runtime\\dc19f88d70e5",
+      "result_files": {
+        "metrics_json": "",
+        "report_json": "",
+        "report_md": "",
+        "summary_csv": "",
+        "summary_txt": ""
+      },
+      "metrics_summary": {},
+      "last_error_type": null,
+      "log_file": "E:\\3dgs\\3dgs_platform\\backend\\runtime\\task_logs\\dc19f88d70e5.log"
+    }
+  ]
+}
