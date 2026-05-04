@@ -201,7 +201,6 @@ export function TaskRunPage() {
     set日志列表((prev) => {
       const next = [...prev, ...lines]
 
-      // 防止长时间训练导致前端 DOM 过多，只保留最近 3000 行
       if (next.length > 3000) {
         return next.slice(next.length - 3000)
       }
@@ -672,3 +671,5 @@ export function TaskRunPage() {
     </div>
   )
 }
+
+export { TaskRunPage as ResultPage }
