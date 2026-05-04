@@ -2,20 +2,29 @@ from pathlib import Path
 import shutil
 import subprocess
 import sys
+from typing import Optional
+
 from PIL import Image, UnidentifiedImageError
 
 from engine.core.config import load_yaml
 from engine.core.paths import PathManager
 from engine.core.logger import setup_logger
+from engine.core.process_utils import (
+    popen_registered,
+    process_registry,
+    raise_if_force_stopped,
+)
 
 
 class ConvertService:
     def __init__(
         self,
         system_config_path="configs/system.yaml",
-        convert_config_path="configs/convert.yaml"
+        convert_config_path="configs/convert.yaml",
+        task_id: Optional[str] = None,
     ):
         self.pm = PathManager(system_config_path)
+        self.task_id = task_id
 
         convert_config_path = Path(convert_config_path)
         if not convert_config_path.is_absolute():
@@ -40,11 +49,15 @@ class ConvertService:
         return exe
 
     def _copy_images(self, src_dir: Path, dst_dir: Path):
+        raise_if_force_stopped(self.task_id)
+
         dst_dir.mkdir(parents=True, exist_ok=True)
         image_exts = {".jpg", ".jpeg", ".png", ".bmp", ".tif", ".tiff"}
         copied = 0
 
         for p in src_dir.iterdir():
+            raise_if_force_stopped(self.task_id)
+
             if p.is_file() and p.suffix.lower() in image_exts:
                 shutil.copy2(p, dst_dir / p.name)
                 copied += 1
@@ -53,6 +66,8 @@ class ConvertService:
             raise RuntimeError(f"没有从原始目录复制到任何图片: {src_dir}")
 
     def _prepare_distorted(self, colmap_workspace: Path, distorted_dir: Path):
+        raise_if_force_stopped(self.task_id)
+
         distorted_dir.mkdir(parents=True, exist_ok=True)
 
         db_src = colmap_workspace / "database.db"
@@ -71,9 +86,13 @@ class ConvertService:
         sparse_dst = sparse_dst_root / "0"
         if sparse_dst.exists():
             shutil.rmtree(sparse_dst)
+
+        raise_if_force_stopped(self.task_id)
         shutil.copytree(sparse_src, sparse_dst)
 
     def _clean_previous_outputs(self, gs_input_path: Path):
+        raise_if_force_stopped(self.task_id)
+
         to_remove = [
             gs_input_path / "input",
             gs_input_path / "distorted",
@@ -85,6 +104,8 @@ class ConvertService:
         ]
 
         for p in to_remove:
+            raise_if_force_stopped(self.task_id)
+
             if p.exists():
                 if p.is_dir():
                     shutil.rmtree(p)
@@ -92,6 +113,8 @@ class ConvertService:
                     p.unlink()
 
     def _validate_generated_images(self, image_dir: Path):
+        raise_if_force_stopped(self.task_id)
+
         if not image_dir.exists():
             raise FileNotFoundError(f"convert 输出的 images 目录不存在: {image_dir}")
 
@@ -99,6 +122,8 @@ class ConvertService:
         image_exts = {".jpg", ".jpeg", ".png", ".bmp", ".tif", ".tiff"}
 
         for img_path in sorted(image_dir.iterdir()):
+            raise_if_force_stopped(self.task_id)
+
             if not img_path.is_file() or img_path.suffix.lower() not in image_exts:
                 continue
 
@@ -120,6 +145,8 @@ class ConvertService:
             )
 
     def _ensure_sparse_layout(self, gs_input_path: Path, distorted_dir: Path, logger):
+        raise_if_force_stopped(self.task_id)
+
         expected_sparse = gs_input_path / "sparse" / "0"
         if expected_sparse.exists():
             return
@@ -132,7 +159,9 @@ class ConvertService:
             if expected_sparse.exists():
                 shutil.rmtree(expected_sparse)
 
+            raise_if_force_stopped(self.task_id)
             shutil.copytree(fallback_sparse, expected_sparse)
+
             logger.warning("convert 后未直接生成 gs_input/sparse/0，已从 distorted/sparse/0 自动补齐")
             print("convert 后未直接生成 gs_input/sparse/0，已从 distorted/sparse/0 自动补齐")
             return
@@ -142,6 +171,8 @@ class ConvertService:
         )
 
     def _validate_generated_sparse(self, gs_input_path: Path):
+        raise_if_force_stopped(self.task_id)
+
         sparse_root = gs_input_path / "sparse"
         sparse_zero = sparse_root / "0"
 
@@ -166,6 +197,8 @@ class ConvertService:
             )
 
     def run(self):
+        raise_if_force_stopped(self.task_id)
+
         scene_name = self.convert_cfg["scene_name"]
         source_images = self._resolve_user_path(self.convert_cfg["source_images"])
         colmap_workspace = self._resolve_user_path(self.convert_cfg["colmap_workspace"])
@@ -203,6 +236,8 @@ class ConvertService:
         self._copy_images(source_images, input_dir)
         self._prepare_distorted(colmap_workspace, distorted_dir)
 
+        raise_if_force_stopped(self.task_id)
+
         log_dir = self.pm.scene_log(scene_name)
         log_dir.mkdir(parents=True, exist_ok=True)
         log_file = log_dir / "convert.log"
@@ -211,7 +246,8 @@ class ConvertService:
         cmd = [
             sys.executable,
             str(convert_script),
-            "-s", str(gs_input_path),
+            "-s",
+            str(gs_input_path),
         ]
 
         if skip_matching:
@@ -238,32 +274,45 @@ class ConvertService:
         print("3DGS 输入目录:", gs_input_path)
         print("执行命令:", " ".join(cmd))
 
-        process = subprocess.Popen(
-            cmd,
-            cwd=str(gs_repo),
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
-            encoding="utf-8",
-            errors="replace"
-        )
+        process = None
 
-        for line in process.stdout:
-            line = line.rstrip()
-            print(line)
-            logger.info(line)
+        try:
+            process = popen_registered(
+                self.task_id,
+                cmd,
+                cwd=str(gs_repo),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+            )
 
-        process.wait()
+            if process.stdout:
+                for line in process.stdout:
+                    raise_if_force_stopped(self.task_id)
 
-        if process.returncode == 0:
-            generated_images_dir = gs_input_path / "images"
+                    line = line.rstrip()
+                    if line:
+                        print(line)
+                        logger.info(line)
 
-            self._ensure_sparse_layout(gs_input_path, distorted_dir, logger)
-            self._validate_generated_images(generated_images_dir)
-            self._validate_generated_sparse(gs_input_path)
+            process.wait()
+            raise_if_force_stopped(self.task_id)
 
-            logger.info("convert.py 执行完成，训练图片与 sparse 结构校验通过")
-            print("convert.py 执行完成，训练图片与 sparse 结构校验通过")
-        else:
-            logger.error("convert.py 执行失败，返回码: %s", process.returncode)
-            raise RuntimeError(f"convert.py 执行失败，返回码: {process.returncode}")
+            if process.returncode == 0:
+                generated_images_dir = gs_input_path / "images"
+
+                self._ensure_sparse_layout(gs_input_path, distorted_dir, logger)
+                self._validate_generated_images(generated_images_dir)
+                self._validate_generated_sparse(gs_input_path)
+
+                logger.info("convert.py 执行完成，训练图片与 sparse 结构校验通过")
+                print("convert.py 执行完成，训练图片与 sparse 结构校验通过")
+            else:
+                logger.error("convert.py 执行失败，返回码: %s", process.returncode)
+                raise RuntimeError(f"convert.py 执行失败，返回码: {process.returncode}")
+
+        finally:
+            if process is not None:
+                process_registry.unregister(self.task_id, process)

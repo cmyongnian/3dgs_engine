@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-05-04T16:23:56.014253+00:00",
+  "updated_at": "2026-05-04T16:27:53.448595+00:00",
   "items": [
     {
       "task_id": "dc19f88d70e5",
@@ -517,6 +517,112 @@
       "metrics_summary": {},
       "last_error_type": "runtime_error",
       "log_file": "E:\\3dgs\\3dgs_platform\\backend\\runtime\\task_logs\\fd0ca3e087ec.log"
+    },
+    {
+      "task_id": "24205759c6b1",
+      "scene_name": "video_scene_01",
+      "payload": {
+        "model": {
+          "scene": {
+            "scene_name": "video_scene_01",
+            "raw_image_path": "datasets/raw/video_scene_01/images",
+            "processed_scene_path": "datasets/processed/video_scene_01",
+            "source_path": "datasets/processed/video_scene_01/gs_input",
+            "model_output": "outputs/video_scene_01",
+            "video_path": "datasets/videos/video_scene_01.mp4",
+            "colmap_executable": "third_party/colmap/COLMAP.bat",
+            "magick_executable": "",
+            "ffmpeg_executable": "ffmpeg",
+            "viewer_root": "third_party/viewer/bin"
+          },
+          "system_paths": {
+            "gs_repo": "third_party/gaussian-splatting",
+            "raw_data": "datasets/raw",
+            "processed_data": "datasets/processed",
+            "outputs": "outputs",
+            "logs": "logs",
+            "videos_data": "datasets/videos"
+          },
+          "pipeline": {
+            "input_mode": "images",
+            "run_preflight": true,
+            "run_video_extract": false,
+            "run_colmap": true,
+            "run_convert": true,
+            "run_train": true,
+            "run_render": true,
+            "run_metrics": true,
+            "launch_viewer": false
+          },
+          "train": {
+            "active_profile": "fast_preview",
+            "eval": true,
+            "iterations": 7000,
+            "save_iterations": [
+              2000,
+              7000
+            ],
+            "test_iterations": [
+              -1
+            ],
+            "checkpoint_iterations": [
+              2000,
+              7000
+            ],
+            "start_checkpoint": "",
+            "resume_from_latest": false,
+            "quiet": false,
+            "extra_args": {
+              "data_device": "cpu",
+              "resolution": 8,
+              "densify_grad_threshold": 0.001,
+              "densification_interval": 300,
+              "densify_until_iter": 1500
+            }
+          }
+        }
+      },
+      "status": "failed",
+      "current_stage": "执行失败",
+      "message": "任务执行失败",
+      "result": {},
+      "error": "unsupported operand type(s) for |: 'type' and 'NoneType'",
+      "created_at": "2026-05-04T16:27:49.774625+00:00",
+      "updated_at": "2026-05-04T16:27:53.448595+00:00",
+      "started_at": "2026-05-04T16:27:50.044953+00:00",
+      "finished_at": "2026-05-04T16:27:53.445595+00:00",
+      "stop_requested": false,
+      "force_stop_requested": false,
+      "retry_count": 0,
+      "stage_history": [
+        {
+          "stage_key": "preflight_raw",
+          "stage_label": "原始数据预检查",
+          "order": 2,
+          "status": "success",
+          "started_at": "2026-05-04T16:27:50.077953+00:00",
+          "finished_at": "2026-05-04T16:27:53.420596+00:00",
+          "duration_seconds": 3.343,
+          "error_type": null,
+          "error_message": null
+        },
+        {
+          "stage_key": "colmap",
+          "stage_label": "COLMAP 重建",
+          "order": 3,
+          "status": "failed",
+          "started_at": "2026-05-04T16:27:53.424596+00:00",
+          "finished_at": "2026-05-04T16:27:53.438603+00:00",
+          "duration_seconds": 0.014,
+          "error_type": "runtime_error",
+          "error_message": "unsupported operand type(s) for |: 'type' and 'NoneType'"
+        }
+      ],
+      "runtime_dir": "E:\\3dgs\\3dgs_platform\\backend\\runtime\\24205759c6b1",
+      "result_files": {},
+      "metrics_summary": {},
+      "last_error_type": "runtime_error",
+      "log_file": "E:\\3dgs\\3dgs_platform\\backend\\runtime\\task_logs\\24205759c6b1.log"
     }
   ]
 }
