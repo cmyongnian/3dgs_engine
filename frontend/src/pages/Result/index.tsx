@@ -276,6 +276,17 @@ function getConfigSnapshot(result: ResultDetail | null): AnyObject {
   return isObject(snapshot) ? snapshot : {};
 }
 
+function getDataQualityReport(result: ResultDetail | null, report: AnyObject | null): AnyObject {
+  const value = pickFirst(result, [
+    ["data_quality_report"],
+    ["dataQualityReport"],
+    ["result", "data_quality_report"],
+    ["result", "dataQualityReport"],
+  ]) || pickFirst(report, [["data_quality_report"], ["dataQualityReport"]]);
+
+  return isObject(value) ? value : {};
+}
+
 function getAugmentationReport(result: ResultDetail | null, report: AnyObject | null): AnyObject {
   const value = pickFirst(result, [
     ["augmentation_report"],
@@ -336,6 +347,7 @@ function ExperimentInfoCard({
   const augmentation = isObject(config.augmentation) ? config.augmentation : {};
 
   const registrationRate = metricValue(result, "colmap_registration_rate");
+  const dataQualityScore = metricValue(result, "data_quality_score");
 
   return (
     <section className="result-card experiment-info-card">
@@ -355,6 +367,8 @@ function ExperimentInfoCard({
         <InfoItem label="任务状态" value={info.status || result?.status} />
         <InfoItem label="创建时间" value={formatDateTime(info.created_at || result?.created_at)} />
         <InfoItem label="完成时间" value={formatDateTime(info.finished_at || result?.finished_at)} />
+        <InfoItem label="数据体检评分" value={dataQualityScore === undefined || dataQualityScore === null || dataQualityScore === "" ? "-" : `${formatValue(dataQualityScore, 0)} / 100`} />
+        <InfoItem label="数据体检风险" value={metricValue(result, "data_quality_risk_label")} />
         <InfoItem label="数据增强" value={info.augmentation_enabled} />
         <InfoItem label="增强预设" value={info.augmentation_preset || augmentation.preset} />
         <InfoItem label="训练模板" value={trainProfile.active_profile} />
@@ -381,6 +395,7 @@ function ExperimentInfoCard({
       <div className="flow-flag-wrap">
         <FlowFlag label="预检查" value={pipeline.run_preflight} />
         <FlowFlag label="视频抽帧" value={pipeline.run_video_extract} />
+        <FlowFlag label="数据体检" value={pipeline.run_data_quality} />
         <FlowFlag label="数据增强" value={pipeline.run_augmentation} />
         <FlowFlag label="COLMAP" value={pipeline.run_colmap} />
         <FlowFlag label="转换" value={pipeline.run_convert} />
@@ -426,6 +441,7 @@ function ParameterSnapshotCard({ result }: { result: ResultDetail | null }) {
 
   const pipeline = isObject(config.pipeline) ? config.pipeline : {};
   const augmentation = isObject(config.augmentation) ? config.augmentation : {};
+  const dataQuality = isObject(config.data_quality) ? config.data_quality : {};
   const trainProfile = getActiveTrainProfile(config);
   const trainExtra = isObject(trainProfile.extra_args) ? trainProfile.extra_args : {};
   const colmap = isObject(config.colmap) ? config.colmap : {};
@@ -485,6 +501,22 @@ function ParameterSnapshotCard({ result }: { result: ResultDetail | null }) {
         </div>
 
         <div className="param-section">
+          <h3>数据体检阈值</h3>
+          <KeyValueGrid
+            rows={[
+              ["min_images", dataQuality.min_images],
+              ["max_sample_images", dataQuality.max_sample_images],
+              ["blur_threshold", dataQuality.blur_threshold],
+              ["severe_blur_threshold", dataQuality.severe_blur_threshold],
+              ["dark_mean_threshold", dataQuality.dark_mean_threshold],
+              ["bright_mean_threshold", dataQuality.bright_mean_threshold],
+              ["low_contrast_threshold", dataQuality.low_contrast_threshold],
+              ["duplicate_hamming_threshold", dataQuality.duplicate_hamming_threshold],
+            ]}
+          />
+        </div>
+
+        <div className="param-section">
           <h3>COLMAP / 视频参数</h3>
           <KeyValueGrid
             rows={[
@@ -505,6 +537,7 @@ function ParameterSnapshotCard({ result }: { result: ResultDetail | null }) {
           <div className="flow-flag-wrap compact">
             <FlowFlag label="预检查" value={pipeline.run_preflight} />
             <FlowFlag label="视频抽帧" value={pipeline.run_video_extract} />
+            <FlowFlag label="数据体检" value={pipeline.run_data_quality} />
             <FlowFlag label="数据增强" value={pipeline.run_augmentation} />
             <FlowFlag label="COLMAP" value={pipeline.run_colmap} />
             <FlowFlag label="转换" value={pipeline.run_convert} />
@@ -519,6 +552,103 @@ function ParameterSnapshotCard({ result }: { result: ResultDetail | null }) {
         <summary>查看完整运行时配置快照</summary>
         <pre className="json-preview">{JSON.stringify(config, null, 2)}</pre>
       </details>
+    </section>
+  );
+}
+
+function DataQualityReportCard({
+  result,
+  report,
+}: {
+  result: ResultDetail | null;
+  report: AnyObject | null;
+}) {
+  const qualityReport = getDataQualityReport(result, report);
+
+  if (!qualityReport || Object.keys(qualityReport).length === 0) return null;
+
+  const summary = isObject(qualityReport.summary) ? qualityReport.summary : {};
+  const checks = isObject(qualityReport.checks) ? qualityReport.checks : {};
+  const conclusions = normalizeTextList(qualityReport.conclusions);
+  const recommendations = normalizeTextList(qualityReport.recommendations);
+  const suspiciousItems = Array.isArray(qualityReport.suspicious_items) ? qualityReport.suspicious_items.slice(0, 20) : [];
+  const riskLevel = String(qualityReport.risk_level || "");
+
+  return (
+    <section className={`result-card data-quality-card risk-${riskLevel || "unknown"}`}>
+      <div className="result-card-header">
+        <div>
+          <h2>数据质量体检与预处理诊断</h2>
+          <p className="section-tip">
+            在 COLMAP 和训练前检查图片数量、分辨率一致性、清晰度、曝光、对比度和疑似重复帧，用于判断是否需要重新采集或启用增强预处理。
+          </p>
+        </div>
+        <div className="quality-score-badge">
+          <span>综合评分</span>
+          <strong>{formatValue(qualityReport.score, 0)}</strong>
+          <em>{qualityReport.risk_label || "-"}</em>
+        </div>
+      </div>
+
+      <div className="experiment-info-grid">
+        <InfoItem label="图片总数" value={summary.total_images} />
+        <InfoItem label="抽样分析数" value={summary.sampled_images} />
+        <InfoItem label="可读取图片" value={summary.readable_images} />
+        <InfoItem label="不可读取图片" value={summary.unreadable_images} />
+        <InfoItem label="主分辨率" value={summary.main_resolution} />
+        <InfoItem label="分辨率一致" value={summary.resolution_consistency} />
+        <InfoItem label="平均清晰度" value={summary.avg_blur_score} />
+        <InfoItem label="模糊图片" value={summary.blur_images} />
+        <InfoItem label="严重模糊" value={summary.severe_blur_images} />
+        <InfoItem label="平均亮度" value={summary.avg_brightness} />
+        <InfoItem label="偏暗图片" value={summary.dark_images} />
+        <InfoItem label="过曝图片" value={summary.overexposed_images} />
+        <InfoItem label="低对比度" value={summary.low_contrast_images} />
+        <InfoItem label="疑似重复帧" value={summary.duplicate_like_images} />
+      </div>
+
+      <div className="experiment-path-grid">
+        <InfoItem label="体检图片目录" value={qualityReport.image_dir} mono />
+        <InfoItem label="视频来源" value={qualityReport.video_path} mono />
+      </div>
+
+      <div className="quality-check-grid">
+        {Object.entries(checks).map(([key, value]) => {
+          const item = isObject(value) ? value : {};
+          return (
+            <div className={`quality-check-item ${item.status === "pass" ? "pass" : "warning"}`} key={key}>
+              <span>{key}</span>
+              <strong>{item.status === "pass" ? "通过" : "需注意"}</strong>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="data-quality-columns">
+        <div className="quality-suggestion-box">
+          <h4>自动结论</h4>
+          {conclusions.length > 0 ? (
+            <ul>{conclusions.map((item, index) => <li key={`dq-c-${index}`}>{item}</li>)}</ul>
+          ) : (
+            <p className="empty-text">暂无自动结论。</p>
+          )}
+        </div>
+        <div className="quality-suggestion-box">
+          <h4>预处理建议</h4>
+          {recommendations.length > 0 ? (
+            <ul>{recommendations.map((item, index) => <li key={`dq-r-${index}`}>{item}</li>)}</ul>
+          ) : (
+            <p className="empty-text">暂无预处理建议。</p>
+          )}
+        </div>
+      </div>
+
+      {suspiciousItems.length > 0 && (
+        <details className="snapshot-details">
+          <summary>查看异常样本记录</summary>
+          <pre className="json-preview">{JSON.stringify(suspiciousItems, null, 2)}</pre>
+        </details>
+      )}
     </section>
   );
 }
@@ -1076,6 +1206,8 @@ function ResultPage() {
       </div>
 
       <ExperimentInfoCard result={state.result} taskId={taskId || ""} />
+
+      <DataQualityReportCard result={state.result} report={report} />
 
       <ParameterSnapshotCard result={state.result} />
 

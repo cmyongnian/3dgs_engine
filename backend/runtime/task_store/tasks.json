@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-05-05T10:40:03.701730+00:00",
+  "updated_at": "2026-05-05T12:51:01.530724+00:00",
   "items": [
     {
       "task_id": "b45750f9a68b",
@@ -33,6 +33,7 @@
             "input_mode": "images",
             "run_preflight": true,
             "run_video_extract": false,
+            "run_data_quality": true,
             "run_augmentation": true,
             "run_colmap": true,
             "run_convert": false,
@@ -210,6 +211,7 @@
             "input_mode": "images",
             "run_preflight": true,
             "run_video_extract": false,
+            "run_data_quality": true,
             "run_augmentation": true,
             "run_colmap": true,
             "run_convert": true,
@@ -341,6 +343,7 @@
             "input_mode": "images",
             "run_preflight": true,
             "run_video_extract": false,
+            "run_data_quality": true,
             "run_augmentation": true,
             "run_colmap": true,
             "run_convert": true,
@@ -711,6 +714,7 @@
             "input_mode": "images",
             "run_preflight": true,
             "run_video_extract": false,
+            "run_data_quality": true,
             "run_augmentation": true,
             "run_colmap": true,
             "run_convert": true,
@@ -1237,6 +1241,7 @@
             "input_mode": "images",
             "run_preflight": true,
             "run_video_extract": false,
+            "run_data_quality": true,
             "run_augmentation": true,
             "run_colmap": true,
             "run_convert": true,
@@ -1763,6 +1768,160 @@
       },
       "last_error_type": null,
       "log_file": "E:\\3dgs\\3dgs_platform\\backend\\runtime\\task_logs\\2f19f586e05e.log"
+    },
+    {
+      "task_id": "66fe55040195",
+      "scene_name": "video_scene_01",
+      "payload": {
+        "model": {
+          "scene": {
+            "scene_name": "video_scene_01",
+            "raw_image_path": "datasets/raw/video_scene_01/images",
+            "processed_scene_path": "datasets/processed/video_scene_01",
+            "source_path": "datasets/processed/video_scene_01/gs_input",
+            "model_output": "outputs/video_scene_01",
+            "video_path": "datasets/videos/video_scene_01.mp4",
+            "colmap_executable": "third_party/colmap/COLMAP.bat",
+            "magick_executable": "",
+            "ffmpeg_executable": "ffmpeg",
+            "viewer_root": "third_party/viewer/bin",
+            "colmap_use_gpu": true,
+            "video_target_fps": 2
+          },
+          "system_paths": {
+            "gs_repo": "third_party/gaussian-splatting",
+            "raw_data": "datasets/raw",
+            "processed_data": "datasets/processed",
+            "outputs": "outputs",
+            "logs": "logs",
+            "videos_data": "datasets/videos"
+          },
+          "pipeline": {
+            "input_mode": "images",
+            "run_preflight": true,
+            "run_video_extract": false,
+            "run_data_quality": true,
+            "run_augmentation": true,
+            "run_colmap": true,
+            "run_convert": true,
+            "run_train": true,
+            "run_render": true,
+            "run_metrics": true,
+            "launch_viewer": false
+          },
+          "augmentation": {
+            "enabled": true,
+            "preset": "safe",
+            "output_subdir": "augmented_images",
+            "overwrite": true,
+            "keep_original_if_failed": true,
+            "jpeg_quality": 95,
+            "gray_world": true,
+            "clahe": true,
+            "clahe_clip_limit": 2.0,
+            "clahe_tile_grid_size": [
+              8,
+              8
+            ],
+            "auto_gamma": false,
+            "gamma_target_mean": 0.48,
+            "denoise": false,
+            "denoise_h": 3.0,
+            "sharpen": false,
+            "sharpen_amount": 0.2,
+            "max_long_edge": 0
+          },
+          "train": {
+            "active_profile": "fast_preview",
+            "eval": true,
+            "iterations": 7000,
+            "save_iterations": [
+              2000,
+              7000
+            ],
+            "test_iterations": [
+              -1
+            ],
+            "checkpoint_iterations": [
+              2000,
+              7000
+            ],
+            "start_checkpoint": "",
+            "resume_from_latest": false,
+            "quiet": false,
+            "extra_args": {
+              "data_device": "cpu",
+              "resolution": 8,
+              "densify_grad_threshold": 0.001,
+              "densification_interval": 300,
+              "densify_until_iter": 1500
+            }
+          }
+        }
+      },
+      "status": "running",
+      "current_stage": "COLMAP 重建",
+      "message": "正在执行：COLMAP 重建",
+      "result": {},
+      "error": null,
+      "created_at": "2026-05-05T12:50:34.742760+00:00",
+      "updated_at": "2026-05-05T12:51:01.530724+00:00",
+      "started_at": "2026-05-05T12:50:35.076362+00:00",
+      "finished_at": null,
+      "stop_requested": false,
+      "force_stop_requested": false,
+      "retry_count": 0,
+      "stage_history": [
+        {
+          "stage_key": "data_quality",
+          "stage_label": "数据质量体检",
+          "order": 2,
+          "status": "success",
+          "started_at": "2026-05-05T12:50:35.130268+00:00",
+          "finished_at": "2026-05-05T12:50:37.347178+00:00",
+          "duration_seconds": 2.217,
+          "error_type": null,
+          "error_message": null
+        },
+        {
+          "stage_key": "preflight_raw",
+          "stage_label": "原始数据预检查",
+          "order": 3,
+          "status": "success",
+          "started_at": "2026-05-05T12:50:37.353176+00:00",
+          "finished_at": "2026-05-05T12:50:40.539963+00:00",
+          "duration_seconds": 3.187,
+          "error_type": null,
+          "error_message": null
+        },
+        {
+          "stage_key": "augmentation",
+          "stage_label": "数据增强",
+          "order": 4,
+          "status": "success",
+          "started_at": "2026-05-05T12:50:40.545963+00:00",
+          "finished_at": "2026-05-05T12:51:01.519725+00:00",
+          "duration_seconds": 20.974,
+          "error_type": null,
+          "error_message": null
+        },
+        {
+          "stage_key": "colmap",
+          "stage_label": "COLMAP 重建",
+          "order": 5,
+          "status": "running",
+          "started_at": "2026-05-05T12:51:01.524725+00:00",
+          "finished_at": null,
+          "duration_seconds": null,
+          "error_type": null,
+          "error_message": null
+        }
+      ],
+      "runtime_dir": "E:\\3dgs\\3dgs_platform\\backend\\runtime\\66fe55040195",
+      "result_files": {},
+      "metrics_summary": {},
+      "last_error_type": null,
+      "log_file": "E:\\3dgs\\3dgs_platform\\backend\\runtime\\task_logs\\66fe55040195.log"
     }
   ]
 }

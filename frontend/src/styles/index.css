@@ -1798,7 +1798,7 @@ summary:hover {
 }
 
 .recent-task-metrics {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
   margin-bottom: 14px;
 }
 
@@ -2128,4 +2128,114 @@ summary:hover {
 
 .recent-task-footer .danger-btn {
   white-space: nowrap;
+}
+
+/* 数据质量体检与预处理诊断报告 */
+.data-quality-card {
+  margin-top: 24px;
+  border-left: 4px solid #2563eb;
+}
+
+.data-quality-card.risk-low {
+  border-left-color: #22c55e;
+}
+
+.data-quality-card.risk-medium {
+  border-left-color: #f59e0b;
+}
+
+.data-quality-card.risk-high,
+.data-quality-card.risk-danger {
+  border-left-color: #ef4444;
+}
+
+.quality-score-badge {
+  min-width: 132px;
+  padding: 12px 16px;
+  border-radius: 16px;
+  background: #f8fafc;
+  border: 1px solid #dbe5f5;
+  text-align: center;
+}
+
+.quality-score-badge span,
+.quality-score-badge em {
+  display: block;
+  color: #64748b;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.quality-score-badge strong {
+  display: block;
+  margin: 4px 0;
+  color: #0b1f3a;
+  font-size: 28px;
+  line-height: 1;
+}
+
+.quality-check-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.quality-check-item {
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+}
+
+.quality-check-item span,
+.quality-check-item strong {
+  display: block;
+}
+
+.quality-check-item span {
+  margin-bottom: 6px;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.quality-check-item strong {
+  color: #0f172a;
+  font-size: 15px;
+}
+
+.quality-check-item.pass {
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+}
+
+.quality-check-item.warning {
+  border-color: #fde68a;
+  background: #fffbeb;
+}
+
+.data-quality-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 18px;
+}
+
+@media (max-width: 1180px) {
+  .quality-check-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 920px) {
+  .quality-check-grid,
+  .data-quality-columns {
+    grid-template-columns: 1fr;
+  }
+
+  .quality-score-badge {
+    width: 100%;
+  }
 }

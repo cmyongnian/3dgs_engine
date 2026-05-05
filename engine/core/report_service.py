@@ -297,6 +297,41 @@ class ReportService:
 
         return quality_json, quality_txt
 
+    def _find_data_quality_files(
+        self,
+        model_path: Path,
+        processed_scene_path: Optional[Path],
+        log_dir: Optional[Path],
+    ) -> Tuple[Optional[Path], Optional[Path]]:
+        quality_json = self._find_existing_file(
+            log_dir / "data_quality_report.json" if log_dir else None,
+            processed_scene_path / "data_quality_report.json" if processed_scene_path else None,
+            model_path / "data_quality_report.json",
+        )
+
+        quality_txt = self._find_existing_file(
+            log_dir / "data_quality_report.txt" if log_dir else None,
+            processed_scene_path / "data_quality_report.txt" if processed_scene_path else None,
+            model_path / "data_quality_report.txt",
+        )
+
+        if quality_json is None:
+            quality_json = (
+                self._find_file_recursively(log_dir, "data_quality_report.json")
+                or self._find_file_recursively(processed_scene_path, "data_quality_report.json")
+                or self._find_file_recursively(model_path, "data_quality_report.json")
+            )
+
+        if quality_txt is None:
+            quality_txt = (
+                self._find_file_recursively(log_dir, "data_quality_report.txt")
+                or self._find_file_recursively(processed_scene_path, "data_quality_report.txt")
+                or self._find_file_recursively(model_path, "data_quality_report.txt")
+            )
+
+        return quality_json, quality_txt
+
+
     def _normalize_metrics_summary(self, raw: Dict[str, Any]) -> Dict[str, Any]:
         metrics = raw.get("metrics_summary", raw)
 
@@ -380,6 +415,7 @@ class ReportService:
 
     def _build_quality_conclusion(
         self,
+        data_quality: Dict[str, Any],
         colmap_quality: Dict[str, Any],
         training_summary: Dict[str, Any],
         render_summary: Dict[str, Any],
@@ -387,6 +423,39 @@ class ReportService:
     ) -> Dict[str, Any]:
         suggestions: List[str] = []
         conclusions: List[str] = []
+
+        data_quality_score = self._safe_float(data_quality.get("score"))
+        data_quality_label = str(data_quality.get("risk_label") or "")
+        data_quality_summary = data_quality.get("summary") if isinstance(data_quality.get("summary"), dict) else {}
+
+        if data_quality_score is not None:
+            conclusions.append(
+                "输入数据质量体检评分为 {0:.0f}/100，风险等级为 {1}。".format(
+                    data_quality_score, data_quality_label or "未标注"
+                )
+            )
+
+        if data_quality_summary:
+            conclusions.append(
+                "体检阶段共检测输入图像 {0} 张，主分辨率为 {1}。".format(
+                    data_quality_summary.get("total_images"),
+                    data_quality_summary.get("main_resolution"),
+                )
+            )
+
+            if data_quality_summary.get("blur_images"):
+                suggestions.append("存在模糊图片，建议删除严重模糊帧或重新采集稳定图像。")
+
+            exposure_count = int(data_quality_summary.get("dark_images") or 0) + int(data_quality_summary.get("overexposed_images") or 0)
+            if exposure_count:
+                suggestions.append("存在曝光异常图片，建议使用安全增强或 low_light 预设，并优先避免过曝采集。")
+
+            if data_quality_summary.get("duplicate_like_images"):
+                suggestions.append("存在疑似重复帧，视频输入可适当降低抽帧 FPS。")
+
+        for item in data_quality.get("recommendations", [])[:3] if isinstance(data_quality.get("recommendations"), list) else []:
+            if item and item not in suggestions:
+                suggestions.append(str(item))
 
         registration_rate = self._safe_float(
             colmap_quality.get("registration_rate_percent")
@@ -524,7 +593,15 @@ class ReportService:
 
         colmap_quality = self._read_json(colmap_quality_json)
 
+        data_quality_json, data_quality_txt = self._find_data_quality_files(
+            model_path=model_path,
+            processed_scene_path=processed_scene_path,
+            log_dir=log_dir,
+        )
+        data_quality = self._read_json(data_quality_json)
+
         conclusion_data = self._build_quality_conclusion(
+            data_quality=data_quality,
             colmap_quality=colmap_quality,
             training_summary=training_summary,
             render_summary=render_summary,
@@ -551,6 +628,16 @@ class ReportService:
                 if colmap_quality_txt and colmap_quality_txt.exists()
                 else ""
             ),
+            "data_quality_json": (
+                str(data_quality_json)
+                if data_quality_json and data_quality_json.exists()
+                else ""
+            ),
+            "data_quality_txt": (
+                str(data_quality_txt)
+                if data_quality_txt and data_quality_txt.exists()
+                else ""
+            ),
             "report_json": "",
             "report_md": "",
             "summary_csv": "",
@@ -565,6 +652,7 @@ class ReportService:
             "report_dir": str(report_dir),
             "generated_at": datetime.now().isoformat(timespec="seconds"),
             "data_summary": data_summary,
+            "data_quality": data_quality,
             "colmap_quality": colmap_quality,
             "training_summary": training_summary,
             "render_summary": render_summary,
@@ -589,6 +677,8 @@ class ReportService:
 
         metrics = data.get("metrics_summary", {})
         colmap = data.get("colmap_quality", {})
+        data_quality = data.get("data_quality", {})
+        data_quality_summary = data_quality.get("summary", {}) if isinstance(data_quality.get("summary"), dict) else {}
         train = data.get("training_summary", {})
         render = data.get("render_summary", {})
         data_summary = data.get("data_summary", {})
@@ -605,14 +695,27 @@ class ReportService:
             "- 报告目录：{0}".format(data.get("report_dir", "")),
             "- 生成时间：{0}".format(data.get("generated_at", "")),
             "",
-            "## 2. 数据与 sparse 结构",
+            "## 2. 输入数据质量体检",
+            "",
+            "- 综合评分：{0}/100".format(data_quality.get("score")),
+            "- 风险等级：{0}".format(data_quality.get("risk_label")),
+            "- 输入图像数量：{0}".format(data_quality_summary.get("total_images")),
+            "- 主分辨率：{0}".format(data_quality_summary.get("main_resolution")),
+            "- 模糊图像数量：{0}".format(data_quality_summary.get("blur_images")),
+            "- 曝光异常数量：{0}".format(
+                int(data_quality_summary.get("dark_images") or 0)
+                + int(data_quality_summary.get("overexposed_images") or 0)
+            ),
+            "- 疑似重复帧：{0}".format(data_quality_summary.get("duplicate_like_images")),
+            "",
+            "## 3. 数据与 sparse 结构",
             "",
             "- 处理后图像数量：{0}".format(data_summary.get("processed_image_count")),
             "- 训练输入图像数量：{0}".format(data_summary.get("source_image_count")),
             "- sparse/0 路径：{0}".format(data_summary.get("sparse_zero_path", "")),
             "- 是否存在 sparse 模型：{0}".format("是" if data_summary.get("has_sparse_model") else "否"),
             "",
-            "## 3. COLMAP 重建质量",
+            "## 4. COLMAP 重建质量",
             "",
             "- 输入图像数量：{0}".format(colmap.get("input_image_count")),
             "- 注册图像数量：{0}".format(colmap.get("registered_image_count")),
@@ -624,20 +727,20 @@ class ReportService:
             "- 质量等级：{0}".format(colmap.get("quality_level")),
             "- 是否建议继续：{0}".format("是" if colmap.get("can_continue") else "否"),
             "",
-            "## 4. 训练结果",
+            "## 5. 训练结果",
             "",
             "- 最新迭代次数：{0}".format(train.get("latest_iteration")),
             "- Gaussian 数量：{0}".format(train.get("gaussian_count")),
             "- 点云文件：{0}".format(train.get("point_cloud_ply", "")),
             "- checkpoint 数量：{0}".format(train.get("checkpoint_count")),
             "",
-            "## 5. 渲染结果",
+            "## 6. 渲染结果",
             "",
             "- 渲染图像总数：{0}".format(render.get("render_image_count")),
             "- test 渲染图像数：{0}".format(render.get("test_render_image_count")),
             "- train 渲染图像数：{0}".format(render.get("train_render_image_count")),
             "",
-            "## 6. 评价指标",
+            "## 7. 评价指标",
             "",
             "- PSNR：{0}".format(metrics.get("psnr")),
             "- SSIM：{0}".format(metrics.get("ssim")),
@@ -645,11 +748,11 @@ class ReportService:
             "- MSE：{0}".format(metrics.get("mse")),
             "- MAE：{0}".format(metrics.get("mae")),
             "",
-            "## 7. 自动结论",
+            "## 8. 自动结论",
             "",
             data.get("overall_conclusion", ""),
             "",
-            "## 8. 优化建议",
+            "## 9. 优化建议",
             "",
         ]
 
@@ -664,7 +767,7 @@ class ReportService:
         preview_images = data.get("preview_images", [])
 
         if preview_images:
-            lines.extend(["", "## 9. 预览图像", ""])
+            lines.extend(["", "## 10. 预览图像", ""])
 
             for item in preview_images:
                 lines.append("- {0}".format(item))
@@ -674,11 +777,13 @@ class ReportService:
         lines.extend(
             [
                 "",
-                "## 10. 结果文件",
+                "## 11. 结果文件",
                 "",
                 "- metrics.json：{0}".format(result_files.get("metrics_json", "")),
                 "- colmap_quality.json：{0}".format(result_files.get("colmap_quality_json", "")),
                 "- colmap_quality.txt：{0}".format(result_files.get("colmap_quality_txt", "")),
+                "- data_quality_report.json：{0}".format(result_files.get("data_quality_json", "")),
+                "- data_quality_report.txt：{0}".format(result_files.get("data_quality_txt", "")),
                 "- report.json：{0}".format(result_files.get("report_json", "")),
                 "- report.md：{0}".format(result_files.get("report_md", "")),
                 "- summary.csv：{0}".format(result_files.get("summary_csv", "")),
@@ -696,6 +801,8 @@ class ReportService:
 
         metrics = data.get("metrics_summary", {})
         colmap = data.get("colmap_quality", {})
+        data_quality = data.get("data_quality", {})
+        data_quality_summary = data_quality.get("summary", {}) if isinstance(data_quality.get("summary"), dict) else {}
         train = data.get("training_summary", {})
         render = data.get("render_summary", {})
 
@@ -705,6 +812,11 @@ class ReportService:
             ["processed_scene_path", data.get("processed_scene_path", "")],
             ["log_dir", data.get("log_dir", "")],
             ["generated_at", data.get("generated_at", "")],
+            ["data_quality_score", data_quality.get("score")],
+            ["data_quality_risk_label", data_quality.get("risk_label")],
+            ["data_quality_total_images", data_quality_summary.get("total_images")],
+            ["data_quality_blur_images", data_quality_summary.get("blur_images")],
+            ["data_quality_exposure_issue_count", int(data_quality_summary.get("dark_images") or 0) + int(data_quality_summary.get("overexposed_images") or 0)],
             ["colmap_input_image_count", colmap.get("input_image_count")],
             ["colmap_registered_image_count", colmap.get("registered_image_count")],
             ["colmap_registration_rate_percent", colmap.get("registration_rate_percent")],
@@ -738,6 +850,8 @@ class ReportService:
 
         metrics = data.get("metrics_summary", {})
         colmap = data.get("colmap_quality", {})
+        data_quality = data.get("data_quality", {})
+        data_quality_summary = data_quality.get("summary", {}) if isinstance(data_quality.get("summary"), dict) else {}
         train = data.get("training_summary", {})
         render = data.get("render_summary", {})
 
@@ -747,6 +861,14 @@ class ReportService:
             "处理数据目录: {0}".format(data.get("processed_scene_path", "")),
             "日志目录: {0}".format(data.get("log_dir", "")),
             "生成时间: {0}".format(data.get("generated_at", "")),
+            "",
+            "[输入数据质量体检]",
+            "综合评分: {0}/100".format(data_quality.get("score")),
+            "风险等级: {0}".format(data_quality.get("risk_label")),
+            "输入图像数量: {0}".format(data_quality_summary.get("total_images")),
+            "主分辨率: {0}".format(data_quality_summary.get("main_resolution")),
+            "模糊图像数量: {0}".format(data_quality_summary.get("blur_images")),
+            "曝光异常数量: {0}".format(int(data_quality_summary.get("dark_images") or 0) + int(data_quality_summary.get("overexposed_images") or 0)),
             "",
             "[COLMAP 重建质量]",
             "输入图像数量: {0}".format(colmap.get("input_image_count")),

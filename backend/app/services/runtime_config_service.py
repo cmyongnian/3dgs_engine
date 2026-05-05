@@ -290,6 +290,7 @@ class RuntimeConfigService:
             "render": str(runtime_dir / "render.yaml"),
             "metrics": str(runtime_dir / "metrics.yaml"),
             "preflight": str(runtime_dir / "preflight.yaml"),
+            "data_quality": str(runtime_dir / "data_quality.yaml"),
             "colmap": str(runtime_dir / "colmap.yaml"),
             "convert": str(runtime_dir / "convert.yaml"),
             "viewer": str(runtime_dir / "viewer.yaml"),
@@ -357,15 +358,16 @@ class RuntimeConfigService:
         pipeline_yaml = {
             "pipeline": {
                 "input_mode": input_mode,
-                "run_preflight": pipeline.get("run_preflight", True),
-                "run_video_extract": pipeline.get("run_video_extract", False),
+                "run_preflight": self._as_bool(pipeline.get("run_preflight", True), True),
+                "run_video_extract": self._as_bool(pipeline.get("run_video_extract", False), False),
+                "run_data_quality": self._as_bool(pipeline.get("run_data_quality", True), True),
                 "run_augmentation": run_augmentation,
-                "run_colmap": pipeline.get("run_colmap", True),
-                "run_convert": pipeline.get("run_convert", True),
-                "run_train": pipeline.get("run_train", True),
-                "run_render": pipeline.get("run_render", True),
-                "run_metrics": pipeline.get("run_metrics", True),
-                "launch_viewer": pipeline.get("launch_viewer", False),
+                "run_colmap": self._as_bool(pipeline.get("run_colmap", True), True),
+                "run_convert": self._as_bool(pipeline.get("run_convert", True), True),
+                "run_train": self._as_bool(pipeline.get("run_train", True), True),
+                "run_render": self._as_bool(pipeline.get("run_render", True), True),
+                "run_metrics": self._as_bool(pipeline.get("run_metrics", True), True),
+                "launch_viewer": self._as_bool(pipeline.get("launch_viewer", False), False),
             }
         }
 
@@ -423,6 +425,31 @@ class RuntimeConfigService:
                 "source_path": source_path,
                 "video_path": video_path,
                 "model_output": output_dir,
+                "quiet": quiet,
+            }
+        }
+
+        data_quality_yaml = {
+            "data_quality": {
+                "scene_name": scene_name,
+                "task_id": task_id,
+                "input_mode": input_mode,
+                "image_dir": raw_image_path,
+                "raw_image_path": raw_image_path,
+                "processed_image_path": source_path,
+                "video_path": video_path,
+                "log_dir": log_dir,
+                "min_images": 20,
+                "max_sample_images": 300,
+                "blur_threshold": 100.0,
+                "severe_blur_threshold": 50.0,
+                "dark_mean_threshold": 0.28,
+                "bright_mean_threshold": 0.78,
+                "dark_pixel_ratio_threshold": 0.45,
+                "overexposed_pixel_ratio_threshold": 0.15,
+                "low_contrast_threshold": 0.08,
+                "duplicate_hamming_threshold": 3,
+                "fail_on_high_risk": False,
                 "quiet": quiet,
             }
         }
@@ -517,6 +544,7 @@ class RuntimeConfigService:
         self._write_yaml(Path(files["metrics"]), metrics_yaml)
         self._write_yaml(Path(files["report"]), report_yaml)
         self._write_yaml(Path(files["preflight"]), preflight_yaml)
+        self._write_yaml(Path(files["data_quality"]), data_quality_yaml)
         self._write_yaml(Path(files["augmentation"]), augmentation_yaml)
         self._write_yaml(Path(files["colmap"]), colmap_yaml)
         self._write_yaml(Path(files["convert"]), convert_yaml)

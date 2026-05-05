@@ -10,6 +10,10 @@ pipeline:
   # 是否执行视频抽帧
   run_video_extract: false
 
+  # 是否执行数据质量体检与预处理诊断
+  # 该步骤位于视频抽帧之后、预检查和数据增强之前
+  run_data_quality: true
+
   # 新增：是否执行数据增强
   # 该步骤位于 COLMAP 之前
   # 使用 Albumentations 进行 pixel-level / image-only 增强

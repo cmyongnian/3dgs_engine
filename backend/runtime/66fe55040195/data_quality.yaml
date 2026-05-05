@@ -1,0 +1,21 @@
+data_quality:
+  scene_name: video_scene_01
+  task_id: 66fe55040195
+  input_mode: images
+  image_dir: datasets/raw/video_scene_01/images
+  raw_image_path: datasets/raw/video_scene_01/images
+  processed_image_path: datasets\processed\video_scene_01\66fe55040195\gs_input
+  video_path: datasets/videos/video_scene_01.mp4
+  log_dir: E:\3dgs\3dgs_platform\engine\logs\video_scene_01\66fe55040195
+  min_images: 20
+  max_sample_images: 300
+  blur_threshold: 100.0
+  severe_blur_threshold: 50.0
+  dark_mean_threshold: 0.28
+  bright_mean_threshold: 0.78
+  dark_pixel_ratio_threshold: 0.45
+  overexposed_pixel_ratio_threshold: 0.15
+  low_contrast_threshold: 0.08
+  duplicate_hamming_threshold: 3
+  fail_on_high_risk: false
+  quiet: false

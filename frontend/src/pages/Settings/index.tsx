@@ -24,6 +24,7 @@ type 流程布尔字段 = Exclude<keyof 系统设置['pipelineDefaults'], 'input
 const 流程开关项: Array<[流程布尔字段, string, string]> = [
   ['run_preflight', '预检查', '检查图片、目录和训练输入是否完整'],
   ['run_video_extract', '视频抽帧', '视频模式下先抽帧到原始图片目录'],
+  ['run_data_quality', '数据质量体检', '统计数量、清晰度、曝光、分辨率和重复帧风险'],
   ['run_augmentation', '数据增强', '在 COLMAP 前进行安全图像增强'],
   ['run_colmap', 'COLMAP', '执行稀疏重建和相机位姿估计'],
   ['run_convert', '转换', '生成 3DGS 训练输入目录'],

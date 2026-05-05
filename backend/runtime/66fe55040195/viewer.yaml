@@ -1,0 +1,6 @@
+viewer:
+  scene_name: video_scene_01
+  source_path: datasets\processed\video_scene_01\66fe55040195\gs_input
+  model_path: outputs\video_scene_01\66fe55040195
+  viewer_root: third_party/viewer/bin
+  quiet: false

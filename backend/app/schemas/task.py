@@ -28,6 +28,7 @@ class PipelineFlags(BaseModel):
     input_mode: Literal["images", "video"] = "images"
     run_preflight: bool = True
     run_video_extract: bool = False
+    run_data_quality: bool = True
     run_augmentation: bool = True
     run_colmap: bool = True
     run_convert: bool = True

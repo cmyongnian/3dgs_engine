@@ -125,6 +125,8 @@ function TaskCard({
   const psnr = 读取指标(task, result, 'psnr')
   const ssim = 读取指标(task, result, 'ssim')
   const lpips = 读取指标(task, result, 'lpips')
+  const dataQualityScore = 读取指标(task, result, 'data_quality_score')
+  const dataQualityRisk = 读取指标(task, result, 'data_quality_risk_label')
   const registrationRate = 读取指标(task, result, 'colmap_registration_rate')
   const registrationRateText =
     registrationRate === undefined || registrationRate === null || registrationRate === ''
@@ -173,6 +175,10 @@ function TaskCard({
       </div>
 
       <div className="recent-task-metrics">
+        <div>
+          <span>数据体检</span>
+          <strong>{dataQualityScore === undefined || dataQualityScore === null || dataQualityScore === '' ? '-' : `${格式化数值(dataQualityScore, 0)} / ${dataQualityRisk || '-'}`}</strong>
+        </div>
         <div>
           <span>PSNR</span>
           <strong>{格式化数值(psnr)}</strong>

@@ -258,6 +258,7 @@ def _runtime_config_snapshot(runtime_dir: Optional[Path]) -> Dict[str, Any]:
         "render": "render.yaml",
         "metrics": "metrics.yaml",
         "preflight": "preflight.yaml",
+        "data_quality": "data_quality.yaml",
         "colmap": "colmap.yaml",
         "convert": "convert.yaml",
         "viewer": "viewer.yaml",
@@ -518,11 +519,18 @@ def _build_context(task_id: str) -> Dict[str, Any]:
     augmentation_report_txt = _resolve_existing_file(
         stored_files.get("augmentation_report_txt")
     ) or _first_found("augmentation_report.txt", *search_dirs)
+    data_quality_json = _resolve_existing_file(
+        stored_files.get("data_quality_json")
+    ) or _first_found("data_quality_report.json", *search_dirs)
+    data_quality_txt = _resolve_existing_file(
+        stored_files.get("data_quality_txt")
+    ) or _first_found("data_quality_report.txt", *search_dirs)
 
     metrics_data = _safe_read_json(metrics_json)
     report_data = _safe_read_json(report_json)
     colmap_quality_data = _safe_read_json(colmap_quality_json)
     augmentation_report_data = _safe_read_json(augmentation_report_json)
+    data_quality_data = _safe_read_json(data_quality_json)
 
     result_files = {
         "metrics_json": _existing_str(metrics_json),
@@ -534,6 +542,8 @@ def _build_context(task_id: str) -> Dict[str, Any]:
         "colmap_quality_txt": _existing_str(colmap_quality_txt),
         "augmentation_report_json": _existing_str(augmentation_report_json),
         "augmentation_report_txt": _existing_str(augmentation_report_txt),
+        "data_quality_json": _existing_str(data_quality_json),
+        "data_quality_txt": _existing_str(data_quality_txt),
     }
 
     metrics_summary = {
@@ -577,6 +587,15 @@ def _build_context(task_id: str) -> Dict[str, Any]:
         "colmap_mean_track_length": colmap_quality_data.get("mean_track_length"),
         "colmap_mean_reprojection_error": colmap_quality_data.get("mean_reprojection_error"),
         "colmap_quality_level": colmap_quality_data.get("quality_level"),
+        "data_quality_score": data_quality_data.get("score"),
+        "data_quality_risk_level": data_quality_data.get("risk_level"),
+        "data_quality_risk_label": data_quality_data.get("risk_label"),
+        "input_image_count": (data_quality_data.get("summary") or {}).get("total_images") if isinstance(data_quality_data.get("summary"), dict) else None,
+        "blur_image_count": (data_quality_data.get("summary") or {}).get("blur_images") if isinstance(data_quality_data.get("summary"), dict) else None,
+        "exposure_issue_count": (
+            int((data_quality_data.get("summary") or {}).get("dark_images") or 0)
+            + int((data_quality_data.get("summary") or {}).get("overexposed_images") or 0)
+        ) if isinstance(data_quality_data.get("summary"), dict) else None,
     }
 
     metrics_summary = {
@@ -651,6 +670,7 @@ def _build_context(task_id: str) -> Dict[str, Any]:
         "report_summary": report_summary,
         "colmap_quality": colmap_quality_data or stored_result.get("colmap_quality", {}),
         "augmentation_report": augmentation_report_data,
+        "data_quality_report": data_quality_data,
         "experiment_info": experiment_info,
         "config_snapshot": config_snapshot,
         "submitted_config": submitted_config,
@@ -694,6 +714,8 @@ def _build_context(task_id: str) -> Dict[str, Any]:
             "report_url": "/api/results/{0}/report".format(task_id) if report_summary else "",
             "augmentation_report": augmentation_report_data,
             "augmentation_report_url": "/api/results/{0}/augmentation-report".format(task_id) if augmentation_report_data else "",
+            "data_quality_report": data_quality_data,
+            "data_quality_report_url": "/api/results/{0}/data-quality-report".format(task_id) if data_quality_data else "",
             "experiment_info": experiment_info,
             "config_snapshot": config_snapshot,
             "submitted_config": submitted_config,
@@ -701,6 +723,22 @@ def _build_context(task_id: str) -> Dict[str, Any]:
         },
     }
 
+
+
+@router.get("/{task_id}/data-quality-report")
+def get_data_quality_report(task_id: str):
+    response = _build_context(task_id)["response"]
+    report = response.get("data_quality_report")
+
+    if not report:
+        raise HTTPException(status_code=404, detail="未找到 data_quality_report.json")
+
+    return report
+
+
+@router.get("/{task_id}/data-quality-report.json")
+def get_data_quality_report_json(task_id: str):
+    return get_data_quality_report(task_id)
 
 
 @router.get("/{task_id}/augmentation-report")

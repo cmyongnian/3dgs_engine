@@ -113,6 +113,7 @@ export const 默认系统设置: 系统设置 = {
     input_mode: 'images',
     run_preflight: true,
     run_video_extract: false,
+    run_data_quality: true,
     run_augmentation: true,
     run_colmap: true,
     run_convert: true,
@@ -177,6 +178,8 @@ function 规范化系统设置(settings: 系统设置): 系统设置 {
     },
     pipelineDefaults: {
       ...settings.pipelineDefaults,
+      run_preflight: settings.pipelineDefaults.run_preflight !== false,
+      run_data_quality: settings.pipelineDefaults.run_data_quality !== false,
       run_augmentation: Boolean(settings.pipelineDefaults.run_augmentation),
       run_colmap: Boolean(settings.pipelineDefaults.run_colmap),
     },

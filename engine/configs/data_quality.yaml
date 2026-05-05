@@ -1,0 +1,30 @@
+data_quality:
+  scene_name: default_scene
+  input_mode: images
+  image_dir: datasets/raw/default_scene/images
+  raw_image_path: datasets/raw/default_scene/images
+  processed_image_path: datasets/processed/default_scene/gs_input
+  video_path: ""
+  log_dir: logs/default_scene
+
+  # 图片数量与抽样
+  min_images: 20
+  max_sample_images: 300
+
+  # 清晰度阈值：Laplacian 方差，数值越小越模糊
+  blur_threshold: 100.0
+  severe_blur_threshold: 50.0
+
+  # 曝光与对比度阈值：亮度和对比度均归一化到 0~1
+  dark_mean_threshold: 0.28
+  bright_mean_threshold: 0.78
+  dark_pixel_ratio_threshold: 0.45
+  overexposed_pixel_ratio_threshold: 0.15
+  low_contrast_threshold: 0.08
+
+  # 疑似重复帧阈值：相邻图片 average hash 汉明距离
+  duplicate_hamming_threshold: 3
+
+  # 默认只诊断不中断；论文实验时建议保留 False，便于完整记录问题
+  fail_on_high_risk: false
+  quiet: false

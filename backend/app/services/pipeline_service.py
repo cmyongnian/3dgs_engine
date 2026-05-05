@@ -55,17 +55,18 @@ class _StreamCapture(io.TextIOBase):
 class PipelineService:
     STAGES = [
         {"key": "video_extract", "label": "视频抽帧", "order": 1},
-        {"key": "preflight_raw", "label": "原始数据预检查", "order": 2},
-        {"key": "augmentation", "label": "数据增强", "order": 3},
-        {"key": "colmap", "label": "COLMAP 重建", "order": 4},
-        {"key": "colmap_quality", "label": "COLMAP 质量分析", "order": 5},
-        {"key": "convert", "label": "数据转换", "order": 6},
-        {"key": "preflight_processed", "label": "训练前复检", "order": 7},
-        {"key": "train", "label": "模型训练", "order": 8},
-        {"key": "render", "label": "离线渲染", "order": 9},
-        {"key": "metrics", "label": "指标评测", "order": 10},
-        {"key": "report", "label": "结果报告", "order": 11},
-        {"key": "viewer", "label": "启动查看器", "order": 12},
+        {"key": "data_quality", "label": "数据质量体检", "order": 2},
+        {"key": "preflight_raw", "label": "原始数据预检查", "order": 3},
+        {"key": "augmentation", "label": "数据增强", "order": 4},
+        {"key": "colmap", "label": "COLMAP 重建", "order": 5},
+        {"key": "colmap_quality", "label": "COLMAP 质量分析", "order": 6},
+        {"key": "convert", "label": "数据转换", "order": 7},
+        {"key": "preflight_processed", "label": "训练前复检", "order": 8},
+        {"key": "train", "label": "模型训练", "order": 9},
+        {"key": "render", "label": "离线渲染", "order": 10},
+        {"key": "metrics", "label": "指标评测", "order": 11},
+        {"key": "report", "label": "结果报告", "order": 12},
+        {"key": "viewer", "label": "启动查看器", "order": 13},
     ]
 
     def __init__(self) -> None:
@@ -193,6 +194,17 @@ class PipelineService:
                     task_id,
                     system_path,
                     config_paths["video"],
+                ),
+            )
+
+        if getattr(flags, "run_data_quality", True):
+            self._execute_stage(
+                task_id=task_id,
+                stage_key="data_quality",
+                action=lambda: self._run_data_quality(
+                    task_id,
+                    system_path,
+                    config_paths["data_quality"],
                 ),
             )
 
@@ -657,10 +669,13 @@ class PipelineService:
         summary_txt = self._first_existing_file("summary.txt", report_dir, output_dir)
         colmap_quality_json = self._first_existing_file("colmap_quality.json", *search_dirs)
         colmap_quality_txt = self._first_existing_file("colmap_quality.txt", *search_dirs)
+        data_quality_json = self._first_existing_file("data_quality_report.json", *search_dirs)
+        data_quality_txt = self._first_existing_file("data_quality_report.txt", *search_dirs)
 
         metrics_data = self._read_json(metrics_json)
         report_summary = self._read_json(report_json)
         colmap_quality = self._read_json(colmap_quality_json) if colmap_quality_json else {}
+        data_quality = self._read_json(data_quality_json) if data_quality_json else {}
 
         metrics_summary = self._merge_metrics(metrics_data, report_summary)
 
@@ -684,6 +699,19 @@ class PipelineService:
                 "mean_reprojection_error"
             )
             metrics_summary["colmap_quality_level"] = colmap_quality.get("quality_level")
+
+        if data_quality:
+            metrics_summary = dict(metrics_summary or {})
+            metrics_summary["data_quality_score"] = data_quality.get("score")
+            metrics_summary["data_quality_risk_level"] = data_quality.get("risk_level")
+            metrics_summary["data_quality_risk_label"] = data_quality.get("risk_label")
+            summary = data_quality.get("summary") if isinstance(data_quality, dict) else {}
+            if isinstance(summary, dict):
+                metrics_summary["input_image_count"] = summary.get("total_images")
+                metrics_summary["blur_image_count"] = summary.get("blur_images")
+                metrics_summary["exposure_issue_count"] = (
+                    int(summary.get("dark_images") or 0) + int(summary.get("overexposed_images") or 0)
+                )
 
         preview_images = []
 
@@ -711,6 +739,16 @@ class PipelineService:
                 if colmap_quality_txt and colmap_quality_txt.exists()
                 else ""
             ),
+            "data_quality_json": (
+                str(data_quality_json)
+                if data_quality_json and data_quality_json.exists()
+                else ""
+            ),
+            "data_quality_txt": (
+                str(data_quality_txt)
+                if data_quality_txt and data_quality_txt.exists()
+                else ""
+            ),
         }
 
         task = task_store.get(task_id)
@@ -730,6 +768,7 @@ class PipelineService:
             "result_files": result_files,
             "preview_images": preview_images,
             "colmap_quality": colmap_quality,
+            "data_quality_report": data_quality,
             "stage_history": stage_history,
         }
 
@@ -771,6 +810,17 @@ class PipelineService:
             video_config_path=video_path,
             task_id=task_id,
         ).run()
+
+    @staticmethod
+    def _run_data_quality(task_id: str, system_path: str, data_quality_path: str) -> None:
+        from engine.core.data_quality_service import DataQualityService
+
+        DataQualityService(
+            system_config_path=system_path,
+            data_quality_config_path=data_quality_path,
+            task_id=task_id,
+        ).run()
+
 
     @staticmethod
     def _run_preflight(system_path: str, preflight_path: str) -> None:

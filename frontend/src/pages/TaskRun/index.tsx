@@ -121,6 +121,7 @@ function 归一化日志文本(text: string) {
 
 const 阶段顺序 = [
   'video_extract',
+  'data_quality',
   'preflight_raw',
   'colmap',
   'colmap_quality',
@@ -135,6 +136,7 @@ const 阶段顺序 = [
 
 const 阶段名称: Record<string, string> = {
   video_extract: '视频抽帧',
+  data_quality: '数据质量体检',
   preflight_raw: '原始数据预检查',
   colmap: 'COLMAP 重建',
   colmap_quality: 'COLMAP 质量分析',
