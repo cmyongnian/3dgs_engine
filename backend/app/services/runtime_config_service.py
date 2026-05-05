@@ -237,6 +237,7 @@ class RuntimeConfigService:
             "convert": str(runtime_dir / "convert.yaml"),
             "viewer": str(runtime_dir / "viewer.yaml"),
             "video": str(runtime_dir / "video.yaml"),
+            "augmentation": str(runtime_dir / "augmentation.yaml"),
             "report": str(runtime_dir / "report.yaml"),
         }
 
@@ -245,6 +246,13 @@ class RuntimeConfigService:
         source_path = scene.get("source_path", "")
         raw_image_path = scene.get("raw_image_path", "")
         video_path = scene.get("video_path", "")
+
+        augmented_image_path = ""
+        if processed_scene_path:
+            augmented_image_path = str(Path(processed_scene_path) / "augmented_images")
+
+        run_augmentation = self._as_bool(pipeline.get("run_augmentation", True), True)
+        effective_image_path = augmented_image_path if run_augmentation else raw_image_path
 
         train_profiles = self._build_train_profiles(train)
         active_profile_data = train_profiles["active_profile_data"]
@@ -269,6 +277,7 @@ class RuntimeConfigService:
                 "input_mode": pipeline.get("input_mode", "images"),
                 "run_preflight": pipeline.get("run_preflight", True),
                 "run_video_extract": pipeline.get("run_video_extract", False),
+                "run_augmentation": run_augmentation,
                 "run_colmap": pipeline.get("run_colmap", True),
                 "run_convert": pipeline.get("run_convert", True),
                 "run_train": pipeline.get("run_train", True),
@@ -335,12 +344,34 @@ class RuntimeConfigService:
                 "quiet": quiet,
             }
         }
-
+        augmentation_yaml = {
+            "augmentation": {
+                "scene_name": scene_name,
+                "enabled": run_augmentation,
+                "input_images": raw_image_path,
+                "output_images": augmented_image_path,
+                "log_dir": log_dir,
+                "overwrite": True,
+                "keep_original_if_failed": True,
+                "jpeg_quality": 95,
+                "gray_world": True,
+                "clahe": True,
+                "clahe_clip_limit": 2.0,
+                "clahe_tile_grid_size": [8, 8],
+                "auto_gamma": False,
+                "gamma_target_mean": 0.48,
+                "denoise": False,
+                "denoise_h": 3.0,
+                "sharpen": False,
+                "sharpen_amount": 0.25,
+                "max_long_edge": 0,
+            }
+        }
         colmap_yaml = {
             "colmap": {
                 "scene_name": scene_name,
-                "image_path": raw_image_path,
-                "raw_image_path": raw_image_path,
+                "image_path": effective_image_path,
+                "raw_image_path": effective_image_path,
                 "workspace_path": processed_scene_path,
                 "processed_scene_path": processed_scene_path,
                 "source_path": source_path,
@@ -352,7 +383,9 @@ class RuntimeConfigService:
         convert_yaml = {
             "convert": {
                 "scene_name": scene_name,
-                "source_images": raw_image_path,
+                "source_images": effective_image_path,
+                "raw_source_images": raw_image_path,
+                "augmented_source_images": augmented_image_path,
                 "colmap_workspace": processed_scene_path,
                 "gs_input_path": source_path,
                 "colmap_executable": scene.get("colmap_executable", ""),
@@ -393,6 +426,7 @@ class RuntimeConfigService:
         self._write_yaml(Path(files["metrics"]), metrics_yaml)
         self._write_yaml(Path(files["report"]), report_yaml)
         self._write_yaml(Path(files["preflight"]), preflight_yaml)
+        self._write_yaml(Path(files["augmentation"]), augmentation_yaml)
         self._write_yaml(Path(files["colmap"]), colmap_yaml)
         self._write_yaml(Path(files["convert"]), convert_yaml)
         self._write_yaml(Path(files["viewer"]), viewer_yaml)

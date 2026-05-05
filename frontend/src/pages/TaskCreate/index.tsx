@@ -11,6 +11,7 @@ import {
 const 开关项: Array<[keyof 创建任务请求['pipeline'], string]> = [
   ['run_preflight', '执行预检查'],
   ['run_video_extract', '执行视频抽帧'],
+  ['run_augmentation', '执行数据增强'],
   ['run_colmap', '执行 COLMAP'],
   ['run_convert', '执行转换'],
   ['run_train', '执行训练'],

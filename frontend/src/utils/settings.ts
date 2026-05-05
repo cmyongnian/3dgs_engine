@@ -29,6 +29,11 @@ export const 默认系统设置: 系统设置 = {
     input_mode: 'images',
     run_preflight: true,
     run_video_extract: false,
+
+    // 新增：是否执行数据增强
+    // 该步骤位于 COLMAP 之前
+    run_augmentation: true,
+
     run_colmap: true,
     run_convert: true,
     run_train: true,

@@ -56,15 +56,16 @@ class PipelineService:
     STAGES = [
         {"key": "video_extract", "label": "视频抽帧", "order": 1},
         {"key": "preflight_raw", "label": "原始数据预检查", "order": 2},
-        {"key": "colmap", "label": "COLMAP 重建", "order": 3},
-        {"key": "colmap_quality", "label": "COLMAP 质量分析", "order": 4},
-        {"key": "convert", "label": "数据转换", "order": 5},
-        {"key": "preflight_processed", "label": "训练前复检", "order": 6},
-        {"key": "train", "label": "模型训练", "order": 7},
-        {"key": "render", "label": "离线渲染", "order": 8},
-        {"key": "metrics", "label": "指标评测", "order": 9},
-        {"key": "report", "label": "结果报告", "order": 10},
-        {"key": "viewer", "label": "启动查看器", "order": 11},
+        {"key": "augmentation", "label": "数据增强", "order": 3},
+        {"key": "colmap", "label": "COLMAP 重建", "order": 4},
+        {"key": "colmap_quality", "label": "COLMAP 质量分析", "order": 5},
+        {"key": "convert", "label": "数据转换", "order": 6},
+        {"key": "preflight_processed", "label": "训练前复检", "order": 7},
+        {"key": "train", "label": "模型训练", "order": 8},
+        {"key": "render", "label": "离线渲染", "order": 9},
+        {"key": "metrics", "label": "指标评测", "order": 10},
+        {"key": "report", "label": "结果报告", "order": 11},
+        {"key": "viewer", "label": "启动查看器", "order": 12},
     ]
 
     def __init__(self) -> None:
@@ -204,7 +205,16 @@ class PipelineService:
                     config_paths["preflight"],
                 ),
             )
-
+        if getattr(flags, "run_augmentation", True):
+          self._execute_stage(
+             task_id=task_id,
+             stage_key="augmentation",
+             action=lambda: self._run_augmentation(
+                task_id,
+                system_path,
+                config_paths["augmentation"],
+             ),
+            )
         if flags.run_colmap:
             self._execute_stage(
                 task_id=task_id,
@@ -774,7 +784,11 @@ class PipelineService:
     @staticmethod
     def _run_colmap(task_id: str, system_path: str, colmap_path: str) -> None:
         from engine.core.colmap_service import ColmapService
-
+        AugmentationService(
+            system_config_path=system_path,
+            augmentation_config_path=augmentation_path,
+            task_id=task_id,
+        ).run()
         ColmapService(
             system_config_path=system_path,
             colmap_config_path=colmap_path,

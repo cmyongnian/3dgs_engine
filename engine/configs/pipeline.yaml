@@ -1,11 +1,34 @@
 pipeline:
+  # 输入模式：
+  # images：直接使用图片目录
+  # video：先从视频抽帧，再进行后续流程
+  input_mode: images
+
+  # 是否执行原始数据预检查
   run_preflight: true
-  input_mode: video
-  run_video_extract: true
+
+  # 是否执行视频抽帧
+  run_video_extract: false
+
+  # 新增：是否执行数据增强
+  # 该步骤位于 COLMAP 之前
+  # 使用 Albumentations 进行 pixel-level / image-only 增强
+  run_augmentation: true
+
+  # 是否执行 COLMAP 重建
   run_colmap: true
+
+  # 是否执行 convert.py 数据转换
   run_convert: true
+
+  # 是否执行 3DGS 训练
   run_train: true
+
+  # 是否执行离线渲染
   run_render: true
+
+  # 是否执行指标评测
   run_metrics: true
-  launch_viewer: true
-  
+
+  # 是否启动 viewer
+  launch_viewer: false

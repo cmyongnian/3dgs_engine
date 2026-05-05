@@ -55,6 +55,7 @@ export interface 创建任务请求 {
     input_mode: 'images' | 'video'
     run_preflight: boolean
     run_video_extract: boolean
+    run_augmentation: boolean
     run_colmap: boolean
     run_convert: boolean
     run_train: boolean

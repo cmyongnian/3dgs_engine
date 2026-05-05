@@ -2,6 +2,7 @@ from pathlib import Path
 
 from engine.core.preflight_service import PreflightService
 from engine.core.video_service import VideoService
+from engine.core.augmentation_service import AugmentationService
 from engine.core.colmap_service import ColmapService
 from engine.core.convert_service import ConvertService
 from engine.core.train_service import TrainerService
@@ -30,6 +31,10 @@ class PipelineService:
         self.input_mode = cfg.get("input_mode", "images")
         self.run_preflight_flag = cfg.get("run_preflight", False)
         self.run_video_extract_flag = cfg.get("run_video_extract", False)
+
+        # 新增：是否执行数据增强
+        self.run_augmentation_flag = cfg.get("run_augmentation", True)
+
         self.run_colmap_flag = cfg.get("run_colmap", False)
         self.run_convert_flag = cfg.get("run_convert", False)
         self.run_train_flag = cfg.get("run_train", True)
@@ -52,44 +57,52 @@ class PipelineService:
             preflight.run()
             print(">>> 原始数据预检查结束")
 
+        if self.run_augmentation_flag:
+            print(">>> 第三步：数据增强")
+            augmentation_service = AugmentationService(
+                system_config_path=self.system_config_path
+            )
+            augmentation_service.run()
+            print(">>> 数据增强结束")
+
         if self.run_colmap_flag:
-            print(">>> 第三步：COLMAP 重建")
+            print(">>> 第四步：COLMAP 重建")
             colmap_service = ColmapService(system_config_path=self.system_config_path)
             colmap_service.run()
             print(">>> COLMAP 重建结束")
 
         if self.run_convert_flag:
-            print(">>> 第四步：执行 convert.py")
+            print(">>> 第五步：执行 convert.py")
             convert_service = ConvertService(system_config_path=self.system_config_path)
             convert_service.run()
             print(">>> convert.py 执行结束")
 
         if self.run_preflight_flag:
-            print(">>> 第五步：训练前复检 processed 数据")
+            print(">>> 第六步：训练前复检 processed 数据")
             preflight = PreflightService(system_config_path=self.system_config_path)
             preflight.run()
             print(">>> 训练前复检结束")
 
         if self.run_train_flag:
-            print(">>> 第六步：开始训练")
+            print(">>> 第七步：开始训练")
             trainer = TrainerService(system_config_path=self.system_config_path)
             trainer.run()
             print(">>> 训练结束")
 
         if self.run_render_flag:
-            print(">>> 第七步：开始渲染")
+            print(">>> 第八步：开始渲染")
             renderer = RenderService(system_config_path=self.system_config_path)
             renderer.run()
             print(">>> 渲染结束")
 
         if self.run_metrics_flag:
-            print(">>> 第八步：开始评测")
+            print(">>> 第九步：开始评测")
             metrics = MetricsService(system_config_path=self.system_config_path)
             metrics.run()
             print(">>> 评测结束")
 
         if self.launch_viewer_flag:
-            print(">>> 第九步：启动官方 Viewer")
+            print(">>> 第十步：启动官方 Viewer")
             viewer = ViewerService(system_config_path=self.system_config_path)
             viewer.run()
             print(">>> Viewer 已启动")

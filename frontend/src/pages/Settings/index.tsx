@@ -627,6 +627,7 @@ export function SettingsPage() {
                   [
                     ['run_preflight', '预检查'],
                     ['run_video_extract', '视频抽帧'],
+                    ['run_augmentation', '数据增强'],
                     ['run_colmap', 'COLMAP'],
                     ['run_convert', '转换'],
                     ['run_train', '训练'],
