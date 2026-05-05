@@ -1,10 +1,9 @@
 colmap:
   scene_name: video_scene_01
-  image_path: datasets/raw/video_scene_01/images
-  raw_image_path: datasets/raw/video_scene_01/images
+  image_path: datasets\processed\video_scene_01\augmented_images
+  raw_image_path: datasets\processed\video_scene_01\augmented_images
   workspace_path: datasets/processed/video_scene_01
   processed_scene_path: datasets/processed/video_scene_01
   source_path: datasets/processed/video_scene_01/gs_input
   colmap_executable: third_party/colmap/COLMAP.bat
-  use_gpu: true
   quiet: false

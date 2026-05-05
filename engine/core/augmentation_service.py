@@ -150,6 +150,21 @@ class AugmentationService:
         )
         return cv2.resize(image, new_size, interpolation=cv2.INTER_AREA)
 
+    def _opencv_clahe(self, image: np.ndarray) -> np.ndarray:
+        tile_grid_size = self.augmentation_cfg.get("clahe_tile_grid_size", [8, 8])
+        if not isinstance(tile_grid_size, (list, tuple)) or len(tile_grid_size) != 2:
+            tile_grid_size = [8, 8]
+
+        lab = cv2.cvtColor(image, cv2.COLOR_RGB2LAB)
+        l_channel, a_channel, b_channel = cv2.split(lab)
+        clahe = cv2.createCLAHE(
+            clipLimit=float(self.augmentation_cfg.get("clahe_clip_limit", 2.0)),
+            tileGridSize=(int(tile_grid_size[0]), int(tile_grid_size[1])),
+        )
+        l_channel = clahe.apply(l_channel)
+        merged = cv2.merge((l_channel, a_channel, b_channel))
+        return cv2.cvtColor(merged, cv2.COLOR_LAB2RGB)
+
     def _build_albumentations_pipeline(self) -> Optional[Any]:
         if A is None:
             return None
@@ -186,6 +201,8 @@ class AugmentationService:
 
         if pipeline is not None:
             image = pipeline(image=image)["image"]
+        elif self.augmentation_cfg.get("clahe", True):
+            image = self._opencv_clahe(image)
 
         if self.augmentation_cfg.get("denoise", False):
             image = self._denoise(
@@ -294,10 +311,9 @@ class AugmentationService:
             logger.info("数据增强已关闭，跳过。")
             return
 
-        if A is None:
-            raise RuntimeError(
-                "未安装 Albumentations。请先安装依赖：pip install 'albumentations>=1.4,<2.0'"
-            )
+        if A is None and bool(self.augmentation_cfg.get("clahe", True)):
+            print("未检测到 Albumentations，自动使用 OpenCV CLAHE 兜底实现。")
+            logger.warning("未检测到 Albumentations，自动使用 OpenCV CLAHE 兜底实现。")
 
         if not input_dir.exists() or not input_dir.is_dir():
             raise FileNotFoundError(f"数据增强输入目录不存在: {input_dir}")

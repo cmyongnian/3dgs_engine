@@ -1,9 +1,9 @@
-import type { 创建任务请求, 系统路径配置 } from './task'
+import type { 创建任务请求, 数据增强配置 } from './task'
 
 export interface 系统设置 {
   apiBaseUrl: string
   wsBaseUrl: string
-  systemPaths: 系统路径配置
+  systemPaths: 创建任务请求['system_paths']
   tools: {
     colmapExecutable: string
     magickExecutable: string
@@ -15,7 +15,12 @@ export interface 系统设置 {
     inputMode: 创建任务请求['pipeline']['input_mode']
     autoFillPaths: boolean
   }
+  processDefaults: {
+    colmapUseGpu: boolean
+    videoTargetFps: number
+  }
   pipelineDefaults: 创建任务请求['pipeline']
+  augmentationDefaults: 数据增强配置
   trainDefaults: {
     activeProfile: string
     iterations: number

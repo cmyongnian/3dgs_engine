@@ -206,14 +206,14 @@ class PipelineService:
                 ),
             )
         if getattr(flags, "run_augmentation", True):
-          self._execute_stage(
-             task_id=task_id,
-             stage_key="augmentation",
-             action=lambda: self._run_augmentation(
-                task_id,
-                system_path,
-                config_paths["augmentation"],
-             ),
+            self._execute_stage(
+                task_id=task_id,
+                stage_key="augmentation",
+                action=lambda: self._run_augmentation(
+                    task_id,
+                    system_path,
+                    config_paths["augmentation"],
+                ),
             )
         if flags.run_colmap:
             self._execute_stage(
@@ -800,7 +800,7 @@ class PipelineService:
             colmap_config_path=colmap_path,
             task_id=task_id,
         ).run()
-        
+
     @staticmethod
     def _run_colmap_quality(system_path: str, colmap_path: str) -> None:
         from engine.core.colmap_quality_service import ColmapQualityService

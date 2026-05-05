@@ -1,15 +1,17 @@
 augmentation:
   scene_name: video_scene_01
   enabled: true
-
+  preset: safe
   input_images: datasets/raw/video_scene_01/images
   output_images: datasets/processed/video_scene_01/augmented_images
-
   log_dir: logs/video_scene_01
+
+  # 文件处理
   overwrite: true
   keep_original_if_failed: true
   jpeg_quality: 95
 
+  # 3DGS / COLMAP 安全增强：只做图像级增强，不做旋转、裁剪、翻转、仿射等几何变换
   gray_world: true
   clahe: true
   clahe_clip_limit: 2.0
@@ -22,6 +24,7 @@ augmentation:
   denoise_h: 3.0
 
   sharpen: false
-  sharpen_amount: 0.25
+  sharpen_amount: 0.2
 
+  # 0 表示不限制；例如 1600/2000 可降低 COLMAP 和训练资源占用
   max_long_edge: 0

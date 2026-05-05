@@ -16,6 +16,8 @@ export type 阶段状态 =
   | 'failed'
   | 'stopped'
 
+export type 数据增强预设 = 'off' | 'safe' | 'low_light' | 'detail' | 'custom'
+
 export interface 阶段记录 {
   stage_key: string
   stage_label: string
@@ -37,6 +39,32 @@ export interface 系统路径配置 {
   videos_data: string
 }
 
+export interface 数据增强配置 {
+  enabled: boolean
+  preset: 数据增强预设
+  output_subdir: string
+  overwrite: boolean
+  keep_original_if_failed: boolean
+  jpeg_quality: number
+
+  gray_world: boolean
+  clahe: boolean
+  clahe_clip_limit: number
+  clahe_tile_grid_size: [number, number]
+
+  auto_gamma: boolean
+  gamma_target_mean: number
+
+  denoise: boolean
+  denoise_h: number
+
+  sharpen: boolean
+  sharpen_amount: number
+
+  /** 0 表示不限制长边；大于 0 时按最长边等比例缩小，避免图片过大导致 COLMAP / 训练显存压力过高。 */
+  max_long_edge: number
+}
+
 export interface 创建任务请求 {
   scene: {
     scene_name: string
@@ -49,6 +77,8 @@ export interface 创建任务请求 {
     magick_executable: string
     ffmpeg_executable: string
     viewer_root: string
+    colmap_use_gpu: boolean
+    video_target_fps: number
   }
   system_paths: 系统路径配置
   pipeline: {
@@ -63,6 +93,7 @@ export interface 创建任务请求 {
     run_metrics: boolean
     launch_viewer: boolean
   }
+  augmentation: 数据增强配置
   train: {
     active_profile: string
     eval: boolean

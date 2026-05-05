@@ -37,6 +37,26 @@ class PipelineFlags(BaseModel):
     launch_viewer: bool = False
 
 
+class AugmentationConfig(BaseModel):
+    enabled: bool = True
+    preset: str = "safe"
+    output_subdir: str = "augmented_images"
+    overwrite: bool = True
+    keep_original_if_failed: bool = True
+    jpeg_quality: int = 95
+    gray_world: bool = True
+    clahe: bool = True
+    clahe_clip_limit: float = 2.0
+    clahe_tile_grid_size: List[int] = Field(default_factory=lambda: [8, 8])
+    auto_gamma: bool = False
+    gamma_target_mean: float = 0.48
+    denoise: bool = False
+    denoise_h: float = 3.0
+    sharpen: bool = False
+    sharpen_amount: float = 0.2
+    max_long_edge: int = 0
+
+
 class TrainProfile(BaseModel):
     active_profile: str = "low_vram"
     eval: bool = True
@@ -59,6 +79,7 @@ class TrainProfile(BaseModel):
         }
     )
 
+
 class SceneConfig(BaseModel):
     scene_name: str
     raw_image_path: str = ""
@@ -70,12 +91,15 @@ class SceneConfig(BaseModel):
     magick_executable: str = ""
     ffmpeg_executable: str = "ffmpeg"
     viewer_root: str = "third_party/viewer/bin"
+    colmap_use_gpu: bool = True
+    video_target_fps: int = 2
 
 
 class TaskCreateRequest(BaseModel):
     scene: SceneConfig
     system_paths: SystemPaths = Field(default_factory=SystemPaths)
     pipeline: PipelineFlags = Field(default_factory=PipelineFlags)
+    augmentation: AugmentationConfig = Field(default_factory=AugmentationConfig)
     train: TrainProfile = Field(default_factory=TrainProfile)
 
 
@@ -119,6 +143,7 @@ class TaskActionResponse(BaseModel):
     action: Literal["stop", "force_stop", "retry", "delete"]
     status: Union[TaskStatus, str]
     message: str
+
 
 class TaskLogResponse(BaseModel):
     task_id: str

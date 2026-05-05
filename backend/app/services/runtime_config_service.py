@@ -34,6 +34,26 @@ class RuntimeConfigService:
         except Exception:
             return default
 
+    def _as_float(self, value: Any, default: float) -> float:
+        try:
+            return float(value)
+        except Exception:
+            return default
+
+    def _clamp_int(self, value: Any, default: int, minimum: int, maximum: int | None = None) -> int:
+        result = self._as_int(value, default)
+        result = max(minimum, result)
+        if maximum is not None:
+            result = min(maximum, result)
+        return result
+
+    def _clamp_float(self, value: Any, default: float, minimum: float, maximum: float | None = None) -> float:
+        result = self._as_float(value, default)
+        result = max(minimum, result)
+        if maximum is not None:
+            result = min(maximum, result)
+        return result
+
     def _as_bool(self, value: Any, default: bool = False) -> bool:
         if isinstance(value, bool):
             return value
@@ -218,6 +238,7 @@ class RuntimeConfigService:
         scene = data.get("scene", {})
         system_paths = data.get("system_paths", {})
         pipeline = data.get("pipeline", {})
+        augmentation = data.get("augmentation", {})
         train = data.get("train", {})
 
         scene_name = scene.get("scene_name", "default_scene")
@@ -247,11 +268,14 @@ class RuntimeConfigService:
         raw_image_path = scene.get("raw_image_path", "")
         video_path = scene.get("video_path", "")
 
+        augmentation_output_subdir = str(augmentation.get("output_subdir") or "augmented_images").strip() or "augmented_images"
+
         augmented_image_path = ""
         if processed_scene_path:
-            augmented_image_path = str(Path(processed_scene_path) / "augmented_images")
+            augmented_image_path = str(Path(processed_scene_path) / augmentation_output_subdir)
 
-        run_augmentation = self._as_bool(pipeline.get("run_augmentation", True), True)
+        augmentation_enabled = self._as_bool(augmentation.get("enabled", True), True)
+        run_augmentation = self._as_bool(pipeline.get("run_augmentation", True), True) and augmentation_enabled
         effective_image_path = augmented_image_path if run_augmentation else raw_image_path
 
         train_profiles = self._build_train_profiles(train)
@@ -344,27 +368,35 @@ class RuntimeConfigService:
                 "quiet": quiet,
             }
         }
+        clahe_tile_grid_size = augmentation.get("clahe_tile_grid_size", [8, 8])
+        if not isinstance(clahe_tile_grid_size, (list, tuple)) or len(clahe_tile_grid_size) != 2:
+            clahe_tile_grid_size = [8, 8]
+
         augmentation_yaml = {
             "augmentation": {
                 "scene_name": scene_name,
                 "enabled": run_augmentation,
+                "preset": augmentation.get("preset", "safe"),
                 "input_images": raw_image_path,
                 "output_images": augmented_image_path,
                 "log_dir": log_dir,
-                "overwrite": True,
-                "keep_original_if_failed": True,
-                "jpeg_quality": 95,
-                "gray_world": True,
-                "clahe": True,
-                "clahe_clip_limit": 2.0,
-                "clahe_tile_grid_size": [8, 8],
-                "auto_gamma": False,
-                "gamma_target_mean": 0.48,
-                "denoise": False,
-                "denoise_h": 3.0,
-                "sharpen": False,
-                "sharpen_amount": 0.25,
-                "max_long_edge": 0,
+                "overwrite": self._as_bool(augmentation.get("overwrite", True), True),
+                "keep_original_if_failed": self._as_bool(augmentation.get("keep_original_if_failed", True), True),
+                "jpeg_quality": self._clamp_int(augmentation.get("jpeg_quality", 95), 95, 1, 100),
+                "gray_world": self._as_bool(augmentation.get("gray_world", True), True),
+                "clahe": self._as_bool(augmentation.get("clahe", True), True),
+                "clahe_clip_limit": self._clamp_float(augmentation.get("clahe_clip_limit", 2.0), 2.0, 0.1),
+                "clahe_tile_grid_size": [
+                    self._clamp_int(clahe_tile_grid_size[0], 8, 1),
+                    self._clamp_int(clahe_tile_grid_size[1], 8, 1),
+                ],
+                "auto_gamma": self._as_bool(augmentation.get("auto_gamma", False), False),
+                "gamma_target_mean": self._clamp_float(augmentation.get("gamma_target_mean", 0.48), 0.48, 0.1, 0.9),
+                "denoise": self._as_bool(augmentation.get("denoise", False), False),
+                "denoise_h": self._clamp_float(augmentation.get("denoise_h", 3.0), 3.0, 0.0),
+                "sharpen": self._as_bool(augmentation.get("sharpen", False), False),
+                "sharpen_amount": self._clamp_float(augmentation.get("sharpen_amount", 0.2), 0.2, 0.0, 1.0),
+                "max_long_edge": self._clamp_int(augmentation.get("max_long_edge", 0), 0, 0),
             }
         }
         colmap_yaml = {
@@ -376,6 +408,7 @@ class RuntimeConfigService:
                 "processed_scene_path": processed_scene_path,
                 "source_path": source_path,
                 "colmap_executable": scene.get("colmap_executable", "colmap"),
+                "use_gpu": self._as_bool(scene.get("colmap_use_gpu", True), True),
                 "quiet": quiet,
             }
         }
@@ -414,7 +447,7 @@ class RuntimeConfigService:
                 "video_path": video_path,
                 "output_images": raw_image_path,
                 "ffmpeg_executable": scene.get("ffmpeg_executable", "ffmpeg"),
-                "target_fps": 2,
+                "target_fps": self._clamp_int(scene.get("video_target_fps", 2), 2, 1),
                 "quiet": quiet,
             }
         }
