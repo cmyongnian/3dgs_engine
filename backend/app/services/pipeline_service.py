@@ -438,14 +438,104 @@ class PipelineService:
 
         return {}
 
+    def _engine_root(self) -> Path:
+        return (self.project_root / "engine").resolve()
+
+    def _resolve_engine_path(self, value: Any) -> Optional[Path]:
+        if value is None or value == "":
+            return None
+
+        path = Path(str(value))
+
+        if path.is_absolute():
+            return path.resolve()
+
+        return (self._engine_root() / path).resolve()
+
+    def _find_file_recursively(self, base_dir: Optional[Path], filename: str) -> Optional[Path]:
+        if not base_dir or not base_dir.exists() or not base_dir.is_dir():
+            return None
+
+        direct = base_dir / filename
+
+        if direct.exists() and direct.is_file():
+            return direct
+
+        try:
+            for item in base_dir.rglob(filename):
+                if item.is_file():
+                    return item
+        except Exception:
+            return None
+
+        return None
+
+    def _first_existing_file(self, filename: str, *base_dirs: Optional[Path]) -> Optional[Path]:
+        for base_dir in base_dirs:
+            found = self._find_file_recursively(base_dir, filename)
+
+            if found is not None:
+                return found
+
+        return None
+
+    def _merge_metrics(self, *sources: Dict[str, Any]) -> Dict[str, Any]:
+        keys = [
+            "psnr",
+            "ssim",
+            "lpips",
+            "mse",
+            "mae",
+            "gaussian_count",
+            "latest_iteration",
+            "generated_at",
+            "metrics_source_file",
+        ]
+        result: Dict[str, Any] = {}
+
+        for source in sources:
+            if not isinstance(source, dict):
+                continue
+
+            candidates = [source]
+
+            for nested_key in ("metrics_summary", "metrics", "summary", "result"):
+                nested = source.get(nested_key)
+                if isinstance(nested, dict):
+                    candidates.append(nested)
+
+            for candidate in candidates:
+                for key in keys:
+                    value = candidate.get(key)
+                    if value is not None and value != "" and key not in result:
+                        result[key] = value
+
+                alias_pairs = {
+                    "psnr": "PSNR",
+                    "ssim": "SSIM",
+                    "lpips": "LPIPS",
+                    "mse": "MSE",
+                    "mae": "MAE",
+                    "gaussian_count": "num_gaussians",
+                    "latest_iteration": "iteration",
+                }
+
+                for target, alias in alias_pairs.items():
+                    value = candidate.get(alias)
+                    if value is not None and value != "" and target not in result:
+                        result[target] = value
+
+        return result
+
     def _resolve_output_dir(self, config_paths: Dict[str, str], scene_name: str) -> Path:
-        report_data = self._read_yaml(config_paths.get("report"))
-        report_cfg = report_data.get("report", {}) if isinstance(report_data, dict) else {}
+        train_data = self._read_yaml(config_paths.get("train"))
+        train_cfg = train_data.get("train", {}) if isinstance(train_data, dict) else {}
 
-        report_dir = report_cfg.get("report_dir", "")
+        model_output = train_cfg.get("model_output", "")
+        resolved = self._resolve_engine_path(model_output)
 
-        if report_dir:
-            return Path(report_dir).resolve()
+        if resolved is not None:
+            return resolved
 
         metrics_data = self._read_yaml(config_paths.get("metrics"))
         metrics_cfg = metrics_data.get("metrics", {}) if isinstance(metrics_data, dict) else {}
@@ -453,55 +543,86 @@ class PipelineService:
         model_paths = metrics_cfg.get("model_paths", [])
 
         if model_paths:
-            return Path(model_paths[0]).resolve()
+            resolved = self._resolve_engine_path(model_paths[0])
+            if resolved is not None:
+                return resolved
 
-        train_data = self._read_yaml(config_paths.get("train"))
-        train_cfg = train_data.get("train", {}) if isinstance(train_data, dict) else {}
+        report_data = self._read_yaml(config_paths.get("report"))
+        report_cfg = report_data.get("report", {}) if isinstance(report_data, dict) else {}
 
-        model_output = train_cfg.get("model_output", "")
+        report_dir = report_cfg.get("report_dir", "")
+        resolved = self._resolve_engine_path(report_dir)
 
-        if model_output:
-            return Path(model_output).resolve()
+        if resolved is not None:
+            return resolved
 
-        return (self.project_root / "engine" / "outputs" / scene_name).resolve()
+        return (self._engine_root() / "outputs" / scene_name).resolve()
+
+    def _resolve_report_dir(self, config_paths: Dict[str, str], scene_name: str) -> Path:
+        report_data = self._read_yaml(config_paths.get("report"))
+        report_cfg = report_data.get("report", {}) if isinstance(report_data, dict) else {}
+
+        report_dir = report_cfg.get("report_dir", "")
+        resolved = self._resolve_engine_path(report_dir)
+
+        if resolved is not None:
+            return resolved
+
+        return self._resolve_output_dir(config_paths, scene_name)
 
     def _resolve_log_dir(self, config_paths: Dict[str, str], scene_name: str) -> Path:
         report_data = self._read_yaml(config_paths.get("report"))
         report_cfg = report_data.get("report", {}) if isinstance(report_data, dict) else {}
 
         log_dir = report_cfg.get("log_dir", "")
+        resolved = self._resolve_engine_path(log_dir)
 
-        if log_dir:
-            return Path(log_dir).resolve()
+        if resolved is not None:
+            return resolved
 
         metrics_data = self._read_yaml(config_paths.get("metrics"))
         metrics_cfg = metrics_data.get("metrics", {}) if isinstance(metrics_data, dict) else {}
 
         metrics_log_dir = metrics_cfg.get("log_dir", "")
+        resolved = self._resolve_engine_path(metrics_log_dir)
 
-        if metrics_log_dir:
-            return Path(metrics_log_dir).resolve()
+        if resolved is not None:
+            return resolved
 
-        return (self.project_root / "engine" / "logs" / scene_name).resolve()
+        return (self._engine_root() / "logs" / scene_name).resolve()
 
     def _resolve_processed_dir(self, config_paths: Dict[str, str], scene_name: str) -> Path:
         report_data = self._read_yaml(config_paths.get("report"))
         report_cfg = report_data.get("report", {}) if isinstance(report_data, dict) else {}
 
         processed_scene_path = report_cfg.get("processed_scene_path", "")
+        resolved = self._resolve_engine_path(processed_scene_path)
 
-        if processed_scene_path:
-            return Path(processed_scene_path).resolve()
+        if resolved is not None:
+            return resolved
 
         metrics_data = self._read_yaml(config_paths.get("metrics"))
         metrics_cfg = metrics_data.get("metrics", {}) if isinstance(metrics_data, dict) else {}
 
         metrics_processed_dir = metrics_cfg.get("processed_scene_path", "")
+        resolved = self._resolve_engine_path(metrics_processed_dir)
 
-        if metrics_processed_dir:
-            return Path(metrics_processed_dir).resolve()
+        if resolved is not None:
+            return resolved
 
-        return (self.project_root / "engine" / "datasets" / "processed" / scene_name).resolve()
+        return (self._engine_root() / "datasets" / "processed" / scene_name).resolve()
+
+    def _resolve_source_dir(self, config_paths: Dict[str, str]) -> Optional[Path]:
+        train_data = self._read_yaml(config_paths.get("train"))
+        train_cfg = train_data.get("train", {}) if isinstance(train_data, dict) else {}
+        return self._resolve_engine_path(train_cfg.get("source_path", ""))
+
+    def _resolve_raw_image_dir(self, config_paths: Dict[str, str]) -> Optional[Path]:
+        colmap_data = self._read_yaml(config_paths.get("colmap"))
+        colmap_cfg = colmap_data.get("colmap", {}) if isinstance(colmap_data, dict) else {}
+        return self._resolve_engine_path(
+            colmap_cfg.get("raw_image_path") or colmap_cfg.get("image_path") or ""
+        )
 
     def _build_result(
         self,
@@ -510,51 +631,28 @@ class PipelineService:
         config_paths: Dict[str, str],
     ) -> Dict[str, Any]:
         output_dir = self._resolve_output_dir(config_paths, scene_name)
+        report_dir = self._resolve_report_dir(config_paths, scene_name)
         log_dir = self._resolve_log_dir(config_paths, scene_name)
         processed_dir = self._resolve_processed_dir(config_paths, scene_name)
+        source_dir = self._resolve_source_dir(config_paths)
+        raw_image_dir = self._resolve_raw_image_dir(config_paths)
+        runtime_dir = self._guess_runtime_dir(config_paths) or ""
 
-        metrics_json = output_dir / "metrics.json"
-        report_json = output_dir / "report.json"
-        report_md = output_dir / "report.md"
-        summary_csv = output_dir / "summary.csv"
-        summary_txt = output_dir / "summary.txt"
+        search_dirs = [report_dir, output_dir, processed_dir, log_dir]
 
-        colmap_quality_json = self._find_existing_file(
-            processed_dir / "colmap_quality.json",
-            output_dir / "colmap_quality.json",
-            log_dir / "colmap_quality.json",
-        )
+        metrics_json = self._first_existing_file("metrics.json", report_dir, output_dir)
+        report_json = self._first_existing_file("report.json", report_dir, output_dir)
+        report_md = self._first_existing_file("report.md", report_dir, output_dir)
+        summary_csv = self._first_existing_file("summary.csv", report_dir, output_dir)
+        summary_txt = self._first_existing_file("summary.txt", report_dir, output_dir)
+        colmap_quality_json = self._first_existing_file("colmap_quality.json", *search_dirs)
+        colmap_quality_txt = self._first_existing_file("colmap_quality.txt", *search_dirs)
 
-        colmap_quality_txt = self._find_existing_file(
-            processed_dir / "colmap_quality.txt",
-            output_dir / "colmap_quality.txt",
-            log_dir / "colmap_quality.txt",
-        )
-
-        preview_images = self._collect_preview_images(output_dir)
-
-        metrics_summary = self._read_json(metrics_json)
+        metrics_data = self._read_json(metrics_json)
         report_summary = self._read_json(report_json)
         colmap_quality = self._read_json(colmap_quality_json) if colmap_quality_json else {}
 
-        result_files = {
-            "metrics_json": str(metrics_json) if metrics_json.exists() else "",
-            "report_json": str(report_json) if report_json.exists() else "",
-            "report_md": str(report_md) if report_md.exists() else "",
-            "summary_csv": str(summary_csv) if summary_csv.exists() else "",
-            "summary_txt": str(summary_txt) if summary_txt.exists() else "",
-            "colmap_quality_json": str(colmap_quality_json) if colmap_quality_json else "",
-            "colmap_quality_txt": str(colmap_quality_txt) if colmap_quality_txt else "",
-        }
-
-        task = task_store.get(task_id)
-        stage_history = []
-
-        if task is not None:
-            stage_history = task.stage_history
-
-        if not metrics_summary and isinstance(report_summary, dict):
-            metrics_summary = report_summary.get("metrics_summary", {}) or {}
+        metrics_summary = self._merge_metrics(metrics_data, report_summary)
 
         if colmap_quality:
             metrics_summary = dict(metrics_summary or {})
@@ -564,15 +662,59 @@ class PipelineService:
             metrics_summary["colmap_registered_images"] = colmap_quality.get(
                 "registered_image_count"
             )
+            metrics_summary["colmap_input_images"] = colmap_quality.get(
+                "input_image_count"
+            )
             metrics_summary["colmap_point3d_count"] = colmap_quality.get("point3d_count")
+            metrics_summary["colmap_camera_count"] = colmap_quality.get("camera_count")
+            metrics_summary["colmap_mean_track_length"] = colmap_quality.get(
+                "mean_track_length"
+            )
+            metrics_summary["colmap_mean_reprojection_error"] = colmap_quality.get(
+                "mean_reprojection_error"
+            )
             metrics_summary["colmap_quality_level"] = colmap_quality.get("quality_level")
+
+        preview_images = []
+
+        if isinstance(report_summary, dict):
+            report_images = report_summary.get("preview_images")
+            if isinstance(report_images, list):
+                preview_images = [str(item) for item in report_images if item]
+
+        if not preview_images:
+            preview_images = self._collect_preview_images(output_dir)
+
+        result_files = {
+            "metrics_json": str(metrics_json) if metrics_json and metrics_json.exists() else "",
+            "report_json": str(report_json) if report_json and report_json.exists() else "",
+            "report_md": str(report_md) if report_md and report_md.exists() else "",
+            "summary_csv": str(summary_csv) if summary_csv and summary_csv.exists() else "",
+            "summary_txt": str(summary_txt) if summary_txt and summary_txt.exists() else "",
+            "colmap_quality_json": (
+                str(colmap_quality_json)
+                if colmap_quality_json and colmap_quality_json.exists()
+                else ""
+            ),
+            "colmap_quality_txt": (
+                str(colmap_quality_txt)
+                if colmap_quality_txt and colmap_quality_txt.exists()
+                else ""
+            ),
+        }
+
+        task = task_store.get(task_id)
+        stage_history = task.stage_history if task is not None else []
 
         return {
             "scene_name": scene_name,
             "output_dir": str(output_dir),
+            "report_dir": str(report_dir),
             "log_dir": str(log_dir),
             "processed_dir": str(processed_dir),
-            "runtime_dir": self._guess_runtime_dir(config_paths) or "",
+            "source_dir": str(source_dir) if source_dir else "",
+            "raw_image_dir": str(raw_image_dir) if raw_image_dir else "",
+            "runtime_dir": runtime_dir,
             "metrics_summary": metrics_summary,
             "report_summary": report_summary,
             "result_files": result_files,
@@ -606,7 +748,7 @@ class PipelineService:
         for pattern in ("*.png", "*.jpg", "*.jpeg", "*.webp"):
             image_files.extend(output_dir.rglob(pattern))
 
-        image_files = sorted(image_files)[:6]
+        image_files = sorted(dict.fromkeys(image_files))[:8]
 
         return [str(item) for item in image_files]
 

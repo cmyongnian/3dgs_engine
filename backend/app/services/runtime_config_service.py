@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 import yaml
 
@@ -27,6 +27,190 @@ class RuntimeConfigService:
                 allow_unicode=True,
                 sort_keys=False,
             )
+
+    def _as_int(self, value: Any, default: int) -> int:
+        try:
+            return int(value)
+        except Exception:
+            return default
+
+    def _as_bool(self, value: Any, default: bool = False) -> bool:
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, str):
+            lowered = value.strip().lower()
+            if lowered in {"1", "true", "yes", "y", "on"}:
+                return True
+            if lowered in {"0", "false", "no", "n", "off"}:
+                return False
+        if value is None:
+            return default
+        return bool(value)
+
+    def _as_int_list(self, value: Any, default: List[int]) -> List[int]:
+        if value is None or value == "":
+            return list(default)
+
+        if isinstance(value, str):
+            items = [item.strip() for item in value.replace("，", ",").split(",")]
+        elif isinstance(value, (list, tuple, set)):
+            items = list(value)
+        else:
+            items = [value]
+
+        result: List[int] = []
+
+        for item in items:
+            if item is None or item == "":
+                continue
+            try:
+                result.append(int(item))
+            except Exception:
+                continue
+
+        return result if result else list(default)
+
+    def _clean_extra_args(self, extra_args: Any) -> Dict[str, Any]:
+        if not isinstance(extra_args, dict):
+            return {}
+
+        cleaned: Dict[str, Any] = {}
+
+        for key, value in extra_args.items():
+            if value is None or value == "":
+                continue
+            cleaned[str(key)] = value
+
+        return cleaned
+
+    def _build_train_profiles(self, train: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        将前端提交的训练参数真正写入 active_profile 对应的配置。
+
+        原来的问题是 active_profile 会变化，但 profiles 内部仍然使用写死的默认值，
+        导致前端输入的 iterations、resolution、data_device、densification_interval 等
+        参数没有真正传给 engine/core/train_service.py。
+        """
+        default_profiles: Dict[str, Dict[str, Any]] = {
+            "low_vram": {
+                "eval": True,
+                "iterations": 30000,
+                "save_iterations": [7000, 30000],
+                "test_iterations": [-1],
+                "checkpoint_iterations": [2000, 15000, 30000],
+                "start_checkpoint": "",
+                "resume_from_latest": False,
+                "quiet": False,
+                "extra_args": {
+                    "data_device": "cpu",
+                    "resolution": 4,
+                    "densify_grad_threshold": 0.001,
+                    "densification_interval": 200,
+                    "densify_until_iter": 3000,
+                },
+            },
+            "normal": {
+                "eval": True,
+                "iterations": 30000,
+                "save_iterations": [7000, 30000],
+                "test_iterations": [-1],
+                "checkpoint_iterations": [2000, 15000, 30000],
+                "start_checkpoint": "",
+                "resume_from_latest": False,
+                "quiet": False,
+                "extra_args": {
+                    "data_device": "cuda",
+                    "resolution": 4,
+                    "densify_grad_threshold": 0.001,
+                    "densification_interval": 200,
+                    "densify_until_iter": 3000,
+                },
+            },
+            "fast_preview": {
+                "eval": False,
+                "iterations": 7000,
+                "save_iterations": [2000, 7000],
+                "test_iterations": [-1],
+                "checkpoint_iterations": [2000, 7000],
+                "start_checkpoint": "",
+                "resume_from_latest": False,
+                "quiet": False,
+                "extra_args": {
+                    "data_device": "cpu",
+                    "resolution": 8,
+                    "densify_grad_threshold": 0.001,
+                    "densification_interval": 300,
+                    "densify_until_iter": 1500,
+                },
+            },
+        }
+
+        active_profile = str(train.get("active_profile") or "low_vram").strip() or "low_vram"
+        base_profile = dict(default_profiles.get(active_profile, default_profiles["low_vram"]))
+        base_extra_args = dict(base_profile.get("extra_args", {}))
+        submitted_extra_args = self._clean_extra_args(train.get("extra_args", {}))
+
+        submitted_profile = {
+            "eval": self._as_bool(train.get("eval"), base_profile.get("eval", True)),
+            "iterations": self._as_int(train.get("iterations"), base_profile.get("iterations", 30000)),
+            "save_iterations": self._as_int_list(
+                train.get("save_iterations"),
+                base_profile.get("save_iterations", [7000, 30000]),
+            ),
+            "test_iterations": self._as_int_list(
+                train.get("test_iterations"),
+                base_profile.get("test_iterations", [-1]),
+            ),
+            "checkpoint_iterations": self._as_int_list(
+                train.get("checkpoint_iterations"),
+                base_profile.get("checkpoint_iterations", [2000, 15000, 30000]),
+            ),
+            "start_checkpoint": train.get("start_checkpoint") or "",
+            "resume_from_latest": self._as_bool(train.get("resume_from_latest"), False),
+            "quiet": self._as_bool(train.get("quiet"), False),
+            "extra_args": {
+                **base_extra_args,
+                **submitted_extra_args,
+            },
+        }
+
+        iterations = max(1, self._as_int(submitted_profile.get("iterations"), 30000))
+        submitted_profile["iterations"] = iterations
+
+        save_iterations = [
+            item
+            for item in self._as_int_list(submitted_profile.get("save_iterations"), [iterations])
+            if 0 < item <= iterations
+        ]
+        if iterations not in save_iterations:
+            save_iterations.append(iterations)
+        submitted_profile["save_iterations"] = sorted(set(save_iterations))
+
+        checkpoint_iterations = [
+            item
+            for item in self._as_int_list(
+                submitted_profile.get("checkpoint_iterations"), [iterations]
+            )
+            if 0 < item <= iterations
+        ]
+        if iterations not in checkpoint_iterations:
+            checkpoint_iterations.append(iterations)
+        submitted_profile["checkpoint_iterations"] = sorted(set(checkpoint_iterations))
+
+        test_iterations = []
+        for item in self._as_int_list(submitted_profile.get("test_iterations"), [-1]):
+            if item == -1 or 0 < item <= iterations:
+                test_iterations.append(item)
+        submitted_profile["test_iterations"] = sorted(set(test_iterations)) or [-1]
+
+        profiles = {key: dict(value) for key, value in default_profiles.items()}
+        profiles[active_profile] = submitted_profile
+
+        return {
+            "active_profile": active_profile,
+            "profiles": profiles,
+            "active_profile_data": submitted_profile,
+        }
 
     def build(self, task_id: str, payload: Any) -> Dict[str, str]:
         data = self._to_dict(payload)
@@ -62,6 +246,10 @@ class RuntimeConfigService:
         raw_image_path = scene.get("raw_image_path", "")
         video_path = scene.get("video_path", "")
 
+        train_profiles = self._build_train_profiles(train)
+        active_profile_data = train_profiles["active_profile_data"]
+        quiet = self._as_bool(active_profile_data.get("quiet"), False)
+
         log_dir = str((self.project_root / "engine" / "logs" / scene_name).resolve())
 
         system_yaml = {
@@ -95,56 +283,8 @@ class RuntimeConfigService:
                 "scene_name": scene_name,
                 "source_path": source_path,
                 "model_output": output_dir,
-                "active_profile": train.get("active_profile", "low_vram"),
-                "profiles": {
-                    "low_vram": {
-                        "eval": True,
-                        "iterations": 30000,
-                        "save_iterations": [7000, 30000],
-                        "test_iterations": [-1],
-                        "checkpoint_iterations": [2000, 15000, 30000],
-                        "start_checkpoint": "",
-                        "resume_from_latest": False,
-                        "quiet": False,
-                        "extra_args": {
-                            "data_device": "cpu",
-                            "resolution": 4,
-                            "densify_grad_threshold": 0.001,
-                            "densification_interval": 200,
-                            "densify_until_iter": 3000,
-                        },
-                    },
-                    "normal": {
-                        "eval": True,
-                        "iterations": 15000,
-                        "save_iterations": [7000, 15000],
-                        "test_iterations": [7000, 15000],
-                        "checkpoint_iterations": [7000, 15000],
-                        "start_checkpoint": "",
-                        "resume_from_latest": False,
-                        "quiet": False,
-                        "extra_args": {
-                            "resolution": 2,
-                        },
-                    },
-                    "fast_preview": {
-                        "eval": False,
-                        "iterations": 3000,
-                        "save_iterations": [1000, 3000],
-                        "test_iterations": [-1],
-                        "checkpoint_iterations": [1000, 3000],
-                        "start_checkpoint": "",
-                        "resume_from_latest": False,
-                        "quiet": False,
-                        "extra_args": {
-                            "data_device": "cpu",
-                            "resolution": 8,
-                            "densify_grad_threshold": 0.001,
-                            "densification_interval": 250,
-                            "densify_until_iter": 1500,
-                        },
-                    },
-                },
+                "active_profile": train_profiles["active_profile"],
+                "profiles": train_profiles["profiles"],
             }
         }
 
@@ -153,7 +293,7 @@ class RuntimeConfigService:
                 "scene_name": scene_name,
                 "model_path": output_dir,
                 "model_paths": [output_dir] if output_dir else [],
-                "quiet": train.get("quiet", False),
+                "quiet": quiet,
             }
         }
 
@@ -168,7 +308,7 @@ class RuntimeConfigService:
                 "collect_resource_stats": True,
                 "collect_gaussian_stats": True,
                 "collect_preview_images": True,
-                "quiet": train.get("quiet", False),
+                "quiet": quiet,
             }
         }
 
@@ -179,7 +319,7 @@ class RuntimeConfigService:
                 "report_dir": output_dir,
                 "log_dir": log_dir,
                 "processed_scene_path": processed_scene_path,
-                "quiet": train.get("quiet", False),
+                "quiet": quiet,
             }
         }
 
@@ -192,7 +332,7 @@ class RuntimeConfigService:
                 "source_path": source_path,
                 "video_path": video_path,
                 "model_output": output_dir,
-                "quiet": train.get("quiet", False),
+                "quiet": quiet,
             }
         }
 
@@ -205,7 +345,7 @@ class RuntimeConfigService:
                 "processed_scene_path": processed_scene_path,
                 "source_path": source_path,
                 "colmap_executable": scene.get("colmap_executable", "colmap"),
-                "quiet": train.get("quiet", False),
+                "quiet": quiet,
             }
         }
 
@@ -221,7 +361,7 @@ class RuntimeConfigService:
                 "resize": False,
                 "use_magick": bool(scene.get("magick_executable", "")),
                 "gs_repo": system_paths.get("gs_repo", "third_party/gaussian-splatting"),
-                "quiet": train.get("quiet", False),
+                "quiet": quiet,
             }
         }
 
@@ -231,7 +371,7 @@ class RuntimeConfigService:
                 "source_path": source_path,
                 "model_path": output_dir,
                 "viewer_root": scene.get("viewer_root", "third_party/viewer/bin"),
-                "quiet": train.get("quiet", False),
+                "quiet": quiet,
             }
         }
 
@@ -242,7 +382,7 @@ class RuntimeConfigService:
                 "output_images": raw_image_path,
                 "ffmpeg_executable": scene.get("ffmpeg_executable", "ffmpeg"),
                 "target_fps": 2,
-                "quiet": train.get("quiet", False),
+                "quiet": quiet,
             }
         }
 

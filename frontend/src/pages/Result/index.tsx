@@ -412,6 +412,10 @@ function ResultPage() {
           result.report ||
           result.report_json ||
           result.reportJson ||
+          result.report_summary ||
+          result.reportSummary ||
+          result.result?.report_summary ||
+          result.result?.reportSummary ||
           null;
 
         if (isObject(embeddedReport)) {
@@ -431,6 +435,9 @@ function ResultPage() {
           result?.reportUrl ||
           result?.report_path ||
           result?.reportPath ||
+          result?.result_files?.report_json ||
+          result?.resultFiles?.report_json ||
+          result?.result?.result_files?.report_json ||
           "";
 
         const reportUrls = [
@@ -490,11 +497,14 @@ function ResultPage() {
       ["auto_conclusion"],
       ["automatic_conclusion"],
       ["autoConclusion"],
+      ["overall_conclusion"],
+      ["overallConclusion"],
       ["conclusion"],
 
       ["summary", "自动结论"],
       ["summary", "auto_conclusion"],
       ["summary", "automatic_conclusion"],
+      ["summary", "overall_conclusion"],
       ["summary", "conclusion"],
 
       ["quality", "自动结论"],
@@ -558,7 +568,13 @@ function ResultPage() {
 
   const mergedMetrics = useMemo(() => {
     const value =
+      state.result?.metrics_summary ||
+      state.result?.metricsSummary ||
       state.result?.metrics ||
+      state.result?.result?.metrics_summary ||
+      state.result?.result?.metricsSummary ||
+      report?.metrics_summary ||
+      report?.metricsSummary ||
       report?.metrics ||
       report?.quality_metrics ||
       report?.qualityMetrics ||
@@ -574,19 +590,29 @@ function ResultPage() {
     return normalizeArray(
       state.result?.artifacts ||
         state.result?.files ||
+        state.result?.result_files ||
+        state.result?.resultFiles ||
+        state.result?.result?.artifacts ||
+        state.result?.result?.files ||
+        state.result?.result?.result_files ||
         report?.artifacts ||
         report?.files ||
         report?.outputs ||
-        report?.output_files
+        report?.output_files ||
+        report?.result_files
     );
   }, [state.result, report]);
 
   const images = useMemo(() => {
     return normalizeArray(
       state.result?.images ||
+        state.result?.result?.images ||
+        state.result?.result?.preview_images ||
+        state.result?.result?.previewImages ||
         report?.images ||
         report?.previews ||
         report?.preview_images ||
+        report?.previewImages ||
         report?.visualizations
     );
   }, [state.result, report]);
