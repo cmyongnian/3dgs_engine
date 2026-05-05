@@ -782,19 +782,25 @@ class PipelineService:
         ).run()
 
     @staticmethod
-    def _run_colmap(task_id: str, system_path: str, colmap_path: str) -> None:
-        from engine.core.colmap_service import ColmapService
+    def _run_augmentation(task_id: str, system_path: str, augmentation_path: str) -> None:
+        from engine.core.augmentation_service import AugmentationService
+
         AugmentationService(
             system_config_path=system_path,
             augmentation_config_path=augmentation_path,
             task_id=task_id,
         ).run()
+
+    @staticmethod
+    def _run_colmap(task_id: str, system_path: str, colmap_path: str) -> None:
+        from engine.core.colmap_service import ColmapService
+
         ColmapService(
             system_config_path=system_path,
             colmap_config_path=colmap_path,
             task_id=task_id,
         ).run()
-
+        
     @staticmethod
     def _run_colmap_quality(system_path: str, colmap_path: str) -> None:
         from engine.core.colmap_quality_service import ColmapQualityService
