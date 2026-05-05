@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import shutil
 from dataclasses import dataclass, asdict
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Iterable, List, Optional
 
@@ -235,26 +236,60 @@ class AugmentationService:
         failed_count = sum(1 for item in items if item.status == "failed")
         skipped_count = sum(1 for item in items if item.status == "skipped")
 
+        operations = {
+            "gray_world": bool(self.augmentation_cfg.get("gray_world", True)),
+            "clahe": bool(self.augmentation_cfg.get("clahe", True)),
+            "auto_gamma": bool(self.augmentation_cfg.get("auto_gamma", False)),
+            "denoise": bool(self.augmentation_cfg.get("denoise", False)),
+            "sharpen": bool(self.augmentation_cfg.get("sharpen", False)),
+            "resize_long_edge": int(self.augmentation_cfg.get("max_long_edge", 0) or 0) > 0,
+        }
+
+        parameters = {
+            "preset": self.augmentation_cfg.get("preset", "safe"),
+            "overwrite": bool(self.augmentation_cfg.get("overwrite", True)),
+            "keep_original_if_failed": bool(self.augmentation_cfg.get("keep_original_if_failed", True)),
+            "jpeg_quality": int(self.augmentation_cfg.get("jpeg_quality", 95)),
+            "gray_world": operations["gray_world"],
+            "clahe": operations["clahe"],
+            "clahe_clip_limit": float(self.augmentation_cfg.get("clahe_clip_limit", 2.0)),
+            "clahe_tile_grid_size": self.augmentation_cfg.get("clahe_tile_grid_size", [8, 8]),
+            "auto_gamma": operations["auto_gamma"],
+            "gamma_target_mean": float(self.augmentation_cfg.get("gamma_target_mean", 0.48)),
+            "denoise": operations["denoise"],
+            "denoise_h": float(self.augmentation_cfg.get("denoise_h", 3.0)),
+            "sharpen": operations["sharpen"],
+            "sharpen_amount": float(self.augmentation_cfg.get("sharpen_amount", 0.25)),
+            "max_long_edge": int(self.augmentation_cfg.get("max_long_edge", 0) or 0),
+        }
+
         report = {
+            "task_id": self.task_id or "",
             "scene_name": scene_name,
+            "enabled": bool(self.augmentation_cfg.get("enabled", True)),
+            "preset": self.augmentation_cfg.get("preset", "safe"),
+            "generated_at": datetime.now().isoformat(timespec="seconds"),
             "input_images": str(input_dir),
             "output_images": str(output_dir),
             "total": len(items),
             "success": ok_count,
             "failed": failed_count,
             "skipped": skipped_count,
+            "counts": {
+                "input_images": len(items),
+                "processed_images": ok_count + skipped_count,
+                "success_images": ok_count,
+                "failed_images": failed_count,
+                "copied_original_images": skipped_count,
+            },
             "method": {
-                "library": "Albumentations",
+                "library": "Albumentations" if A is not None else "OpenCV fallback",
                 "type": "pixel-level/image-only safe augmentation for 3DGS",
+                "safe_for_3dgs": True,
                 "geometric_transforms": False,
-                "operations": {
-                    "gray_world": bool(self.augmentation_cfg.get("gray_world", True)),
-                    "clahe": bool(self.augmentation_cfg.get("clahe", True)),
-                    "auto_gamma": bool(self.augmentation_cfg.get("auto_gamma", False)),
-                    "denoise": bool(self.augmentation_cfg.get("denoise", False)),
-                    "sharpen": bool(self.augmentation_cfg.get("sharpen", False)),
-                    "max_long_edge": int(self.augmentation_cfg.get("max_long_edge", 0) or 0),
-                },
+                "operations": operations,
+                "parameters": parameters,
+                "notes": "仅使用不改变图像几何结构的增强；未使用裁剪、旋转、翻转、仿射、透视等几何变换。",
             },
             "items": [asdict(item) for item in items],
         }
@@ -276,6 +311,9 @@ class AugmentationService:
             f"成功: {ok_count}",
             f"失败: {failed_count}",
             f"跳过: {skipped_count}",
+            f"增强预设: {self.augmentation_cfg.get('preset', 'safe')}",
+            f"JPEG质量: {self.augmentation_cfg.get('jpeg_quality', 95)}",
+            f"最大长边: {self.augmentation_cfg.get('max_long_edge', 0)}",
             "增强类型: pixel-level/image-only，不使用裁剪、旋转、翻转、仿射等几何增强。",
         ]
         txt_path.write_text("\n".join(txt_lines), encoding="utf-8")

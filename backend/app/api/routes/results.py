@@ -8,6 +8,7 @@ from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import FileResponse
 
 from backend.app.services.task_service import task_service
+from backend.app.state.task_store import task_store
 
 router = APIRouter()
 
@@ -212,26 +213,192 @@ def _pick_value(*sources: Dict[str, Any], keys: Tuple[str, ...]) -> Any:
     return None
 
 
+def _plain_data(value: Any) -> Any:
+    """将 Pydantic / dataclass / 普通对象递归转成可 JSON 序列化的 Python 数据。"""
+    if value is None:
+        return None
+
+    if hasattr(value, "model_dump"):
+        return _plain_data(value.model_dump())
+
+    if hasattr(value, "dict"):
+        return _plain_data(value.dict())
+
+    if isinstance(value, dict):
+        return {str(key): _plain_data(val) for key, val in value.items()}
+
+    if isinstance(value, (list, tuple, set)):
+        return [_plain_data(item) for item in value]
+
+    if isinstance(value, Path):
+        return str(value)
+
+    return value
+
+
+def _task_payload_snapshot(task_id: str) -> Dict[str, Any]:
+    record = task_store.get(task_id)
+    if record is None:
+        return {}
+
+    payload = getattr(record, "payload", {}) or {}
+    model = payload.get("model") if isinstance(payload, dict) else payload
+    data = _plain_data(model)
+    return data if isinstance(data, dict) else {}
+
+
+def _runtime_config_snapshot(runtime_dir: Optional[Path]) -> Dict[str, Any]:
+    if not runtime_dir or not runtime_dir.exists():
+        return {}
+
+    files = {
+        "system": "system.yaml",
+        "pipeline": "pipeline.yaml",
+        "train": "train.yaml",
+        "render": "render.yaml",
+        "metrics": "metrics.yaml",
+        "preflight": "preflight.yaml",
+        "colmap": "colmap.yaml",
+        "convert": "convert.yaml",
+        "viewer": "viewer.yaml",
+        "video": "video.yaml",
+        "augmentation": "augmentation.yaml",
+        "report": "report.yaml",
+    }
+
+    snapshot: Dict[str, Any] = {}
+    for key, filename in files.items():
+        data = _safe_read_yaml(runtime_dir / filename)
+        if isinstance(data, dict):
+            snapshot[key] = data.get(key, data)
+
+    return snapshot
+
+
+def _train_profile_info(train_cfg: Dict[str, Any]) -> Dict[str, Any]:
+    active_profile = train_cfg.get("active_profile") or ""
+    profiles = train_cfg.get("profiles") if isinstance(train_cfg.get("profiles"), dict) else {}
+    profile = profiles.get(active_profile, {}) if active_profile else {}
+    extra_args = profile.get("extra_args", {}) if isinstance(profile, dict) else {}
+
+    return {
+        "active_profile": active_profile,
+        "iterations": profile.get("iterations"),
+        "eval": profile.get("eval"),
+        "save_iterations": profile.get("save_iterations"),
+        "checkpoint_iterations": profile.get("checkpoint_iterations"),
+        "data_device": extra_args.get("data_device") if isinstance(extra_args, dict) else None,
+        "resolution": extra_args.get("resolution") if isinstance(extra_args, dict) else None,
+        "densify_grad_threshold": extra_args.get("densify_grad_threshold") if isinstance(extra_args, dict) else None,
+        "densification_interval": extra_args.get("densification_interval") if isinstance(extra_args, dict) else None,
+        "densify_until_iter": extra_args.get("densify_until_iter") if isinstance(extra_args, dict) else None,
+    }
+
+
+def _stringify_path(path: Optional[Path]) -> Optional[str]:
+    return str(path) if path else None
+
+
+def _submitted_train_profile(train_cfg: Dict[str, Any]) -> Dict[str, Any]:
+    extra_args = train_cfg.get("extra_args", {}) if isinstance(train_cfg.get("extra_args"), dict) else {}
+    return {
+        "active_profile": train_cfg.get("active_profile"),
+        "iterations": train_cfg.get("iterations"),
+        "eval": train_cfg.get("eval"),
+        "save_iterations": train_cfg.get("save_iterations"),
+        "checkpoint_iterations": train_cfg.get("checkpoint_iterations"),
+        "data_device": extra_args.get("data_device"),
+        "resolution": extra_args.get("resolution"),
+        "densify_grad_threshold": extra_args.get("densify_grad_threshold"),
+        "densification_interval": extra_args.get("densification_interval"),
+        "densify_until_iter": extra_args.get("densify_until_iter"),
+    }
+
+
+def _value_or(primary: Any, fallback: Any) -> Any:
+    return fallback if primary is None or primary == "" else primary
+
+
+
+
+def _build_experiment_info(
+    task_id: str,
+    task_data: Dict[str, Any],
+    scene_name: str,
+    status: str,
+    paths: Dict[str, Optional[Path]],
+    config_snapshot: Dict[str, Any],
+    submitted_config: Dict[str, Any],
+    metrics_summary: Dict[str, Any],
+) -> Dict[str, Any]:
+    scene_cfg = submitted_config.get("scene", {}) if isinstance(submitted_config, dict) else {}
+    submitted_pipeline = submitted_config.get("pipeline", {}) if isinstance(submitted_config, dict) else {}
+    submitted_aug = submitted_config.get("augmentation", {}) if isinstance(submitted_config, dict) else {}
+    submitted_train = submitted_config.get("train", {}) if isinstance(submitted_config, dict) else {}
+
+    pipeline_cfg = config_snapshot.get("pipeline", {}) or submitted_pipeline or {}
+    train_cfg = config_snapshot.get("train", {}) or {}
+    augmentation_cfg = config_snapshot.get("augmentation", {}) or submitted_aug or {}
+    video_cfg = config_snapshot.get("video", {}) or {}
+    colmap_cfg = config_snapshot.get("colmap", {}) or {}
+
+    train_profile = _train_profile_info(train_cfg)
+    if not train_profile.get("active_profile") and isinstance(submitted_train, dict):
+        train_profile = _submitted_train_profile(submitted_train)
+
+    input_mode = pipeline_cfg.get("input_mode") or submitted_pipeline.get("input_mode") or "images"
+    augmentation_enabled = bool(
+        pipeline_cfg.get("run_augmentation", submitted_pipeline.get("run_augmentation", False))
+        and augmentation_cfg.get("enabled", submitted_aug.get("enabled", False))
+    )
+
+    return {
+        "task_id": task_data.get("task_id", task_id),
+        "scene_name": scene_name,
+        "status": status,
+        "current_stage": task_data.get("current_stage", "结果查看"),
+        "message": task_data.get("message", ""),
+        "error": task_data.get("error"),
+        "created_at": task_data.get("created_at"),
+        "started_at": task_data.get("started_at"),
+        "finished_at": task_data.get("finished_at"),
+        "input_mode": input_mode,
+        "raw_image_dir": _stringify_path(paths.get("raw_image_dir")) or scene_cfg.get("raw_image_path"),
+        "processed_dir": _stringify_path(paths.get("processed_dir")) or scene_cfg.get("processed_scene_path"),
+        "source_dir": _stringify_path(paths.get("source_dir")) or scene_cfg.get("source_path"),
+        "output_dir": _stringify_path(paths.get("output_dir")) or scene_cfg.get("model_output"),
+        "report_dir": _stringify_path(paths.get("report_dir")) or scene_cfg.get("model_output"),
+        "runtime_dir": _stringify_path(paths.get("runtime_dir")),
+        "log_dir": _stringify_path(paths.get("log_dir")),
+        "video_path": video_cfg.get("video_path") or scene_cfg.get("video_path"),
+        "video_target_fps": video_cfg.get("target_fps") or scene_cfg.get("video_target_fps"),
+        "colmap_use_gpu": _value_or(colmap_cfg.get("use_gpu"), scene_cfg.get("colmap_use_gpu")),
+        "augmentation_enabled": augmentation_enabled,
+        "augmentation_preset": augmentation_cfg.get("preset") or submitted_aug.get("preset"),
+        "augmentation_output_dir": augmentation_cfg.get("output_images"),
+        "train_profile": train_profile,
+        "metrics_summary": metrics_summary,
+    }
+
+
 def _infer_from_runtime(task_id: str) -> Dict[str, Any]:
     runtime_dir = (BACKEND_RUNTIME_ROOT / task_id).resolve()
 
     if not runtime_dir.exists():
         return {}
 
-    train_yaml = _safe_read_yaml(runtime_dir / "train.yaml")
-    report_yaml = _safe_read_yaml(runtime_dir / "report.yaml")
-    metrics_yaml = _safe_read_yaml(runtime_dir / "metrics.yaml")
-    colmap_yaml = _safe_read_yaml(runtime_dir / "colmap.yaml")
-
-    train_cfg = train_yaml.get("train", {})
-    report_cfg = report_yaml.get("report", {})
-    metrics_cfg = metrics_yaml.get("metrics", {})
-    colmap_cfg = colmap_yaml.get("colmap", {})
+    config_snapshot = _runtime_config_snapshot(runtime_dir)
+    train_cfg = config_snapshot.get("train", {})
+    report_cfg = config_snapshot.get("report", {})
+    metrics_cfg = config_snapshot.get("metrics", {})
+    colmap_cfg = config_snapshot.get("colmap", {})
+    augmentation_cfg = config_snapshot.get("augmentation", {})
 
     scene_name = (
         train_cfg.get("scene_name")
         or report_cfg.get("scene_name")
         or metrics_cfg.get("scene_name")
+        or augmentation_cfg.get("scene_name")
         or task_id
     )
 
@@ -240,7 +407,7 @@ def _infer_from_runtime(task_id: str) -> Dict[str, Any]:
 
     output_dir = _resolve_engine_path(train_cfg.get("model_output") or first_model_path)
     report_dir = _resolve_engine_path(report_cfg.get("report_dir") or first_model_path)
-    log_dir = _resolve_engine_path(report_cfg.get("log_dir") or metrics_cfg.get("log_dir"))
+    log_dir = _resolve_engine_path(report_cfg.get("log_dir") or metrics_cfg.get("log_dir") or augmentation_cfg.get("log_dir"))
     processed_dir = _resolve_engine_path(
         report_cfg.get("processed_scene_path") or metrics_cfg.get("processed_scene_path")
     )
@@ -258,8 +425,8 @@ def _infer_from_runtime(task_id: str) -> Dict[str, Any]:
         "processed_dir": processed_dir,
         "source_dir": source_dir,
         "raw_image_dir": raw_image_dir,
+        "config_snapshot": config_snapshot,
     }
-
 
 def _artifact_url(task_id: str, path: str) -> str:
     return "/api/results/{0}/file?path={1}".format(task_id, quote(path, safe=""))
@@ -345,10 +512,17 @@ def _build_context(task_id: str) -> Dict[str, Any]:
     colmap_quality_txt = _resolve_existing_file(
         stored_files.get("colmap_quality_txt")
     ) or _first_found("colmap_quality.txt", *search_dirs)
+    augmentation_report_json = _resolve_existing_file(
+        stored_files.get("augmentation_report_json")
+    ) or _first_found("augmentation_report.json", *search_dirs)
+    augmentation_report_txt = _resolve_existing_file(
+        stored_files.get("augmentation_report_txt")
+    ) or _first_found("augmentation_report.txt", *search_dirs)
 
     metrics_data = _safe_read_json(metrics_json)
     report_data = _safe_read_json(report_json)
     colmap_quality_data = _safe_read_json(colmap_quality_json)
+    augmentation_report_data = _safe_read_json(augmentation_report_json)
 
     result_files = {
         "metrics_json": _existing_str(metrics_json),
@@ -358,6 +532,8 @@ def _build_context(task_id: str) -> Dict[str, Any]:
         "summary_txt": _existing_str(summary_txt),
         "colmap_quality_json": _existing_str(colmap_quality_json),
         "colmap_quality_txt": _existing_str(colmap_quality_txt),
+        "augmentation_report_json": _existing_str(augmentation_report_json),
+        "augmentation_report_txt": _existing_str(augmentation_report_txt),
     }
 
     metrics_summary = {
@@ -407,7 +583,15 @@ def _build_context(task_id: str) -> Dict[str, Any]:
         key: value for key, value in metrics_summary.items() if value is not None and value != ""
     }
 
-    report_summary = report_data or stored_result.get("report_summary", {}) or {}
+    # 优先使用任务完成时已经写入内存的 report_summary。
+    # 如果多个旧任务曾经共用同一个 outputs 目录，磁盘上的 report.json 会被后续任务覆盖，
+    # 这里如果优先读磁盘，就会出现“任务 A 的指标 + 任务 B 的自动结论”混在一起。
+    stored_report_summary = stored_result.get("report_summary", {})
+    report_summary = (
+        stored_report_summary
+        if isinstance(stored_report_summary, dict) and stored_report_summary
+        else report_data
+    ) or {}
 
     preview_images_raw = stored_result.get("preview_images") or report_summary.get("preview_images") or _find_preview_images(
         report_dir,
@@ -424,6 +608,34 @@ def _build_context(task_id: str) -> Dict[str, Any]:
     artifacts = _artifact_items(task_id, artifact_paths, file_name_map)
     images = _artifact_items(task_id, preview_images)
 
+    inferred_status = (
+        "success"
+        if any(value for value in result_files.values())
+        else (task_data.get("status") or "unknown")
+    )
+
+    config_snapshot = runtime_meta.get("config_snapshot", {}) or {}
+    submitted_config = _task_payload_snapshot(task_id)
+    paths_for_info = {
+        "output_dir": output_dir,
+        "report_dir": report_dir,
+        "processed_dir": processed_dir,
+        "source_dir": source_dir,
+        "raw_image_dir": raw_image_dir,
+        "runtime_dir": runtime_dir,
+        "log_dir": log_dir,
+    }
+    experiment_info = _build_experiment_info(
+        task_id=task_id,
+        task_data=task_data,
+        scene_name=scene_name,
+        status=inferred_status,
+        paths=paths_for_info,
+        config_snapshot=config_snapshot,
+        submitted_config=submitted_config,
+        metrics_summary=metrics_summary,
+    )
+
     result_payload = {
         "output_dir": str(output_dir) if output_dir else None,
         "report_dir": str(report_dir) if report_dir else None,
@@ -438,13 +650,11 @@ def _build_context(task_id: str) -> Dict[str, Any]:
         "result_files": result_files,
         "report_summary": report_summary,
         "colmap_quality": colmap_quality_data or stored_result.get("colmap_quality", {}),
+        "augmentation_report": augmentation_report_data,
+        "experiment_info": experiment_info,
+        "config_snapshot": config_snapshot,
+        "submitted_config": submitted_config,
     }
-
-    inferred_status = (
-        "success"
-        if any(value for value in result_files.values())
-        else (task_data.get("status") or "unknown")
-    )
 
     return {
         "task_data": task_data,
@@ -482,10 +692,31 @@ def _build_context(task_id: str) -> Dict[str, Any]:
             "report_json": report_summary,
             "report_summary": report_summary,
             "report_url": "/api/results/{0}/report".format(task_id) if report_summary else "",
+            "augmentation_report": augmentation_report_data,
+            "augmentation_report_url": "/api/results/{0}/augmentation-report".format(task_id) if augmentation_report_data else "",
+            "experiment_info": experiment_info,
+            "config_snapshot": config_snapshot,
+            "submitted_config": submitted_config,
             "result": result_payload,
         },
     }
 
+
+
+@router.get("/{task_id}/augmentation-report")
+def get_augmentation_report(task_id: str):
+    response = _build_context(task_id)["response"]
+    report = response.get("augmentation_report")
+
+    if not report:
+        raise HTTPException(status_code=404, detail="未找到 augmentation_report.json")
+
+    return report
+
+
+@router.get("/{task_id}/augmentation-report.json")
+def get_augmentation_report_json(task_id: str):
+    return get_augmentation_report(task_id)
 
 def _is_inside(path: Path, root: Optional[Path]) -> bool:
     if root is None:

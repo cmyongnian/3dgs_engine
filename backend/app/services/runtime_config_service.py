@@ -103,6 +103,40 @@ class RuntimeConfigService:
 
         return cleaned
 
+    def _clean_path_text(self, value: Any, default: str = "") -> str:
+        text = str(value or "").strip()
+        return text or default
+
+    def _append_task_id_to_path(
+        self,
+        value: Any,
+        task_id: str,
+        *,
+        default: str = "",
+        keep_images_leaf: bool = False,
+    ) -> str:
+        """
+        为每次任务生成独立目录，避免多个任务共用同一个 outputs / processed / raw frames 目录。
+
+        - outputs/video_scene_01  -> outputs/video_scene_01/<task_id>
+        - datasets/processed/video_scene_01 -> datasets/processed/video_scene_01/<task_id>
+        - datasets/raw/video_scene_01/images + keep_images_leaf=True
+          -> datasets/raw/video_scene_01/<task_id>/images
+        """
+        text = self._clean_path_text(value, default)
+        if not text:
+            return ""
+
+        path = Path(text)
+        parts = [str(part).lower() for part in path.parts]
+        if task_id.lower() in parts:
+            return str(path)
+
+        if keep_images_leaf and path.name.lower() == "images":
+            return str(path.parent / task_id / path.name)
+
+        return str(path / task_id)
+
     def _build_train_profiles(self, train: Dict[str, Any]) -> Dict[str, Any]:
         """
         将前端提交的训练参数真正写入 active_profile 对应的配置。
@@ -241,7 +275,9 @@ class RuntimeConfigService:
         augmentation = data.get("augmentation", {})
         train = data.get("train", {})
 
-        scene_name = scene.get("scene_name", "default_scene")
+        scene_name = self._clean_path_text(scene.get("scene_name"), "default_scene")
+        input_mode = self._clean_path_text(pipeline.get("input_mode"), "images")
+
         runtime_dir = self.runtime_root / task_id
         runtime_dir.mkdir(parents=True, exist_ok=True)
 
@@ -262,17 +298,39 @@ class RuntimeConfigService:
             "report": str(runtime_dir / "report.yaml"),
         }
 
-        output_dir = scene.get("model_output", "")
-        processed_scene_path = scene.get("processed_scene_path", "")
-        source_path = scene.get("source_path", "")
-        raw_image_path = scene.get("raw_image_path", "")
-        video_path = scene.get("video_path", "")
+        # 原始图片目录：图片模式直接使用用户输入；视频抽帧模式需要按任务隔离，避免覆盖旧抽帧。
+        raw_image_base = self._clean_path_text(
+            scene.get("raw_image_path"),
+            "datasets/raw/{0}/images".format(scene_name),
+        )
+        if input_mode == "video":
+            raw_image_path = self._append_task_id_to_path(
+                raw_image_base,
+                task_id,
+                keep_images_leaf=True,
+            )
+        else:
+            raw_image_path = raw_image_base
+
+        # 以下目录必须按 task_id 隔离，否则多个任务会读写同一个 COLMAP / 训练 / report 结果。
+        processed_base = self._clean_path_text(
+            scene.get("processed_scene_path"),
+            "datasets/processed/{0}".format(scene_name),
+        )
+        processed_scene_path = self._append_task_id_to_path(processed_base, task_id)
+
+        source_path = str(Path(processed_scene_path) / "gs_input")
+
+        output_base = self._clean_path_text(
+            scene.get("model_output"),
+            "outputs/{0}".format(scene_name),
+        )
+        output_dir = self._append_task_id_to_path(output_base, task_id)
+
+        video_path = self._clean_path_text(scene.get("video_path"), "")
 
         augmentation_output_subdir = str(augmentation.get("output_subdir") or "augmented_images").strip() or "augmented_images"
-
-        augmented_image_path = ""
-        if processed_scene_path:
-            augmented_image_path = str(Path(processed_scene_path) / augmentation_output_subdir)
+        augmented_image_path = str(Path(processed_scene_path) / augmentation_output_subdir)
 
         augmentation_enabled = self._as_bool(augmentation.get("enabled", True), True)
         run_augmentation = self._as_bool(pipeline.get("run_augmentation", True), True) and augmentation_enabled
@@ -282,7 +340,7 @@ class RuntimeConfigService:
         active_profile_data = train_profiles["active_profile_data"]
         quiet = self._as_bool(active_profile_data.get("quiet"), False)
 
-        log_dir = str((self.project_root / "engine" / "logs" / scene_name).resolve())
+        log_dir = str((self.project_root / "engine" / "logs" / scene_name / task_id).resolve())
 
         system_yaml = {
             "paths": {
@@ -298,7 +356,7 @@ class RuntimeConfigService:
 
         pipeline_yaml = {
             "pipeline": {
-                "input_mode": pipeline.get("input_mode", "images"),
+                "input_mode": input_mode,
                 "run_preflight": pipeline.get("run_preflight", True),
                 "run_video_extract": pipeline.get("run_video_extract", False),
                 "run_augmentation": run_augmentation,
@@ -359,7 +417,7 @@ class RuntimeConfigService:
         preflight_yaml = {
             "preflight": {
                 "scene_name": scene_name,
-                "input_mode": pipeline.get("input_mode", "images"),
+                "input_mode": input_mode,
                 "raw_image_path": raw_image_path,
                 "processed_image_path": source_path,
                 "source_path": source_path,

@@ -1,9 +1,0 @@
-preflight:
-  scene_name: video_scene_01
-  input_mode: images
-  raw_image_path: datasets/raw/video_scene_01/images
-  processed_image_path: datasets/processed/video_scene_01/gs_input
-  source_path: datasets/processed/video_scene_01/gs_input
-  video_path: datasets/videos/video_scene_01.mp4
-  model_output: outputs/video_scene_01
-  quiet: false

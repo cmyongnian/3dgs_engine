@@ -1,0 +1,6 @@
+render:
+  scene_name: video_scene_01
+  model_path: outputs\video_scene_01\2f19f586e05e
+  model_paths:
+  - outputs\video_scene_01\2f19f586e05e
+  quiet: false

@@ -1,315 +1,7 @@
 {
   "version": 1,
-  "updated_at": "2026-05-05T07:09:24.020905+00:00",
+  "updated_at": "2026-05-05T10:40:03.701730+00:00",
   "items": [
-    {
-      "task_id": "dc19f88d70e5",
-      "scene_name": "video_scene_01",
-      "payload": {
-        "model": {
-          "scene": {
-            "scene_name": "video_scene_01",
-            "raw_image_path": "datasets/raw/video_scene_01/images",
-            "processed_scene_path": "datasets/processed/video_scene_01",
-            "source_path": "datasets/processed/video_scene_01/gs_input",
-            "model_output": "outputs/video_scene_01",
-            "video_path": "datasets/videos/video_scene_01.mp4",
-            "colmap_executable": "third_party/colmap/COLMAP.bat",
-            "magick_executable": "",
-            "ffmpeg_executable": "ffmpeg",
-            "viewer_root": "third_party/viewer/bin",
-            "colmap_use_gpu": true,
-            "video_target_fps": 2
-          },
-          "system_paths": {
-            "gs_repo": "third_party/gaussian-splatting",
-            "raw_data": "datasets/raw",
-            "processed_data": "datasets/processed",
-            "outputs": "outputs",
-            "logs": "logs",
-            "videos_data": "datasets/videos"
-          },
-          "pipeline": {
-            "input_mode": "images",
-            "run_preflight": true,
-            "run_video_extract": false,
-            "run_augmentation": true,
-            "run_colmap": true,
-            "run_convert": false,
-            "run_train": false,
-            "run_render": false,
-            "run_metrics": false,
-            "launch_viewer": false
-          },
-          "augmentation": {
-            "enabled": true,
-            "preset": "safe",
-            "output_subdir": "augmented_images",
-            "overwrite": true,
-            "keep_original_if_failed": true,
-            "jpeg_quality": 95,
-            "gray_world": true,
-            "clahe": true,
-            "clahe_clip_limit": 2.0,
-            "clahe_tile_grid_size": [
-              8,
-              8
-            ],
-            "auto_gamma": false,
-            "gamma_target_mean": 0.48,
-            "denoise": false,
-            "denoise_h": 3.0,
-            "sharpen": false,
-            "sharpen_amount": 0.2,
-            "max_long_edge": 0
-          },
-          "train": {
-            "active_profile": "fast_preview",
-            "eval": true,
-            "iterations": 7000,
-            "save_iterations": [
-              2000,
-              7000
-            ],
-            "test_iterations": [
-              -1
-            ],
-            "checkpoint_iterations": [
-              2000,
-              7000
-            ],
-            "start_checkpoint": "",
-            "resume_from_latest": false,
-            "quiet": false,
-            "extra_args": {
-              "data_device": "cpu",
-              "resolution": 8,
-              "densify_grad_threshold": 0.001,
-              "densification_interval": 300,
-              "densify_until_iter": 1500
-            }
-          }
-        }
-      },
-      "status": "success",
-      "current_stage": "已完成",
-      "message": "任务执行完成",
-      "result": {
-        "scene_name": "video_scene_01",
-        "output_dir": "outputs\\video_scene_01",
-        "log_dir": "E:\\3dgs\\3dgs_platform\\engine\\logs\\video_scene_01",
-        "processed_dir": "datasets\\processed\\video_scene_01",
-        "runtime_dir": "E:\\3dgs\\3dgs_platform\\backend\\runtime\\dc19f88d70e5",
-        "metrics_summary": {},
-        "report_summary": {},
-        "result_files": {
-          "metrics_json": "",
-          "report_json": "",
-          "report_md": "",
-          "summary_csv": "",
-          "summary_txt": ""
-        },
-        "preview_images": [],
-        "stage_history": [
-          {
-            "stage_key": "preflight_raw",
-            "stage_label": "原始数据预检查",
-            "order": 2,
-            "status": "success",
-            "started_at": "2026-05-04T10:05:47.919199+00:00",
-            "finished_at": "2026-05-04T10:05:51.220842+00:00",
-            "duration_seconds": 3.302,
-            "error_type": null,
-            "error_message": null
-          },
-          {
-            "stage_key": "preflight_processed",
-            "stage_label": "训练前复检",
-            "order": 5,
-            "status": "success",
-            "started_at": "2026-05-04T10:05:51.223846+00:00",
-            "finished_at": "2026-05-04T10:05:54.202347+00:00",
-            "duration_seconds": 2.979,
-            "error_type": null,
-            "error_message": null
-          }
-        ]
-      },
-      "error": null,
-      "created_at": "2026-05-04T10:05:47.855128+00:00",
-      "updated_at": "2026-05-04T10:05:54.219462+00:00",
-      "started_at": "2026-05-04T10:05:47.879114+00:00",
-      "finished_at": "2026-05-04T10:05:54.216378+00:00",
-      "stop_requested": false,
-      "force_stop_requested": false,
-      "retry_count": 0,
-      "stage_history": [
-        {
-          "stage_key": "preflight_raw",
-          "stage_label": "原始数据预检查",
-          "order": 2,
-          "status": "success",
-          "started_at": "2026-05-04T10:05:47.919199+00:00",
-          "finished_at": "2026-05-04T10:05:51.220842+00:00",
-          "duration_seconds": 3.302,
-          "error_type": null,
-          "error_message": null
-        },
-        {
-          "stage_key": "preflight_processed",
-          "stage_label": "训练前复检",
-          "order": 5,
-          "status": "success",
-          "started_at": "2026-05-04T10:05:51.223846+00:00",
-          "finished_at": "2026-05-04T10:05:54.202347+00:00",
-          "duration_seconds": 2.979,
-          "error_type": null,
-          "error_message": null
-        }
-      ],
-      "runtime_dir": "E:\\3dgs\\3dgs_platform\\backend\\runtime\\dc19f88d70e5",
-      "result_files": {
-        "metrics_json": "",
-        "report_json": "",
-        "report_md": "",
-        "summary_csv": "",
-        "summary_txt": ""
-      },
-      "metrics_summary": {},
-      "last_error_type": null,
-      "log_file": "E:\\3dgs\\3dgs_platform\\backend\\runtime\\task_logs\\dc19f88d70e5.log"
-    },
-    {
-      "task_id": "580950d56ee2",
-      "scene_name": "video_scene_01",
-      "payload": {
-        "model": {
-          "scene": {
-            "scene_name": "video_scene_01",
-            "raw_image_path": "datasets/raw/video_scene_01/images",
-            "processed_scene_path": "datasets/processed/video_scene_01",
-            "source_path": "datasets/processed/video_scene_01/gs_input",
-            "model_output": "outputs/video_scene_01",
-            "video_path": "datasets/videos/video_scene_01.mp4",
-            "colmap_executable": "third_party/colmap/COLMAP.bat",
-            "magick_executable": "",
-            "ffmpeg_executable": "ffmpeg",
-            "viewer_root": "third_party/viewer/bin",
-            "colmap_use_gpu": true,
-            "video_target_fps": 2
-          },
-          "system_paths": {
-            "gs_repo": "third_party/gaussian-splatting",
-            "raw_data": "datasets/raw",
-            "processed_data": "datasets/processed",
-            "outputs": "outputs",
-            "logs": "logs",
-            "videos_data": "datasets/videos"
-          },
-          "pipeline": {
-            "input_mode": "images",
-            "run_preflight": true,
-            "run_video_extract": false,
-            "run_augmentation": true,
-            "run_colmap": true,
-            "run_convert": false,
-            "run_train": false,
-            "run_render": false,
-            "run_metrics": false,
-            "launch_viewer": false
-          },
-          "augmentation": {
-            "enabled": true,
-            "preset": "safe",
-            "output_subdir": "augmented_images",
-            "overwrite": true,
-            "keep_original_if_failed": true,
-            "jpeg_quality": 95,
-            "gray_world": true,
-            "clahe": true,
-            "clahe_clip_limit": 2.0,
-            "clahe_tile_grid_size": [
-              8,
-              8
-            ],
-            "auto_gamma": false,
-            "gamma_target_mean": 0.48,
-            "denoise": false,
-            "denoise_h": 3.0,
-            "sharpen": false,
-            "sharpen_amount": 0.2,
-            "max_long_edge": 0
-          },
-          "train": {
-            "active_profile": "fast_preview",
-            "eval": true,
-            "iterations": 7000,
-            "save_iterations": [
-              2000,
-              7000
-            ],
-            "test_iterations": [
-              -1
-            ],
-            "checkpoint_iterations": [
-              2000,
-              7000
-            ],
-            "start_checkpoint": "",
-            "resume_from_latest": false,
-            "quiet": false,
-            "extra_args": {
-              "data_device": "cpu",
-              "resolution": 8,
-              "densify_grad_threshold": 0.001,
-              "densification_interval": 300,
-              "densify_until_iter": 1500
-            }
-          }
-        }
-      },
-      "status": "stopped",
-      "current_stage": "已停止",
-      "message": "任务已停止",
-      "result": {},
-      "error": "已收到立即停止请求",
-      "created_at": "2026-05-04T11:37:59.591177+00:00",
-      "updated_at": "2026-05-04T15:44:16.941676+00:00",
-      "started_at": "2026-05-04T11:37:59.911972+00:00",
-      "finished_at": "2026-05-04T11:38:06.321001+00:00",
-      "stop_requested": true,
-      "force_stop_requested": true,
-      "retry_count": 0,
-      "stage_history": [
-        {
-          "stage_key": "preflight_raw",
-          "stage_label": "原始数据预检查",
-          "order": 2,
-          "status": "success",
-          "started_at": "2026-05-04T11:37:59.957000+00:00",
-          "finished_at": "2026-05-04T11:38:03.304587+00:00",
-          "duration_seconds": 3.348,
-          "error_type": null,
-          "error_message": null
-        },
-        {
-          "stage_key": "preflight_processed",
-          "stage_label": "训练前复检",
-          "order": 5,
-          "status": "success",
-          "started_at": "2026-05-04T11:38:03.307592+00:00",
-          "finished_at": "2026-05-04T11:38:06.313030+00:00",
-          "duration_seconds": 3.005,
-          "error_type": null,
-          "error_message": null
-        }
-      ],
-      "runtime_dir": "E:\\3dgs\\3dgs_platform\\backend\\runtime\\580950d56ee2",
-      "result_files": {},
-      "metrics_summary": {},
-      "last_error_type": null,
-      "log_file": "E:\\3dgs\\3dgs_platform\\backend\\runtime\\task_logs\\580950d56ee2.log"
-    },
     {
       "task_id": "b45750f9a68b",
       "scene_name": "video_scene_01",
@@ -1515,709 +1207,7 @@
       "log_file": "E:\\3dgs\\3dgs_platform\\backend\\runtime\\task_logs\\4fe43553c702.log"
     },
     {
-      "task_id": "f7b3dc3b4c89",
-      "scene_name": "video_scene_01",
-      "payload": {
-        "model": {
-          "scene": {
-            "scene_name": "video_scene_01",
-            "raw_image_path": "datasets/raw/video_scene_01/images",
-            "processed_scene_path": "datasets/processed/video_scene_01",
-            "source_path": "datasets/processed/video_scene_01/gs_input",
-            "model_output": "outputs/video_scene_01",
-            "video_path": "datasets/videos/video_scene_01.mp4",
-            "colmap_executable": "third_party/colmap/COLMAP.bat",
-            "magick_executable": "",
-            "ffmpeg_executable": "ffmpeg",
-            "viewer_root": "third_party/viewer/bin",
-            "colmap_use_gpu": true,
-            "video_target_fps": 2
-          },
-          "system_paths": {
-            "gs_repo": "third_party/gaussian-splatting",
-            "raw_data": "datasets/raw",
-            "processed_data": "datasets/processed",
-            "outputs": "outputs",
-            "logs": "logs",
-            "videos_data": "datasets/videos"
-          },
-          "pipeline": {
-            "input_mode": "images",
-            "run_preflight": true,
-            "run_video_extract": false,
-            "run_augmentation": true,
-            "run_colmap": true,
-            "run_convert": true,
-            "run_train": true,
-            "run_render": true,
-            "run_metrics": false,
-            "launch_viewer": false
-          },
-          "augmentation": {
-            "enabled": true,
-            "preset": "safe",
-            "output_subdir": "augmented_images",
-            "overwrite": true,
-            "keep_original_if_failed": true,
-            "jpeg_quality": 95,
-            "gray_world": true,
-            "clahe": true,
-            "clahe_clip_limit": 2.0,
-            "clahe_tile_grid_size": [
-              8,
-              8
-            ],
-            "auto_gamma": false,
-            "gamma_target_mean": 0.48,
-            "denoise": false,
-            "denoise_h": 3.0,
-            "sharpen": false,
-            "sharpen_amount": 0.2,
-            "max_long_edge": 0
-          },
-          "train": {
-            "active_profile": "fast_preview",
-            "eval": true,
-            "iterations": 7000,
-            "save_iterations": [
-              2000,
-              7000
-            ],
-            "test_iterations": [
-              -1
-            ],
-            "checkpoint_iterations": [
-              2000,
-              7000
-            ],
-            "start_checkpoint": "",
-            "resume_from_latest": false,
-            "quiet": false,
-            "extra_args": {
-              "data_device": "cpu",
-              "resolution": 8,
-              "densify_grad_threshold": 0.001,
-              "densification_interval": 300,
-              "densify_until_iter": 1500
-            }
-          }
-        }
-      },
-      "status": "success",
-      "current_stage": "已完成",
-      "message": "任务执行完成",
-      "result": {
-        "scene_name": "video_scene_01",
-        "output_dir": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01",
-        "report_dir": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01",
-        "log_dir": "E:\\3dgs\\3dgs_platform\\engine\\logs\\video_scene_01",
-        "processed_dir": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01",
-        "source_dir": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\gs_input",
-        "raw_image_dir": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\augmented_images",
-        "runtime_dir": "E:\\3dgs\\3dgs_platform\\backend\\runtime\\f7b3dc3b4c89",
-        "metrics_summary": {
-          "psnr": 21.980178833007812,
-          "ssim": 0.7975425124168396,
-          "lpips": 0.1604655385017395,
-          "gaussian_count": 42307,
-          "latest_iteration": 30000,
-          "generated_at": "2026-05-05T10:39:33",
-          "metrics_source_file": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\results.json",
-          "colmap_registration_rate": 100.0,
-          "colmap_registered_images": 62,
-          "colmap_input_images": 62,
-          "colmap_point3d_count": 34182,
-          "colmap_camera_count": 62,
-          "colmap_mean_track_length": 6.021,
-          "colmap_mean_reprojection_error": 0.6686,
-          "colmap_quality_level": "良好"
-        },
-        "report_summary": {
-          "scene_name": "video_scene_01",
-          "model_path": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01",
-          "processed_scene_path": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01",
-          "log_dir": "E:\\3dgs\\3dgs_platform\\engine\\logs\\video_scene_01",
-          "report_dir": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01",
-          "generated_at": "2026-05-05T14:16:20",
-          "data_summary": {
-            "processed_scene_path": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01",
-            "source_path": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\gs_input",
-            "source_images_dir": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\gs_input\\images",
-            "processed_image_count": 310,
-            "source_image_count": 62,
-            "sparse_zero_path": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\gs_input\\sparse\\0",
-            "has_sparse_bin": true,
-            "has_sparse_txt": false,
-            "has_sparse_model": true
-          },
-          "colmap_quality": {
-            "scene_name": "video_scene_01",
-            "image_path": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\augmented_images",
-            "workspace_path": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01",
-            "source_path": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\gs_input",
-            "sparse_model_path": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\sparse\\0",
-            "model_format": "bin",
-            "input_image_count": 62,
-            "generated_at": "2026-05-05T14:14:41",
-            "camera_count": 62,
-            "registered_image_count": 62,
-            "point3d_count": 34182,
-            "total_points2d": 363641,
-            "matched_points2d": 205809,
-            "mean_track_length": 6.021,
-            "mean_reprojection_error": 0.6686,
-            "registration_rate": 1.0,
-            "registration_rate_percent": 100.0,
-            "quality_level": "良好",
-            "status": "pass",
-            "can_continue": true,
-            "suggestions": [
-              "图像注册率和稀疏点数量较好，可以进入 3DGS 训练。"
-            ]
-          },
-          "training_summary": {
-            "model_path": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01",
-            "latest_iteration": 30000,
-            "latest_iteration_dir": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\point_cloud\\iteration_30000",
-            "point_cloud_ply": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\point_cloud\\iteration_30000\\point_cloud.ply",
-            "gaussian_count": 42307,
-            "checkpoint_count": 6,
-            "checkpoint_files": [
-              "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\chkpnt1000.pth",
-              "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\chkpnt15000.pth",
-              "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\chkpnt2000.pth",
-              "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\chkpnt3000.pth",
-              "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\chkpnt30000.pth",
-              "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\chkpnt7000.pth"
-            ],
-            "has_point_cloud": true
-          },
-          "render_summary": {
-            "test_render_image_count": 16,
-            "train_render_image_count": 0,
-            "direct_render_image_count": 0,
-            "render_image_count": 16,
-            "preview_images": [
-              "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\test\\ours_30000\\gt\\00000.png",
-              "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\test\\ours_30000\\gt\\00001.png",
-              "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\test\\ours_30000\\gt\\00002.png",
-              "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\test\\ours_30000\\gt\\00003.png",
-              "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\test\\ours_30000\\gt\\00004.png",
-              "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\test\\ours_30000\\gt\\00005.png",
-              "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\test\\ours_30000\\gt\\00006.png",
-              "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\test\\ours_30000\\gt\\00007.png"
-            ]
-          },
-          "metrics_summary": {
-            "psnr": 21.980178833007812,
-            "ssim": 0.7975425124168396,
-            "lpips": 0.1604655385017395,
-            "mse": null,
-            "mae": null,
-            "gaussian_count": 42307,
-            "latest_iteration": 30000,
-            "metrics_source_file": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\results.json",
-            "generated_at": "2026-05-05T10:39:33"
-          },
-          "overall_conclusion": "COLMAP 图像注册率为 100.00%。 图像注册率较高，相机位姿估计整体可靠。 输入图像 62 张，成功注册 62 张。 稀疏点云数量为 34182。 平均重投影误差为 0.6686。 3DGS 训练已生成 iteration_30000 结果。 模型包含 Gaussian 数量 42307。 已生成渲染图像 16 张。 PSNR 为 21.9802。 SSIM 为 0.7975。 LPIPS 为 0.1605。 COLMAP 质量等级为：良好。",
-          "suggestions": [
-            "当前重建流程整体正常，可继续进行结果展示、截图和论文实验分析。"
-          ],
-          "preview_images": [
-            "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\test\\ours_30000\\gt\\00000.png",
-            "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\test\\ours_30000\\gt\\00001.png",
-            "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\test\\ours_30000\\gt\\00002.png",
-            "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\test\\ours_30000\\gt\\00003.png",
-            "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\test\\ours_30000\\gt\\00004.png",
-            "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\test\\ours_30000\\gt\\00005.png",
-            "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\test\\ours_30000\\gt\\00006.png",
-            "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\test\\ours_30000\\gt\\00007.png"
-          ],
-          "log_files": [
-            "E:\\3dgs\\3dgs_platform\\engine\\logs\\video_scene_01\\augmentation.log",
-            "E:\\3dgs\\3dgs_platform\\engine\\logs\\video_scene_01\\colmap.log",
-            "E:\\3dgs\\3dgs_platform\\engine\\logs\\video_scene_01\\colmap_quality.log",
-            "E:\\3dgs\\3dgs_platform\\engine\\logs\\video_scene_01\\convert.log",
-            "E:\\3dgs\\3dgs_platform\\engine\\logs\\video_scene_01\\metrics.log",
-            "E:\\3dgs\\3dgs_platform\\engine\\logs\\video_scene_01\\preflight.log",
-            "E:\\3dgs\\3dgs_platform\\engine\\logs\\video_scene_01\\render.log",
-            "E:\\3dgs\\3dgs_platform\\engine\\logs\\video_scene_01\\report.log",
-            "E:\\3dgs\\3dgs_platform\\engine\\logs\\video_scene_01\\train_fast_preview.log",
-            "E:\\3dgs\\3dgs_platform\\engine\\logs\\video_scene_01\\train_low_vram.log",
-            "E:\\3dgs\\3dgs_platform\\engine\\logs\\video_scene_01\\video_extract.log"
-          ],
-          "result_files": {
-            "metrics_json": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\metrics.json",
-            "colmap_quality_json": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\colmap_quality.json",
-            "colmap_quality_txt": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\colmap_quality.txt",
-            "report_json": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\report.json",
-            "report_md": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\report.md",
-            "summary_csv": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\summary.csv",
-            "summary_txt": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\summary.txt"
-          }
-        },
-        "result_files": {
-          "metrics_json": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\metrics.json",
-          "report_json": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\report.json",
-          "report_md": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\report.md",
-          "summary_csv": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\summary.csv",
-          "summary_txt": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\summary.txt",
-          "colmap_quality_json": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\colmap_quality.json",
-          "colmap_quality_txt": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\colmap_quality.txt"
-        },
-        "preview_images": [
-          "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\test\\ours_30000\\gt\\00000.png",
-          "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\test\\ours_30000\\gt\\00001.png",
-          "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\test\\ours_30000\\gt\\00002.png",
-          "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\test\\ours_30000\\gt\\00003.png",
-          "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\test\\ours_30000\\gt\\00004.png",
-          "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\test\\ours_30000\\gt\\00005.png",
-          "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\test\\ours_30000\\gt\\00006.png",
-          "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\test\\ours_30000\\gt\\00007.png"
-        ],
-        "colmap_quality": {
-          "scene_name": "video_scene_01",
-          "image_path": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\augmented_images",
-          "workspace_path": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01",
-          "source_path": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\gs_input",
-          "sparse_model_path": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\sparse\\0",
-          "model_format": "bin",
-          "input_image_count": 62,
-          "generated_at": "2026-05-05T14:14:41",
-          "camera_count": 62,
-          "registered_image_count": 62,
-          "point3d_count": 34182,
-          "total_points2d": 363641,
-          "matched_points2d": 205809,
-          "mean_track_length": 6.021,
-          "mean_reprojection_error": 0.6686,
-          "registration_rate": 1.0,
-          "registration_rate_percent": 100.0,
-          "quality_level": "良好",
-          "status": "pass",
-          "can_continue": true,
-          "suggestions": [
-            "图像注册率和稀疏点数量较好，可以进入 3DGS 训练。"
-          ]
-        },
-        "stage_history": [
-          {
-            "stage_key": "preflight_raw",
-            "stage_label": "原始数据预检查",
-            "order": 2,
-            "status": "success",
-            "started_at": "2026-05-05T06:14:13.008232+00:00",
-            "finished_at": "2026-05-05T06:14:16.625881+00:00",
-            "duration_seconds": 3.618,
-            "error_type": null,
-            "error_message": null
-          },
-          {
-            "stage_key": "augmentation",
-            "stage_label": "数据增强",
-            "order": 3,
-            "status": "success",
-            "started_at": "2026-05-05T06:14:16.637913+00:00",
-            "finished_at": "2026-05-05T06:14:40.309513+00:00",
-            "duration_seconds": 23.672,
-            "error_type": null,
-            "error_message": null
-          },
-          {
-            "stage_key": "colmap",
-            "stage_label": "COLMAP 重建",
-            "order": 4,
-            "status": "success",
-            "started_at": "2026-05-05T06:14:40.313512+00:00",
-            "finished_at": "2026-05-05T06:14:41.541829+00:00",
-            "duration_seconds": 1.228,
-            "error_type": null,
-            "error_message": null
-          },
-          {
-            "stage_key": "colmap_quality",
-            "stage_label": "COLMAP 质量分析",
-            "order": 5,
-            "status": "success",
-            "started_at": "2026-05-05T06:14:41.546828+00:00",
-            "finished_at": "2026-05-05T06:14:41.775829+00:00",
-            "duration_seconds": 0.229,
-            "error_type": null,
-            "error_message": null
-          },
-          {
-            "stage_key": "convert",
-            "stage_label": "数据转换",
-            "order": 6,
-            "status": "success",
-            "started_at": "2026-05-05T06:14:41.779828+00:00",
-            "finished_at": "2026-05-05T06:14:49.922804+00:00",
-            "duration_seconds": 8.143,
-            "error_type": null,
-            "error_message": null
-          },
-          {
-            "stage_key": "preflight_processed",
-            "stage_label": "训练前复检",
-            "order": 7,
-            "status": "success",
-            "started_at": "2026-05-05T06:14:49.926826+00:00",
-            "finished_at": "2026-05-05T06:14:52.736074+00:00",
-            "duration_seconds": 2.809,
-            "error_type": null,
-            "error_message": null
-          },
-          {
-            "stage_key": "train",
-            "stage_label": "模型训练",
-            "order": 8,
-            "status": "success",
-            "started_at": "2026-05-05T06:14:52.740075+00:00",
-            "finished_at": "2026-05-05T06:16:11.870393+00:00",
-            "duration_seconds": 79.13,
-            "error_type": null,
-            "error_message": null
-          },
-          {
-            "stage_key": "render",
-            "stage_label": "离线渲染",
-            "order": 9,
-            "status": "success",
-            "started_at": "2026-05-05T06:16:11.875392+00:00",
-            "finished_at": "2026-05-05T06:16:20.027758+00:00",
-            "duration_seconds": 8.152,
-            "error_type": null,
-            "error_message": null
-          },
-          {
-            "stage_key": "report",
-            "stage_label": "结果报告",
-            "order": 11,
-            "status": "success",
-            "started_at": "2026-05-05T06:16:20.032757+00:00",
-            "finished_at": "2026-05-05T06:16:20.191088+00:00",
-            "duration_seconds": 0.158,
-            "error_type": null,
-            "error_message": null
-          }
-        ]
-      },
-      "error": null,
-      "created_at": "2026-05-05T04:29:21.302158+00:00",
-      "updated_at": "2026-05-05T06:27:02.602307+00:00",
-      "started_at": "2026-05-05T06:14:12.970231+00:00",
-      "finished_at": "2026-05-05T06:16:20.232087+00:00",
-      "stop_requested": false,
-      "force_stop_requested": false,
-      "retry_count": 1,
-      "stage_history": [
-        {
-          "stage_key": "preflight_raw",
-          "stage_label": "原始数据预检查",
-          "order": 2,
-          "status": "success",
-          "started_at": "2026-05-05T06:14:13.008232+00:00",
-          "finished_at": "2026-05-05T06:14:16.625881+00:00",
-          "duration_seconds": 3.618,
-          "error_type": null,
-          "error_message": null
-        },
-        {
-          "stage_key": "augmentation",
-          "stage_label": "数据增强",
-          "order": 3,
-          "status": "success",
-          "started_at": "2026-05-05T06:14:16.637913+00:00",
-          "finished_at": "2026-05-05T06:14:40.309513+00:00",
-          "duration_seconds": 23.672,
-          "error_type": null,
-          "error_message": null
-        },
-        {
-          "stage_key": "colmap",
-          "stage_label": "COLMAP 重建",
-          "order": 4,
-          "status": "success",
-          "started_at": "2026-05-05T06:14:40.313512+00:00",
-          "finished_at": "2026-05-05T06:14:41.541829+00:00",
-          "duration_seconds": 1.228,
-          "error_type": null,
-          "error_message": null
-        },
-        {
-          "stage_key": "colmap_quality",
-          "stage_label": "COLMAP 质量分析",
-          "order": 5,
-          "status": "success",
-          "started_at": "2026-05-05T06:14:41.546828+00:00",
-          "finished_at": "2026-05-05T06:14:41.775829+00:00",
-          "duration_seconds": 0.229,
-          "error_type": null,
-          "error_message": null
-        },
-        {
-          "stage_key": "convert",
-          "stage_label": "数据转换",
-          "order": 6,
-          "status": "success",
-          "started_at": "2026-05-05T06:14:41.779828+00:00",
-          "finished_at": "2026-05-05T06:14:49.922804+00:00",
-          "duration_seconds": 8.143,
-          "error_type": null,
-          "error_message": null
-        },
-        {
-          "stage_key": "preflight_processed",
-          "stage_label": "训练前复检",
-          "order": 7,
-          "status": "success",
-          "started_at": "2026-05-05T06:14:49.926826+00:00",
-          "finished_at": "2026-05-05T06:14:52.736074+00:00",
-          "duration_seconds": 2.809,
-          "error_type": null,
-          "error_message": null
-        },
-        {
-          "stage_key": "train",
-          "stage_label": "模型训练",
-          "order": 8,
-          "status": "success",
-          "started_at": "2026-05-05T06:14:52.740075+00:00",
-          "finished_at": "2026-05-05T06:16:11.870393+00:00",
-          "duration_seconds": 79.13,
-          "error_type": null,
-          "error_message": null
-        },
-        {
-          "stage_key": "render",
-          "stage_label": "离线渲染",
-          "order": 9,
-          "status": "success",
-          "started_at": "2026-05-05T06:16:11.875392+00:00",
-          "finished_at": "2026-05-05T06:16:20.027758+00:00",
-          "duration_seconds": 8.152,
-          "error_type": null,
-          "error_message": null
-        },
-        {
-          "stage_key": "report",
-          "stage_label": "结果报告",
-          "order": 11,
-          "status": "success",
-          "started_at": "2026-05-05T06:16:20.032757+00:00",
-          "finished_at": "2026-05-05T06:16:20.191088+00:00",
-          "duration_seconds": 0.158,
-          "error_type": null,
-          "error_message": null
-        }
-      ],
-      "runtime_dir": "E:\\3dgs\\3dgs_platform\\backend\\runtime\\f7b3dc3b4c89",
-      "result_files": {
-        "metrics_json": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\metrics.json",
-        "report_json": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\report.json",
-        "report_md": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\report.md",
-        "summary_csv": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\summary.csv",
-        "summary_txt": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\summary.txt",
-        "colmap_quality_json": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\colmap_quality.json",
-        "colmap_quality_txt": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\colmap_quality.txt"
-      },
-      "metrics_summary": {
-        "psnr": 21.980178833007812,
-        "ssim": 0.7975425124168396,
-        "lpips": 0.1604655385017395,
-        "gaussian_count": 42307,
-        "latest_iteration": 30000,
-        "generated_at": "2026-05-05T10:39:33",
-        "metrics_source_file": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\results.json",
-        "colmap_registration_rate": 100.0,
-        "colmap_registered_images": 62,
-        "colmap_input_images": 62,
-        "colmap_point3d_count": 34182,
-        "colmap_camera_count": 62,
-        "colmap_mean_track_length": 6.021,
-        "colmap_mean_reprojection_error": 0.6686,
-        "colmap_quality_level": "良好"
-      },
-      "last_error_type": null,
-      "log_file": "E:\\3dgs\\3dgs_platform\\backend\\runtime\\task_logs\\f7b3dc3b4c89.log"
-    },
-    {
-      "task_id": "2b8a7d427d63",
-      "scene_name": "video_scene_01",
-      "payload": {
-        "model": {
-          "scene": {
-            "scene_name": "video_scene_01",
-            "raw_image_path": "datasets/raw/video_scene_01/images",
-            "processed_scene_path": "datasets/processed/video_scene_01",
-            "source_path": "datasets/processed/video_scene_01/gs_input",
-            "model_output": "outputs/video_scene_01",
-            "video_path": "datasets/videos/video_scene_01.mp4",
-            "colmap_executable": "third_party/colmap/COLMAP.bat",
-            "magick_executable": "",
-            "ffmpeg_executable": "ffmpeg",
-            "viewer_root": "third_party/viewer/bin",
-            "colmap_use_gpu": true,
-            "video_target_fps": 2
-          },
-          "system_paths": {
-            "gs_repo": "third_party/gaussian-splatting",
-            "raw_data": "datasets/raw",
-            "processed_data": "datasets/processed",
-            "outputs": "outputs",
-            "logs": "logs",
-            "videos_data": "datasets/videos"
-          },
-          "pipeline": {
-            "input_mode": "images",
-            "run_preflight": true,
-            "run_video_extract": false,
-            "run_augmentation": true,
-            "run_colmap": true,
-            "run_convert": true,
-            "run_train": true,
-            "run_render": true,
-            "run_metrics": false,
-            "launch_viewer": false
-          },
-          "augmentation": {
-            "enabled": true,
-            "preset": "safe",
-            "output_subdir": "augmented_images",
-            "overwrite": true,
-            "keep_original_if_failed": true,
-            "jpeg_quality": 95,
-            "gray_world": true,
-            "clahe": true,
-            "clahe_clip_limit": 2.0,
-            "clahe_tile_grid_size": [
-              8,
-              8
-            ],
-            "auto_gamma": false,
-            "gamma_target_mean": 0.48,
-            "denoise": false,
-            "denoise_h": 3.0,
-            "sharpen": false,
-            "sharpen_amount": 0.2,
-            "max_long_edge": 0
-          },
-          "train": {
-            "active_profile": "fast_preview",
-            "eval": true,
-            "iterations": 7000,
-            "save_iterations": [
-              2000,
-              7000
-            ],
-            "test_iterations": [
-              -1
-            ],
-            "checkpoint_iterations": [
-              2000,
-              7000
-            ],
-            "start_checkpoint": "",
-            "resume_from_latest": false,
-            "quiet": false,
-            "extra_args": {
-              "data_device": "cpu",
-              "resolution": 8,
-              "densify_grad_threshold": 0.001,
-              "densification_interval": 300,
-              "densify_until_iter": 1500
-            }
-          }
-        }
-      },
-      "status": "stopped",
-      "current_stage": "已停止",
-      "message": "任务已停止",
-      "result": {},
-      "error": "已收到停止请求",
-      "created_at": "2026-05-05T06:26:38.697424+00:00",
-      "updated_at": "2026-05-05T06:27:02.620308+00:00",
-      "started_at": "2026-05-05T06:26:39.020851+00:00",
-      "finished_at": "2026-05-05T06:27:02.615303+00:00",
-      "stop_requested": true,
-      "force_stop_requested": false,
-      "retry_count": 0,
-      "stage_history": [
-        {
-          "stage_key": "preflight_raw",
-          "stage_label": "原始数据预检查",
-          "order": 2,
-          "status": "success",
-          "started_at": "2026-05-05T06:26:39.074363+00:00",
-          "finished_at": "2026-05-05T06:26:41.933383+00:00",
-          "duration_seconds": 2.859,
-          "error_type": null,
-          "error_message": null
-        },
-        {
-          "stage_key": "augmentation",
-          "stage_label": "数据增强",
-          "order": 3,
-          "status": "success",
-          "started_at": "2026-05-05T06:26:41.939382+00:00",
-          "finished_at": "2026-05-05T06:26:50.309695+00:00",
-          "duration_seconds": 8.37,
-          "error_type": null,
-          "error_message": null
-        },
-        {
-          "stage_key": "colmap",
-          "stage_label": "COLMAP 重建",
-          "order": 4,
-          "status": "success",
-          "started_at": "2026-05-05T06:26:50.314726+00:00",
-          "finished_at": "2026-05-05T06:26:51.322299+00:00",
-          "duration_seconds": 1.008,
-          "error_type": null,
-          "error_message": null
-        },
-        {
-          "stage_key": "colmap_quality",
-          "stage_label": "COLMAP 质量分析",
-          "order": 5,
-          "status": "success",
-          "started_at": "2026-05-05T06:26:51.328299+00:00",
-          "finished_at": "2026-05-05T06:26:51.551117+00:00",
-          "duration_seconds": 0.223,
-          "error_type": null,
-          "error_message": null
-        },
-        {
-          "stage_key": "convert",
-          "stage_label": "数据转换",
-          "order": 6,
-          "status": "success",
-          "started_at": "2026-05-05T06:26:51.556149+00:00",
-          "finished_at": "2026-05-05T06:26:59.684095+00:00",
-          "duration_seconds": 8.128,
-          "error_type": null,
-          "error_message": null
-        },
-        {
-          "stage_key": "preflight_processed",
-          "stage_label": "训练前复检",
-          "order": 7,
-          "status": "success",
-          "started_at": "2026-05-05T06:26:59.690092+00:00",
-          "finished_at": "2026-05-05T06:27:02.604310+00:00",
-          "duration_seconds": 2.914,
-          "error_type": null,
-          "error_message": null
-        }
-      ],
-      "runtime_dir": "E:\\3dgs\\3dgs_platform\\backend\\runtime\\2b8a7d427d63",
-      "result_files": {},
-      "metrics_summary": {},
-      "last_error_type": null,
-      "log_file": "E:\\3dgs\\3dgs_platform\\backend\\runtime\\task_logs\\2b8a7d427d63.log"
-    },
-    {
-      "task_id": "2dc357ba9054",
+      "task_id": "2f19f586e05e",
       "scene_name": "video_scene_01",
       "payload": {
         "model": {
@@ -2305,201 +1295,69 @@
           }
         }
       },
-      "status": "failed",
-      "current_stage": "执行失败",
-      "message": "任务执行失败",
-      "result": {},
-      "error": "[WinError 2] 系统找不到指定的文件。: 'E:\\\\3dgs\\\\3dgs_platform\\\\engine\\\\datasets\\\\processed\\\\video_scene_01\\\\augmented_images\\\\image000003.png'",
-      "created_at": "2026-05-05T07:02:07.052565+00:00",
-      "updated_at": "2026-05-05T07:02:45.397677+00:00",
-      "started_at": "2026-05-05T07:02:07.401207+00:00",
-      "finished_at": "2026-05-05T07:02:23.245992+00:00",
-      "stop_requested": false,
-      "force_stop_requested": false,
-      "retry_count": 0,
-      "stage_history": [
-        {
-          "stage_key": "preflight_raw",
-          "stage_label": "原始数据预检查",
-          "order": 2,
-          "status": "success",
-          "started_at": "2026-05-05T07:02:07.505676+00:00",
-          "finished_at": "2026-05-05T07:02:11.351876+00:00",
-          "duration_seconds": 3.846,
-          "error_type": null,
-          "error_message": null
-        },
-        {
-          "stage_key": "augmentation",
-          "stage_label": "数据增强",
-          "order": 3,
-          "status": "failed",
-          "started_at": "2026-05-05T07:02:11.356875+00:00",
-          "finished_at": "2026-05-05T07:02:23.233995+00:00",
-          "duration_seconds": 11.877,
-          "error_type": "environment_error",
-          "error_message": "[WinError 2] 系统找不到指定的文件。: 'E:\\\\3dgs\\\\3dgs_platform\\\\engine\\\\datasets\\\\processed\\\\video_scene_01\\\\augmented_images\\\\image000003.png'"
-        }
-      ],
-      "runtime_dir": "E:\\3dgs\\3dgs_platform\\backend\\runtime\\2dc357ba9054",
-      "result_files": {},
-      "metrics_summary": {},
-      "last_error_type": "environment_error",
-      "log_file": "E:\\3dgs\\3dgs_platform\\backend\\runtime\\task_logs\\2dc357ba9054.log"
-    },
-    {
-      "task_id": "f41867c032a0",
-      "scene_name": "video_scene_01",
-      "payload": {
-        "model": {
-          "scene": {
-            "scene_name": "video_scene_01",
-            "raw_image_path": "datasets/raw/video_scene_01/images",
-            "processed_scene_path": "datasets/processed/video_scene_01",
-            "source_path": "datasets/processed/video_scene_01/gs_input",
-            "model_output": "outputs/video_scene_01",
-            "video_path": "datasets/videos/video_scene_01.mp4",
-            "colmap_executable": "third_party/colmap/COLMAP.bat",
-            "magick_executable": "",
-            "ffmpeg_executable": "ffmpeg",
-            "viewer_root": "third_party/viewer/bin",
-            "colmap_use_gpu": true,
-            "video_target_fps": 2
-          },
-          "system_paths": {
-            "gs_repo": "third_party/gaussian-splatting",
-            "raw_data": "datasets/raw",
-            "processed_data": "datasets/processed",
-            "outputs": "outputs",
-            "logs": "logs",
-            "videos_data": "datasets/videos"
-          },
-          "pipeline": {
-            "input_mode": "images",
-            "run_preflight": true,
-            "run_video_extract": false,
-            "run_augmentation": true,
-            "run_colmap": true,
-            "run_convert": true,
-            "run_train": true,
-            "run_render": true,
-            "run_metrics": true,
-            "launch_viewer": false
-          },
-          "augmentation": {
-            "enabled": true,
-            "preset": "safe",
-            "output_subdir": "augmented_images",
-            "overwrite": true,
-            "keep_original_if_failed": true,
-            "jpeg_quality": 95,
-            "gray_world": true,
-            "clahe": true,
-            "clahe_clip_limit": 2.0,
-            "clahe_tile_grid_size": [
-              8,
-              8
-            ],
-            "auto_gamma": false,
-            "gamma_target_mean": 0.48,
-            "denoise": false,
-            "denoise_h": 3.0,
-            "sharpen": false,
-            "sharpen_amount": 0.2,
-            "max_long_edge": 0
-          },
-          "train": {
-            "active_profile": "low_vram",
-            "eval": true,
-            "iterations": 30000,
-            "save_iterations": [
-              7000,
-              30000
-            ],
-            "test_iterations": [
-              -1
-            ],
-            "checkpoint_iterations": [
-              2000,
-              15000,
-              30000
-            ],
-            "start_checkpoint": "",
-            "resume_from_latest": false,
-            "quiet": false,
-            "extra_args": {
-              "data_device": "cpu",
-              "resolution": 4,
-              "densify_grad_threshold": 0.001,
-              "densification_interval": 200,
-              "densify_until_iter": 3000
-            }
-          }
-        }
-      },
       "status": "success",
       "current_stage": "已完成",
       "message": "任务执行完成",
       "result": {
         "scene_name": "video_scene_01",
-        "output_dir": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01",
-        "report_dir": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01",
-        "log_dir": "E:\\3dgs\\3dgs_platform\\engine\\logs\\video_scene_01",
-        "processed_dir": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01",
-        "source_dir": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\gs_input",
-        "raw_image_dir": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\augmented_images",
-        "runtime_dir": "E:\\3dgs\\3dgs_platform\\backend\\runtime\\f41867c032a0",
+        "output_dir": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\2f19f586e05e",
+        "report_dir": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\2f19f586e05e",
+        "log_dir": "E:\\3dgs\\3dgs_platform\\engine\\logs\\video_scene_01\\2f19f586e05e",
+        "processed_dir": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\2f19f586e05e",
+        "source_dir": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\2f19f586e05e\\gs_input",
+        "raw_image_dir": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\2f19f586e05e\\augmented_images",
+        "runtime_dir": "E:\\3dgs\\3dgs_platform\\backend\\runtime\\2f19f586e05e",
         "metrics_summary": {
-          "psnr": 20.715396881103516,
-          "ssim": 0.7773329019546509,
-          "lpips": 0.20855391025543213,
-          "gaussian_count": 47187,
-          "latest_iteration": 30000,
-          "generated_at": "2026-05-05T15:09:23",
-          "metrics_source_file": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\results.json",
+          "psnr": 21.453113555908203,
+          "ssim": 0.7944904565811157,
+          "lpips": 0.17095357179641724,
+          "gaussian_count": 39614,
+          "latest_iteration": 7000,
+          "generated_at": "2026-05-05T16:12:26",
+          "metrics_source_file": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\2f19f586e05e\\results.json",
           "colmap_registration_rate": 100.0,
           "colmap_registered_images": 62,
           "colmap_input_images": 62,
-          "colmap_point3d_count": 34182,
+          "colmap_point3d_count": 38135,
           "colmap_camera_count": 62,
-          "colmap_mean_track_length": 6.021,
-          "colmap_mean_reprojection_error": 0.6686,
+          "colmap_mean_track_length": 5.8773,
+          "colmap_mean_reprojection_error": 0.676,
           "colmap_quality_level": "良好"
         },
         "report_summary": {
           "scene_name": "video_scene_01",
-          "model_path": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01",
-          "processed_scene_path": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01",
-          "log_dir": "E:\\3dgs\\3dgs_platform\\engine\\logs\\video_scene_01",
-          "report_dir": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01",
-          "generated_at": "2026-05-05T15:09:23",
+          "model_path": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\2f19f586e05e",
+          "processed_scene_path": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\2f19f586e05e",
+          "log_dir": "E:\\3dgs\\3dgs_platform\\engine\\logs\\video_scene_01\\2f19f586e05e",
+          "report_dir": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\2f19f586e05e",
+          "generated_at": "2026-05-05T16:12:26",
           "data_summary": {
-            "processed_scene_path": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01",
-            "source_path": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\gs_input",
-            "source_images_dir": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\gs_input\\images",
-            "processed_image_count": 310,
+            "processed_scene_path": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\2f19f586e05e",
+            "source_path": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\2f19f586e05e\\gs_input",
+            "source_images_dir": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\2f19f586e05e\\gs_input\\images",
+            "processed_image_count": 248,
             "source_image_count": 62,
-            "sparse_zero_path": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\gs_input\\sparse\\0",
+            "sparse_zero_path": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\2f19f586e05e\\gs_input\\sparse\\0",
             "has_sparse_bin": true,
             "has_sparse_txt": false,
             "has_sparse_model": true
           },
           "colmap_quality": {
             "scene_name": "video_scene_01",
-            "image_path": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\augmented_images",
-            "workspace_path": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01",
-            "source_path": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\gs_input",
-            "sparse_model_path": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\sparse\\0",
+            "image_path": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\2f19f586e05e\\augmented_images",
+            "workspace_path": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\2f19f586e05e",
+            "source_path": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\2f19f586e05e\\gs_input",
+            "sparse_model_path": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\2f19f586e05e\\sparse\\0",
             "model_format": "bin",
             "input_image_count": 62,
-            "generated_at": "2026-05-05T15:02:33",
+            "generated_at": "2026-05-05T16:10:28",
             "camera_count": 62,
             "registered_image_count": 62,
-            "point3d_count": 34182,
-            "total_points2d": 363641,
-            "matched_points2d": 205809,
-            "mean_track_length": 6.021,
-            "mean_reprojection_error": 0.6686,
+            "point3d_count": 38135,
+            "total_points2d": 440752,
+            "matched_points2d": 224131,
+            "mean_track_length": 5.8773,
+            "mean_reprojection_error": 0.676,
             "registration_rate": 1.0,
             "registration_rate_percent": 100.0,
             "quality_level": "良好",
@@ -2510,19 +1368,15 @@
             ]
           },
           "training_summary": {
-            "model_path": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01",
-            "latest_iteration": 30000,
-            "latest_iteration_dir": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\point_cloud\\iteration_30000",
-            "point_cloud_ply": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\point_cloud\\iteration_30000\\point_cloud.ply",
-            "gaussian_count": 47187,
-            "checkpoint_count": 6,
+            "model_path": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\2f19f586e05e",
+            "latest_iteration": 7000,
+            "latest_iteration_dir": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\2f19f586e05e\\point_cloud\\iteration_7000",
+            "point_cloud_ply": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\2f19f586e05e\\point_cloud\\iteration_7000\\point_cloud.ply",
+            "gaussian_count": 39614,
+            "checkpoint_count": 2,
             "checkpoint_files": [
-              "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\chkpnt1000.pth",
-              "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\chkpnt15000.pth",
-              "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\chkpnt2000.pth",
-              "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\chkpnt3000.pth",
-              "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\chkpnt30000.pth",
-              "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\chkpnt7000.pth"
+              "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\2f19f586e05e\\chkpnt2000.pth",
+              "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\2f19f586e05e\\chkpnt7000.pth"
             ],
             "has_point_cloud": true
           },
@@ -2532,99 +1386,90 @@
             "direct_render_image_count": 0,
             "render_image_count": 16,
             "preview_images": [
-              "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\test\\ours_30000\\gt\\00000.png",
-              "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\test\\ours_30000\\gt\\00001.png",
-              "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\test\\ours_30000\\gt\\00002.png",
-              "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\test\\ours_30000\\gt\\00003.png",
-              "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\test\\ours_30000\\gt\\00004.png",
-              "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\test\\ours_30000\\gt\\00005.png",
-              "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\test\\ours_30000\\gt\\00006.png",
-              "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\test\\ours_30000\\gt\\00007.png"
+              "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\2f19f586e05e\\test\\ours_7000\\gt\\00000.png",
+              "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\2f19f586e05e\\test\\ours_7000\\gt\\00001.png",
+              "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\2f19f586e05e\\test\\ours_7000\\gt\\00002.png",
+              "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\2f19f586e05e\\test\\ours_7000\\gt\\00003.png",
+              "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\2f19f586e05e\\test\\ours_7000\\gt\\00004.png",
+              "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\2f19f586e05e\\test\\ours_7000\\gt\\00005.png",
+              "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\2f19f586e05e\\test\\ours_7000\\gt\\00006.png",
+              "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\2f19f586e05e\\test\\ours_7000\\gt\\00007.png"
             ]
           },
           "metrics_summary": {
-            "psnr": 20.715396881103516,
-            "ssim": 0.7773329019546509,
-            "lpips": 0.20855391025543213,
+            "psnr": 21.453113555908203,
+            "ssim": 0.7944904565811157,
+            "lpips": 0.17095357179641724,
             "mse": null,
             "mae": null,
-            "gaussian_count": 47187,
-            "latest_iteration": 30000,
-            "metrics_source_file": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\results.json",
-            "generated_at": "2026-05-05T15:09:23"
+            "gaussian_count": 39614,
+            "latest_iteration": 7000,
+            "metrics_source_file": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\2f19f586e05e\\results.json",
+            "generated_at": "2026-05-05T16:12:26"
           },
-          "overall_conclusion": "COLMAP 图像注册率为 100.00%。 图像注册率较高，相机位姿估计整体可靠。 输入图像 62 张，成功注册 62 张。 稀疏点云数量为 34182。 平均重投影误差为 0.6686。 3DGS 训练已生成 iteration_30000 结果。 模型包含 Gaussian 数量 47187。 已生成渲染图像 16 张。 PSNR 为 20.7154。 SSIM 为 0.7773。 LPIPS 为 0.2086。 COLMAP 质量等级为：良好。",
+          "overall_conclusion": "COLMAP 图像注册率为 100.00%。 图像注册率较高，相机位姿估计整体可靠。 输入图像 62 张，成功注册 62 张。 稀疏点云数量为 38135。 平均重投影误差为 0.6760。 3DGS 训练已生成 iteration_7000 结果。 模型包含 Gaussian 数量 39614。 已生成渲染图像 16 张。 PSNR 为 21.4531。 SSIM 为 0.7945。 LPIPS 为 0.1710。 COLMAP 质量等级为：良好。",
           "suggestions": [
             "当前重建流程整体正常，可继续进行结果展示、截图和论文实验分析。"
           ],
           "preview_images": [
-            "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\test\\ours_30000\\gt\\00000.png",
-            "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\test\\ours_30000\\gt\\00001.png",
-            "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\test\\ours_30000\\gt\\00002.png",
-            "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\test\\ours_30000\\gt\\00003.png",
-            "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\test\\ours_30000\\gt\\00004.png",
-            "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\test\\ours_30000\\gt\\00005.png",
-            "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\test\\ours_30000\\gt\\00006.png",
-            "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\test\\ours_30000\\gt\\00007.png"
+            "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\2f19f586e05e\\test\\ours_7000\\gt\\00000.png",
+            "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\2f19f586e05e\\test\\ours_7000\\gt\\00001.png",
+            "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\2f19f586e05e\\test\\ours_7000\\gt\\00002.png",
+            "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\2f19f586e05e\\test\\ours_7000\\gt\\00003.png",
+            "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\2f19f586e05e\\test\\ours_7000\\gt\\00004.png",
+            "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\2f19f586e05e\\test\\ours_7000\\gt\\00005.png",
+            "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\2f19f586e05e\\test\\ours_7000\\gt\\00006.png",
+            "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\2f19f586e05e\\test\\ours_7000\\gt\\00007.png"
           ],
           "log_files": [
-            "E:\\3dgs\\3dgs_platform\\engine\\logs\\video_scene_01\\augmentation.log",
-            "E:\\3dgs\\3dgs_platform\\engine\\logs\\video_scene_01\\colmap.log",
-            "E:\\3dgs\\3dgs_platform\\engine\\logs\\video_scene_01\\colmap_quality.log",
-            "E:\\3dgs\\3dgs_platform\\engine\\logs\\video_scene_01\\convert.log",
-            "E:\\3dgs\\3dgs_platform\\engine\\logs\\video_scene_01\\metrics.log",
-            "E:\\3dgs\\3dgs_platform\\engine\\logs\\video_scene_01\\preflight.log",
-            "E:\\3dgs\\3dgs_platform\\engine\\logs\\video_scene_01\\render.log",
-            "E:\\3dgs\\3dgs_platform\\engine\\logs\\video_scene_01\\report.log",
-            "E:\\3dgs\\3dgs_platform\\engine\\logs\\video_scene_01\\train_fast_preview.log",
-            "E:\\3dgs\\3dgs_platform\\engine\\logs\\video_scene_01\\train_low_vram.log",
-            "E:\\3dgs\\3dgs_platform\\engine\\logs\\video_scene_01\\video_extract.log"
+            "E:\\3dgs\\3dgs_platform\\engine\\logs\\video_scene_01\\2f19f586e05e\\augmentation.log",
+            "E:\\3dgs\\3dgs_platform\\engine\\logs\\video_scene_01\\2f19f586e05e\\report.log"
           ],
           "result_files": {
-            "metrics_json": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\metrics.json",
-            "colmap_quality_json": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\colmap_quality.json",
-            "colmap_quality_txt": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\colmap_quality.txt",
-            "report_json": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\report.json",
-            "report_md": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\report.md",
-            "summary_csv": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\summary.csv",
-            "summary_txt": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\summary.txt"
+            "metrics_json": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\2f19f586e05e\\metrics.json",
+            "colmap_quality_json": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\2f19f586e05e\\colmap_quality.json",
+            "colmap_quality_txt": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\2f19f586e05e\\colmap_quality.txt",
+            "report_json": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\2f19f586e05e\\report.json",
+            "report_md": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\2f19f586e05e\\report.md",
+            "summary_csv": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\2f19f586e05e\\summary.csv",
+            "summary_txt": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\2f19f586e05e\\summary.txt"
           }
         },
         "result_files": {
-          "metrics_json": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\metrics.json",
-          "report_json": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\report.json",
-          "report_md": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\report.md",
-          "summary_csv": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\summary.csv",
-          "summary_txt": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\summary.txt",
-          "colmap_quality_json": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\colmap_quality.json",
-          "colmap_quality_txt": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\colmap_quality.txt"
+          "metrics_json": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\2f19f586e05e\\metrics.json",
+          "report_json": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\2f19f586e05e\\report.json",
+          "report_md": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\2f19f586e05e\\report.md",
+          "summary_csv": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\2f19f586e05e\\summary.csv",
+          "summary_txt": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\2f19f586e05e\\summary.txt",
+          "colmap_quality_json": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\2f19f586e05e\\colmap_quality.json",
+          "colmap_quality_txt": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\2f19f586e05e\\colmap_quality.txt"
         },
         "preview_images": [
-          "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\test\\ours_30000\\gt\\00000.png",
-          "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\test\\ours_30000\\gt\\00001.png",
-          "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\test\\ours_30000\\gt\\00002.png",
-          "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\test\\ours_30000\\gt\\00003.png",
-          "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\test\\ours_30000\\gt\\00004.png",
-          "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\test\\ours_30000\\gt\\00005.png",
-          "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\test\\ours_30000\\gt\\00006.png",
-          "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\test\\ours_30000\\gt\\00007.png"
+          "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\2f19f586e05e\\test\\ours_7000\\gt\\00000.png",
+          "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\2f19f586e05e\\test\\ours_7000\\gt\\00001.png",
+          "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\2f19f586e05e\\test\\ours_7000\\gt\\00002.png",
+          "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\2f19f586e05e\\test\\ours_7000\\gt\\00003.png",
+          "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\2f19f586e05e\\test\\ours_7000\\gt\\00004.png",
+          "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\2f19f586e05e\\test\\ours_7000\\gt\\00005.png",
+          "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\2f19f586e05e\\test\\ours_7000\\gt\\00006.png",
+          "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\2f19f586e05e\\test\\ours_7000\\gt\\00007.png"
         ],
         "colmap_quality": {
           "scene_name": "video_scene_01",
-          "image_path": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\augmented_images",
-          "workspace_path": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01",
-          "source_path": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\gs_input",
-          "sparse_model_path": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\sparse\\0",
+          "image_path": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\2f19f586e05e\\augmented_images",
+          "workspace_path": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\2f19f586e05e",
+          "source_path": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\2f19f586e05e\\gs_input",
+          "sparse_model_path": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\2f19f586e05e\\sparse\\0",
           "model_format": "bin",
           "input_image_count": 62,
-          "generated_at": "2026-05-05T15:02:33",
+          "generated_at": "2026-05-05T16:10:28",
           "camera_count": 62,
           "registered_image_count": 62,
-          "point3d_count": 34182,
-          "total_points2d": 363641,
-          "matched_points2d": 205809,
-          "mean_track_length": 6.021,
-          "mean_reprojection_error": 0.6686,
+          "point3d_count": 38135,
+          "total_points2d": 440752,
+          "matched_points2d": 224131,
+          "mean_track_length": 5.8773,
+          "mean_reprojection_error": 0.676,
           "registration_rate": 1.0,
           "registration_rate_percent": 100.0,
           "quality_level": "良好",
@@ -2640,9 +1485,9 @@
             "stage_label": "原始数据预检查",
             "order": 2,
             "status": "success",
-            "started_at": "2026-05-05T07:02:07.499675+00:00",
-            "finished_at": "2026-05-05T07:02:11.337875+00:00",
-            "duration_seconds": 3.838,
+            "started_at": "2026-05-05T07:34:14.477064+00:00",
+            "finished_at": "2026-05-05T07:34:17.801007+00:00",
+            "duration_seconds": 3.324,
             "error_type": null,
             "error_message": null
           },
@@ -2651,9 +1496,9 @@
             "stage_label": "数据增强",
             "order": 3,
             "status": "success",
-            "started_at": "2026-05-05T07:02:11.345876+00:00",
-            "finished_at": "2026-05-05T07:02:32.286664+00:00",
-            "duration_seconds": 20.941,
+            "started_at": "2026-05-05T07:34:17.806041+00:00",
+            "finished_at": "2026-05-05T07:34:39.679264+00:00",
+            "duration_seconds": 21.873,
             "error_type": null,
             "error_message": null
           },
@@ -2662,9 +1507,9 @@
             "stage_label": "COLMAP 重建",
             "order": 4,
             "status": "success",
-            "started_at": "2026-05-05T07:02:32.292665+00:00",
-            "finished_at": "2026-05-05T07:02:33.366089+00:00",
-            "duration_seconds": 1.073,
+            "started_at": "2026-05-05T07:34:39.684275+00:00",
+            "finished_at": "2026-05-05T08:10:28.199853+00:00",
+            "duration_seconds": 2148.516,
             "error_type": null,
             "error_message": null
           },
@@ -2673,9 +1518,9 @@
             "stage_label": "COLMAP 质量分析",
             "order": 5,
             "status": "success",
-            "started_at": "2026-05-05T07:02:33.372063+00:00",
-            "finished_at": "2026-05-05T07:02:33.625828+00:00",
-            "duration_seconds": 0.254,
+            "started_at": "2026-05-05T08:10:28.204890+00:00",
+            "finished_at": "2026-05-05T08:10:28.477570+00:00",
+            "duration_seconds": 0.273,
             "error_type": null,
             "error_message": null
           },
@@ -2684,9 +1529,9 @@
             "stage_label": "数据转换",
             "order": 6,
             "status": "success",
-            "started_at": "2026-05-05T07:02:33.631828+00:00",
-            "finished_at": "2026-05-05T07:02:42.409400+00:00",
-            "duration_seconds": 8.778,
+            "started_at": "2026-05-05T08:10:28.482572+00:00",
+            "finished_at": "2026-05-05T08:10:36.869411+00:00",
+            "duration_seconds": 8.387,
             "error_type": null,
             "error_message": null
           },
@@ -2695,9 +1540,9 @@
             "stage_label": "训练前复检",
             "order": 7,
             "status": "success",
-            "started_at": "2026-05-05T07:02:42.414400+00:00",
-            "finished_at": "2026-05-05T07:02:45.399678+00:00",
-            "duration_seconds": 2.985,
+            "started_at": "2026-05-05T08:10:36.873410+00:00",
+            "finished_at": "2026-05-05T08:10:39.751935+00:00",
+            "duration_seconds": 2.879,
             "error_type": null,
             "error_message": null
           },
@@ -2706,9 +1551,9 @@
             "stage_label": "模型训练",
             "order": 8,
             "status": "success",
-            "started_at": "2026-05-05T07:02:45.405642+00:00",
-            "finished_at": "2026-05-05T07:09:01.175016+00:00",
-            "duration_seconds": 375.769,
+            "started_at": "2026-05-05T08:10:39.756937+00:00",
+            "finished_at": "2026-05-05T08:12:04.264026+00:00",
+            "duration_seconds": 84.507,
             "error_type": null,
             "error_message": null
           },
@@ -2717,9 +1562,9 @@
             "stage_label": "离线渲染",
             "order": 9,
             "status": "success",
-            "started_at": "2026-05-05T07:09:01.181011+00:00",
-            "finished_at": "2026-05-05T07:09:09.863087+00:00",
-            "duration_seconds": 8.682,
+            "started_at": "2026-05-05T08:12:04.269043+00:00",
+            "finished_at": "2026-05-05T08:12:12.559409+00:00",
+            "duration_seconds": 8.29,
             "error_type": null,
             "error_message": null
           },
@@ -2728,9 +1573,9 @@
             "stage_label": "指标评测",
             "order": 10,
             "status": "success",
-            "started_at": "2026-05-05T07:09:09.869631+00:00",
-            "finished_at": "2026-05-05T07:09:23.764906+00:00",
-            "duration_seconds": 13.895,
+            "started_at": "2026-05-05T08:12:12.564408+00:00",
+            "finished_at": "2026-05-05T08:12:26.639180+00:00",
+            "duration_seconds": 14.075,
             "error_type": null,
             "error_message": null
           },
@@ -2739,19 +1584,30 @@
             "stage_label": "结果报告",
             "order": 11,
             "status": "success",
-            "started_at": "2026-05-05T07:09:23.773940+00:00",
-            "finished_at": "2026-05-05T07:09:23.954904+00:00",
-            "duration_seconds": 0.181,
+            "started_at": "2026-05-05T08:12:26.644179+00:00",
+            "finished_at": "2026-05-05T08:12:26.786229+00:00",
+            "duration_seconds": 0.142,
+            "error_type": null,
+            "error_message": null
+          },
+          {
+            "stage_key": "viewer",
+            "stage_label": "启动查看器",
+            "order": 12,
+            "status": "success",
+            "started_at": "2026-05-05T08:12:26.791229+00:00",
+            "finished_at": "2026-05-05T08:12:26.820230+00:00",
+            "duration_seconds": 0.029,
             "error_type": null,
             "error_message": null
           }
         ]
       },
       "error": null,
-      "created_at": "2026-05-05T07:02:07.053567+00:00",
-      "updated_at": "2026-05-05T07:09:24.019904+00:00",
-      "started_at": "2026-05-05T07:02:07.411031+00:00",
-      "finished_at": "2026-05-05T07:09:24.010904+00:00",
+      "created_at": "2026-05-05T07:34:14.081835+00:00",
+      "updated_at": "2026-05-05T08:12:26.888792+00:00",
+      "started_at": "2026-05-05T07:34:14.421384+00:00",
+      "finished_at": "2026-05-05T08:12:26.883792+00:00",
       "stop_requested": false,
       "force_stop_requested": false,
       "retry_count": 0,
@@ -2761,9 +1617,9 @@
           "stage_label": "原始数据预检查",
           "order": 2,
           "status": "success",
-          "started_at": "2026-05-05T07:02:07.499675+00:00",
-          "finished_at": "2026-05-05T07:02:11.337875+00:00",
-          "duration_seconds": 3.838,
+          "started_at": "2026-05-05T07:34:14.477064+00:00",
+          "finished_at": "2026-05-05T07:34:17.801007+00:00",
+          "duration_seconds": 3.324,
           "error_type": null,
           "error_message": null
         },
@@ -2772,9 +1628,9 @@
           "stage_label": "数据增强",
           "order": 3,
           "status": "success",
-          "started_at": "2026-05-05T07:02:11.345876+00:00",
-          "finished_at": "2026-05-05T07:02:32.286664+00:00",
-          "duration_seconds": 20.941,
+          "started_at": "2026-05-05T07:34:17.806041+00:00",
+          "finished_at": "2026-05-05T07:34:39.679264+00:00",
+          "duration_seconds": 21.873,
           "error_type": null,
           "error_message": null
         },
@@ -2783,9 +1639,9 @@
           "stage_label": "COLMAP 重建",
           "order": 4,
           "status": "success",
-          "started_at": "2026-05-05T07:02:32.292665+00:00",
-          "finished_at": "2026-05-05T07:02:33.366089+00:00",
-          "duration_seconds": 1.073,
+          "started_at": "2026-05-05T07:34:39.684275+00:00",
+          "finished_at": "2026-05-05T08:10:28.199853+00:00",
+          "duration_seconds": 2148.516,
           "error_type": null,
           "error_message": null
         },
@@ -2794,9 +1650,9 @@
           "stage_label": "COLMAP 质量分析",
           "order": 5,
           "status": "success",
-          "started_at": "2026-05-05T07:02:33.372063+00:00",
-          "finished_at": "2026-05-05T07:02:33.625828+00:00",
-          "duration_seconds": 0.254,
+          "started_at": "2026-05-05T08:10:28.204890+00:00",
+          "finished_at": "2026-05-05T08:10:28.477570+00:00",
+          "duration_seconds": 0.273,
           "error_type": null,
           "error_message": null
         },
@@ -2805,9 +1661,9 @@
           "stage_label": "数据转换",
           "order": 6,
           "status": "success",
-          "started_at": "2026-05-05T07:02:33.631828+00:00",
-          "finished_at": "2026-05-05T07:02:42.409400+00:00",
-          "duration_seconds": 8.778,
+          "started_at": "2026-05-05T08:10:28.482572+00:00",
+          "finished_at": "2026-05-05T08:10:36.869411+00:00",
+          "duration_seconds": 8.387,
           "error_type": null,
           "error_message": null
         },
@@ -2816,9 +1672,9 @@
           "stage_label": "训练前复检",
           "order": 7,
           "status": "success",
-          "started_at": "2026-05-05T07:02:42.414400+00:00",
-          "finished_at": "2026-05-05T07:02:45.399678+00:00",
-          "duration_seconds": 2.985,
+          "started_at": "2026-05-05T08:10:36.873410+00:00",
+          "finished_at": "2026-05-05T08:10:39.751935+00:00",
+          "duration_seconds": 2.879,
           "error_type": null,
           "error_message": null
         },
@@ -2827,9 +1683,9 @@
           "stage_label": "模型训练",
           "order": 8,
           "status": "success",
-          "started_at": "2026-05-05T07:02:45.405642+00:00",
-          "finished_at": "2026-05-05T07:09:01.175016+00:00",
-          "duration_seconds": 375.769,
+          "started_at": "2026-05-05T08:10:39.756937+00:00",
+          "finished_at": "2026-05-05T08:12:04.264026+00:00",
+          "duration_seconds": 84.507,
           "error_type": null,
           "error_message": null
         },
@@ -2838,9 +1694,9 @@
           "stage_label": "离线渲染",
           "order": 9,
           "status": "success",
-          "started_at": "2026-05-05T07:09:01.181011+00:00",
-          "finished_at": "2026-05-05T07:09:09.863087+00:00",
-          "duration_seconds": 8.682,
+          "started_at": "2026-05-05T08:12:04.269043+00:00",
+          "finished_at": "2026-05-05T08:12:12.559409+00:00",
+          "duration_seconds": 8.29,
           "error_type": null,
           "error_message": null
         },
@@ -2849,9 +1705,9 @@
           "stage_label": "指标评测",
           "order": 10,
           "status": "success",
-          "started_at": "2026-05-05T07:09:09.869631+00:00",
-          "finished_at": "2026-05-05T07:09:23.764906+00:00",
-          "duration_seconds": 13.895,
+          "started_at": "2026-05-05T08:12:12.564408+00:00",
+          "finished_at": "2026-05-05T08:12:26.639180+00:00",
+          "duration_seconds": 14.075,
           "error_type": null,
           "error_message": null
         },
@@ -2860,42 +1716,53 @@
           "stage_label": "结果报告",
           "order": 11,
           "status": "success",
-          "started_at": "2026-05-05T07:09:23.773940+00:00",
-          "finished_at": "2026-05-05T07:09:23.954904+00:00",
-          "duration_seconds": 0.181,
+          "started_at": "2026-05-05T08:12:26.644179+00:00",
+          "finished_at": "2026-05-05T08:12:26.786229+00:00",
+          "duration_seconds": 0.142,
+          "error_type": null,
+          "error_message": null
+        },
+        {
+          "stage_key": "viewer",
+          "stage_label": "启动查看器",
+          "order": 12,
+          "status": "success",
+          "started_at": "2026-05-05T08:12:26.791229+00:00",
+          "finished_at": "2026-05-05T08:12:26.820230+00:00",
+          "duration_seconds": 0.029,
           "error_type": null,
           "error_message": null
         }
       ],
-      "runtime_dir": "E:\\3dgs\\3dgs_platform\\backend\\runtime\\f41867c032a0",
+      "runtime_dir": "E:\\3dgs\\3dgs_platform\\backend\\runtime\\2f19f586e05e",
       "result_files": {
-        "metrics_json": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\metrics.json",
-        "report_json": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\report.json",
-        "report_md": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\report.md",
-        "summary_csv": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\summary.csv",
-        "summary_txt": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\summary.txt",
-        "colmap_quality_json": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\colmap_quality.json",
-        "colmap_quality_txt": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\colmap_quality.txt"
+        "metrics_json": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\2f19f586e05e\\metrics.json",
+        "report_json": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\2f19f586e05e\\report.json",
+        "report_md": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\2f19f586e05e\\report.md",
+        "summary_csv": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\2f19f586e05e\\summary.csv",
+        "summary_txt": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\2f19f586e05e\\summary.txt",
+        "colmap_quality_json": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\2f19f586e05e\\colmap_quality.json",
+        "colmap_quality_txt": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\2f19f586e05e\\colmap_quality.txt"
       },
       "metrics_summary": {
-        "psnr": 20.715396881103516,
-        "ssim": 0.7773329019546509,
-        "lpips": 0.20855391025543213,
-        "gaussian_count": 47187,
-        "latest_iteration": 30000,
-        "generated_at": "2026-05-05T15:09:23",
-        "metrics_source_file": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\results.json",
+        "psnr": 21.453113555908203,
+        "ssim": 0.7944904565811157,
+        "lpips": 0.17095357179641724,
+        "gaussian_count": 39614,
+        "latest_iteration": 7000,
+        "generated_at": "2026-05-05T16:12:26",
+        "metrics_source_file": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\2f19f586e05e\\results.json",
         "colmap_registration_rate": 100.0,
         "colmap_registered_images": 62,
         "colmap_input_images": 62,
-        "colmap_point3d_count": 34182,
+        "colmap_point3d_count": 38135,
         "colmap_camera_count": 62,
-        "colmap_mean_track_length": 6.021,
-        "colmap_mean_reprojection_error": 0.6686,
+        "colmap_mean_track_length": 5.8773,
+        "colmap_mean_reprojection_error": 0.676,
         "colmap_quality_level": "良好"
       },
       "last_error_type": null,
-      "log_file": "E:\\3dgs\\3dgs_platform\\backend\\runtime\\task_logs\\f41867c032a0.log"
+      "log_file": "E:\\3dgs\\3dgs_platform\\backend\\runtime\\task_logs\\2f19f586e05e.log"
     }
   ]
 }

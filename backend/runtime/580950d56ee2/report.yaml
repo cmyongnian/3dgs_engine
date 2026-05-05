@@ -1,8 +1,0 @@
-report:
-  scene_name: video_scene_01
-  model_paths:
-  - outputs/video_scene_01
-  report_dir: outputs/video_scene_01
-  log_dir: E:\3dgs\3dgs_platform\engine\logs\video_scene_01
-  processed_scene_path: datasets/processed/video_scene_01
-  quiet: false

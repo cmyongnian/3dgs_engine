@@ -149,6 +149,30 @@ export interface 任务列表响应 {
   items: 任务响应[]
 }
 
+export interface 实验信息响应 {
+  task_id?: string
+  scene_name?: string
+  status?: 任务状态 | string
+  current_stage?: string
+  input_mode?: 'images' | 'video' | string
+  raw_image_dir?: string | null
+  processed_dir?: string | null
+  source_dir?: string | null
+  output_dir?: string | null
+  report_dir?: string | null
+  runtime_dir?: string | null
+  log_dir?: string | null
+  video_path?: string | null
+  video_target_fps?: number | string | null
+  colmap_use_gpu?: boolean | string | null
+  augmentation_enabled?: boolean
+  augmentation_preset?: string | null
+  augmentation_output_dir?: string | null
+  train_profile?: Record<string, unknown>
+  metrics_summary?: Record<string, unknown>
+  [key: string]: unknown
+}
+
 export interface 结果响应 {
   task_id: string
   scene_name: string
@@ -168,6 +192,9 @@ export interface 结果响应 {
   stage_history: 阶段记录[]
   metrics_summary: Record<string, unknown>
   result_files: Record<string, unknown>
+  experiment_info?: 实验信息响应
+  config_snapshot?: Record<string, unknown>
+  submitted_config?: Record<string, unknown>
   result: Record<string, unknown>
 }
 

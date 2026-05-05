@@ -212,6 +212,409 @@ function StatusBadge({ status }: { status?: string }) {
   return <span className={className}>{label}</span>;
 }
 
+function formatDateTime(value: unknown) {
+  if (!value) return "-";
+  const date = new Date(String(value));
+  if (Number.isNaN(date.getTime())) return String(value);
+  return date.toLocaleString();
+}
+
+function formatValue(value: unknown, digits = 4) {
+  if (value === undefined || value === null || value === "") return "-";
+
+  if (typeof value === "boolean") {
+    return value ? "开启" : "关闭";
+  }
+
+  const numberValue = typeof value === "number" ? value : Number(value);
+  if (Number.isFinite(numberValue) && String(value).trim() !== "") {
+    if (Math.abs(numberValue) >= 1000) return String(Math.round(numberValue));
+    return numberValue
+      .toFixed(digits)
+      .replace(/\.0+$/, "")
+      .replace(/(\.\d*?)0+$/, "$1");
+  }
+
+  if (Array.isArray(value)) return value.join("，");
+  if (isObject(value)) return JSON.stringify(value);
+  return String(value);
+}
+
+function pathValue(value: unknown) {
+  const text = formatValue(value);
+  if (text === "-") return text;
+  return text.replace(/\\/g, "/");
+}
+
+function metricValue(source: AnyObject | null | undefined, key: string) {
+  return pickFirst(source, [
+    ["metrics_summary", key],
+    ["metrics", key],
+    ["experiment_info", "metrics_summary", key],
+    ["result", "metrics_summary", key],
+    ["result", "experiment_info", "metrics_summary", key],
+  ]);
+}
+
+function getExperimentInfo(result: ResultDetail | null): AnyObject {
+  const info = pickFirst(result, [
+    ["experiment_info"],
+    ["experimentInfo"],
+    ["result", "experiment_info"],
+    ["result", "experimentInfo"],
+  ]);
+  return isObject(info) ? info : {};
+}
+
+function getConfigSnapshot(result: ResultDetail | null): AnyObject {
+  const snapshot = pickFirst(result, [
+    ["config_snapshot"],
+    ["configSnapshot"],
+    ["result", "config_snapshot"],
+    ["result", "configSnapshot"],
+  ]);
+  return isObject(snapshot) ? snapshot : {};
+}
+
+function getAugmentationReport(result: ResultDetail | null, report: AnyObject | null): AnyObject {
+  const value = pickFirst(result, [
+    ["augmentation_report"],
+    ["augmentationReport"],
+    ["result", "augmentation_report"],
+    ["result", "augmentationReport"],
+  ]) || pickFirst(report, [["augmentation_report"], ["augmentationReport"]]);
+
+  return isObject(value) ? value : {};
+}
+
+function getActiveTrainProfile(config: AnyObject): AnyObject {
+  const train = isObject(config.train) ? config.train : {};
+  const activeProfile = train.active_profile || "";
+  const profiles = isObject(train.profiles) ? train.profiles : {};
+  const profile = activeProfile && isObject(profiles[activeProfile]) ? profiles[activeProfile] : {};
+  const activeProfileData = isObject(train.active_profile_data) ? train.active_profile_data : {};
+
+  return {
+    active_profile: activeProfile,
+    ...(isObject(profile) ? profile : {}),
+    ...(isObject(activeProfileData) ? activeProfileData : {}),
+  };
+}
+
+function InfoItem({ label, value, mono = false }: { label: string; value: unknown; mono?: boolean }) {
+  return (
+    <div className="experiment-info-item">
+      <span>{label}</span>
+      <strong className={mono ? "mono-value" : undefined} title={String(formatValue(value))}>
+        {mono ? pathValue(value) : formatValue(value)}
+      </strong>
+    </div>
+  );
+}
+
+function FlowFlag({ label, value }: { label: string; value: unknown }) {
+  const enabled = value === true || value === "true" || value === 1 || value === "1";
+  const disabled = value === false || value === "false" || value === 0 || value === "0";
+  return (
+    <span className={`flow-flag ${enabled ? "flow-flag-on" : disabled ? "flow-flag-off" : ""}`}>
+      {label}：{enabled ? "开" : disabled ? "关" : formatValue(value)}
+    </span>
+  );
+}
+
+function ExperimentInfoCard({
+  result,
+  taskId,
+}: {
+  result: ResultDetail | null;
+  taskId: string;
+}) {
+  const info = getExperimentInfo(result);
+  const config = getConfigSnapshot(result);
+  const trainProfile = isObject(info.train_profile) ? info.train_profile : {};
+  const pipeline = isObject(config.pipeline) ? config.pipeline : {};
+  const augmentation = isObject(config.augmentation) ? config.augmentation : {};
+
+  const registrationRate = metricValue(result, "colmap_registration_rate");
+
+  return (
+    <section className="result-card experiment-info-card">
+      <div className="result-card-header">
+        <div>
+          <h2>实验信息</h2>
+          <p className="section-tip">
+            用于论文实验记录和多任务对比，重点展示任务隔离目录、数据增强状态、训练配置和关键指标。
+          </p>
+        </div>
+      </div>
+
+      <div className="experiment-info-grid">
+        <InfoItem label="任务 ID" value={info.task_id || result?.task_id || result?.id || taskId} />
+        <InfoItem label="场景名称" value={info.scene_name || result?.scene_name} />
+        <InfoItem label="输入模式" value={info.input_mode === "video" ? "视频抽帧" : info.input_mode === "images" ? "图片目录" : info.input_mode} />
+        <InfoItem label="任务状态" value={info.status || result?.status} />
+        <InfoItem label="创建时间" value={formatDateTime(info.created_at || result?.created_at)} />
+        <InfoItem label="完成时间" value={formatDateTime(info.finished_at || result?.finished_at)} />
+        <InfoItem label="数据增强" value={info.augmentation_enabled} />
+        <InfoItem label="增强预设" value={info.augmentation_preset || augmentation.preset} />
+        <InfoItem label="训练模板" value={trainProfile.active_profile} />
+        <InfoItem label="训练轮数" value={trainProfile.iterations} />
+        <InfoItem label="分辨率倍率" value={trainProfile.resolution} />
+        <InfoItem label="数据设备" value={trainProfile.data_device} />
+        <InfoItem label="COLMAP GPU" value={info.colmap_use_gpu} />
+        <InfoItem label="视频 FPS" value={info.video_target_fps} />
+        <InfoItem label="PSNR" value={metricValue(result, "psnr")} />
+        <InfoItem label="SSIM" value={metricValue(result, "ssim")} />
+        <InfoItem label="LPIPS" value={metricValue(result, "lpips")} />
+        <InfoItem label="COLMAP 注册率" value={registrationRate === undefined || registrationRate === null || registrationRate === "" ? "-" : `${formatValue(registrationRate, 2)}%`} />
+      </div>
+
+      <div className="experiment-path-grid">
+        <InfoItem label="原始图片目录" value={info.raw_image_dir} mono />
+        <InfoItem label="处理目录" value={info.processed_dir} mono />
+        <InfoItem label="训练输入目录" value={info.source_dir} mono />
+        <InfoItem label="模型输出目录" value={info.output_dir} mono />
+        <InfoItem label="增强输出目录" value={info.augmentation_output_dir} mono />
+        <InfoItem label="运行配置目录" value={info.runtime_dir} mono />
+      </div>
+
+      <div className="flow-flag-wrap">
+        <FlowFlag label="预检查" value={pipeline.run_preflight} />
+        <FlowFlag label="视频抽帧" value={pipeline.run_video_extract} />
+        <FlowFlag label="数据增强" value={pipeline.run_augmentation} />
+        <FlowFlag label="COLMAP" value={pipeline.run_colmap} />
+        <FlowFlag label="转换" value={pipeline.run_convert} />
+        <FlowFlag label="训练" value={pipeline.run_train} />
+        <FlowFlag label="渲染" value={pipeline.run_render} />
+        <FlowFlag label="评测" value={pipeline.run_metrics} />
+      </div>
+    </section>
+  );
+}
+
+function KeyValueGrid({
+  rows,
+  mono = false,
+}: {
+  rows: Array<[string, unknown]>;
+  mono?: boolean;
+}) {
+  const filtered = rows.filter(([, value]) => value !== undefined && value !== null && value !== "");
+
+  if (filtered.length === 0) {
+    return <p className="empty-text">暂无参数。</p>;
+  }
+
+  return (
+    <div className="param-kv-grid">
+      {filtered.map(([label, value]) => (
+        <div className="param-kv-item" key={label}>
+          <span>{label}</span>
+          <strong className={mono ? "mono-value" : undefined} title={pathValue(value)}>
+            {mono ? pathValue(value) : formatValue(value)}
+          </strong>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ParameterSnapshotCard({ result }: { result: ResultDetail | null }) {
+  const config = getConfigSnapshot(result);
+
+  if (!config || Object.keys(config).length === 0) return null;
+
+  const pipeline = isObject(config.pipeline) ? config.pipeline : {};
+  const augmentation = isObject(config.augmentation) ? config.augmentation : {};
+  const trainProfile = getActiveTrainProfile(config);
+  const trainExtra = isObject(trainProfile.extra_args) ? trainProfile.extra_args : {};
+  const colmap = isObject(config.colmap) ? config.colmap : {};
+  const video = isObject(config.video) ? config.video : {};
+
+  return (
+    <section className="result-card parameter-snapshot-card">
+      <div className="result-card-header">
+        <div>
+          <h2>参数快照</h2>
+          <p className="section-tip">
+            展示本任务运行时生成的配置文件内容。这里读取的是该任务自己的 runtime 目录，不受当前系统设置变化影响。
+          </p>
+        </div>
+      </div>
+
+      <div className="param-section-grid">
+        <div className="param-section">
+          <h3>训练参数</h3>
+          <KeyValueGrid
+            rows={[
+              ["训练模板", trainProfile.active_profile],
+              ["训练轮数", trainProfile.iterations],
+              ["保存轮数", trainProfile.save_iterations],
+              ["测试轮数", trainProfile.test_iterations],
+              ["检查点轮数", trainProfile.checkpoint_iterations],
+              ["eval", trainProfile.eval],
+              ["data_device", trainExtra.data_device],
+              ["resolution", trainExtra.resolution],
+              ["densify_grad_threshold", trainExtra.densify_grad_threshold],
+              ["densification_interval", trainExtra.densification_interval],
+              ["densify_until_iter", trainExtra.densify_until_iter],
+            ]}
+          />
+        </div>
+
+        <div className="param-section">
+          <h3>数据增强参数</h3>
+          <KeyValueGrid
+            rows={[
+              ["enabled", augmentation.enabled],
+              ["preset", augmentation.preset],
+              ["gray_world", augmentation.gray_world],
+              ["clahe", augmentation.clahe],
+              ["clahe_clip_limit", augmentation.clahe_clip_limit],
+              ["clahe_tile_grid_size", augmentation.clahe_tile_grid_size],
+              ["auto_gamma", augmentation.auto_gamma],
+              ["gamma_target_mean", augmentation.gamma_target_mean],
+              ["denoise", augmentation.denoise],
+              ["denoise_h", augmentation.denoise_h],
+              ["sharpen", augmentation.sharpen],
+              ["sharpen_amount", augmentation.sharpen_amount],
+              ["jpeg_quality", augmentation.jpeg_quality],
+              ["max_long_edge", augmentation.max_long_edge],
+            ]}
+          />
+        </div>
+
+        <div className="param-section">
+          <h3>COLMAP / 视频参数</h3>
+          <KeyValueGrid
+            rows={[
+              ["COLMAP GPU", colmap.use_gpu],
+              ["COLMAP 图片目录", colmap.image_path],
+              ["COLMAP 工作目录", colmap.workspace_path],
+              ["COLMAP 程序", colmap.colmap_executable],
+              ["视频路径", video.video_path],
+              ["抽帧 FPS", video.target_fps],
+              ["FFmpeg", video.ffmpeg_executable],
+            ]}
+            mono
+          />
+        </div>
+
+        <div className="param-section">
+          <h3>流程开关</h3>
+          <div className="flow-flag-wrap compact">
+            <FlowFlag label="预检查" value={pipeline.run_preflight} />
+            <FlowFlag label="视频抽帧" value={pipeline.run_video_extract} />
+            <FlowFlag label="数据增强" value={pipeline.run_augmentation} />
+            <FlowFlag label="COLMAP" value={pipeline.run_colmap} />
+            <FlowFlag label="转换" value={pipeline.run_convert} />
+            <FlowFlag label="训练" value={pipeline.run_train} />
+            <FlowFlag label="渲染" value={pipeline.run_render} />
+            <FlowFlag label="评测" value={pipeline.run_metrics} />
+          </div>
+        </div>
+      </div>
+
+      <details className="snapshot-details">
+        <summary>查看完整运行时配置快照</summary>
+        <pre className="json-preview">{JSON.stringify(config, null, 2)}</pre>
+      </details>
+    </section>
+  );
+}
+
+function AugmentationReportCard({
+  result,
+  report,
+}: {
+  result: ResultDetail | null;
+  report: AnyObject | null;
+}) {
+  const augmentationReport = getAugmentationReport(result, report);
+  const config = getConfigSnapshot(result);
+  const augmentationCfg = isObject(config.augmentation) ? config.augmentation : {};
+  const shouldShow = Object.keys(augmentationReport).length > 0 || augmentationCfg.enabled === true;
+
+  if (!shouldShow) return null;
+
+  const counts = isObject(augmentationReport.counts) ? augmentationReport.counts : {};
+  const method = isObject(augmentationReport.method) ? augmentationReport.method : {};
+  const operations = isObject(method.operations) ? method.operations : {};
+  const parameters = isObject(method.parameters) ? method.parameters : augmentationCfg;
+  const items = Array.isArray(augmentationReport.items) ? augmentationReport.items : [];
+  const failedItems = items.filter((item: any) => item?.status === "failed" || item?.status === "skipped").slice(0, 8);
+
+  return (
+    <section className="result-card augmentation-report-card">
+      <div className="result-card-header">
+        <div>
+          <h2>数据增强报告</h2>
+          <p className="section-tip">
+            用于说明增强模块是否执行成功，以及是否保持 3DGS / COLMAP 所需的几何一致性。
+          </p>
+        </div>
+      </div>
+
+      {Object.keys(augmentationReport).length === 0 ? (
+        <p className="empty-text">
+          当前任务开启了数据增强，但暂未找到 augmentation_report.json。请确认数据增强阶段是否已经执行完成。
+        </p>
+      ) : (
+        <>
+          <div className="augmentation-summary-grid">
+            <InfoItem label="增强状态" value={augmentationReport.enabled} />
+            <InfoItem label="增强预设" value={augmentationReport.preset || parameters.preset} />
+            <InfoItem label="输入图片" value={counts.input_images ?? augmentationReport.total} />
+            <InfoItem label="成功增强" value={counts.success_images ?? augmentationReport.success} />
+            <InfoItem label="失败图片" value={counts.failed_images ?? augmentationReport.failed} />
+            <InfoItem label="复制原图" value={counts.copied_original_images ?? augmentationReport.skipped} />
+            <InfoItem label="增强库" value={method.library} />
+            <InfoItem label="几何变换" value={method.geometric_transforms ? "使用" : "未使用"} />
+          </div>
+
+          <div className="experiment-path-grid">
+            <InfoItem label="增强输入目录" value={augmentationReport.input_images} mono />
+            <InfoItem label="增强输出目录" value={augmentationReport.output_images} mono />
+          </div>
+
+          <div className="operation-tag-wrap">
+            {Object.entries(operations).map(([key, value]) => (
+              <span className={`operation-tag ${value ? "on" : "off"}`} key={key}>
+                {key}：{value ? "开" : "关"}
+              </span>
+            ))}
+          </div>
+
+          <div className="param-section soft">
+            <h3>增强参数</h3>
+            <KeyValueGrid
+              rows={[
+                ["jpeg_quality", parameters.jpeg_quality],
+                ["clahe_clip_limit", parameters.clahe_clip_limit],
+                ["clahe_tile_grid_size", parameters.clahe_tile_grid_size],
+                ["gamma_target_mean", parameters.gamma_target_mean],
+                ["denoise_h", parameters.denoise_h],
+                ["sharpen_amount", parameters.sharpen_amount],
+                ["max_long_edge", parameters.max_long_edge],
+                ["keep_original_if_failed", parameters.keep_original_if_failed],
+              ]}
+            />
+          </div>
+
+          {method.notes && <p className="safe-note">{method.notes}</p>}
+
+          {failedItems.length > 0 && (
+            <details className="snapshot-details">
+              <summary>查看失败或复制原图记录</summary>
+              <pre className="json-preview">{JSON.stringify(failedItems, null, 2)}</pre>
+            </details>
+          )}
+        </>
+      )}
+    </section>
+  );
+}
+
 function InsightCard({
   title,
   items,
@@ -671,6 +1074,12 @@ function ResultPage() {
           </Link>
         </div>
       </div>
+
+      <ExperimentInfoCard result={state.result} taskId={taskId || ""} />
+
+      <ParameterSnapshotCard result={state.result} />
+
+      <AugmentationReportCard result={state.result} report={report} />
 
       <div className="result-grid">
         <InsightCard
