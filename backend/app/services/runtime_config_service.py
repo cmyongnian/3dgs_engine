@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import yaml
 
@@ -40,14 +40,14 @@ class RuntimeConfigService:
         except Exception:
             return default
 
-    def _clamp_int(self, value: Any, default: int, minimum: int, maximum: int | None = None) -> int:
+    def _clamp_int(self, value: Any, default: int, minimum: int, maximum: Optional[int] = None) -> int:
         result = self._as_int(value, default)
         result = max(minimum, result)
         if maximum is not None:
             result = min(maximum, result)
         return result
 
-    def _clamp_float(self, value: Any, default: float, minimum: float, maximum: float | None = None) -> float:
+    def _clamp_float(self, value: Any, default: float, minimum: float, maximum: Optional[float] = None) -> float:
         result = self._as_float(value, default)
         result = max(minimum, result)
         if maximum is not None:

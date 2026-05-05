@@ -185,7 +185,12 @@ export function TaskCreatePage() {
       set提示('')
 
       const 已创建 = await 创建任务(表单)
-      await 启动任务(已创建.task_id)
+
+      // 不再等待启动接口完成后才跳转，避免后端热重载或子进程启动较慢时页面一直停在“正在提交”。
+      // 进入运行页后会轮询任务状态；启动失败时，运行页仍可看到已创建的任务记录。
+      启动任务(已创建.task_id).catch((error) => {
+        console.error('启动任务失败：', error)
+      })
 
       navigate(`/tasks/${已创建.task_id}`)
     } catch (error) {
