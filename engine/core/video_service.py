@@ -1,11 +1,16 @@
 from pathlib import Path
 import subprocess
 import shutil
+from typing import Optional
 
 from engine.core.config import load_yaml
 from engine.core.paths import PathManager
 from engine.core.logger import setup_logger
-from engine.core.process_utils import popen_registered, process_registry, raise_if_force_stopped
+from engine.core.process_utils import (
+    popen_registered,
+    process_registry,
+    raise_if_force_stopped,
+)
 
 
 class VideoService:
@@ -13,7 +18,7 @@ class VideoService:
         self,
         system_config_path="configs/system.yaml",
         video_config_path="configs/video.yaml",
-        task_id: str | None = None,
+        task_id: Optional[str] = None,
     ):
         self.pm = PathManager(system_config_path)
         self.task_id = task_id
@@ -45,6 +50,8 @@ class VideoService:
         return exe
 
     def run(self):
+        raise_if_force_stopped(self.task_id)
+
         scene_name = self.video_cfg["scene_name"]
         video_path = self._resolve_user_path(self.video_cfg["video_path"])
         output_images = self._resolve_user_path(self.video_cfg["output_images"])
@@ -58,6 +65,7 @@ class VideoService:
 
         if output_images.exists():
             shutil.rmtree(output_images)
+
         output_images.mkdir(parents=True, exist_ok=True)
 
         log_dir = self.pm.scene_log(scene_name)
@@ -69,10 +77,13 @@ class VideoService:
 
         cmd = [
             ffmpeg_executable,
-            "-i", str(video_path),
-            "-vf", f"fps={target_fps}",
-            "-q:v", "2",
-            str(output_pattern)
+            "-i",
+            str(video_path),
+            "-vf",
+            f"fps={target_fps}",
+            "-q:v",
+            "2",
+            str(output_pattern),
         ]
 
         logger.info("开始视频抽帧")
@@ -86,38 +97,47 @@ class VideoService:
         print("输入视频:", video_path)
         print("输出目录:", output_images)
         print("目标帧率:", target_fps)
+        print("执行命令:", " ".join(cmd))
+
+        process = None
 
         try:
-            process = popen_registered(
-                self.task_id,
-                cmd,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                text=True,
-                encoding="utf-8",
-                errors="replace",
-            )
-        except FileNotFoundError:
-            raise FileNotFoundError(
-                f"找不到 ffmpeg 可执行程序: {ffmpeg_executable}\n"
-                "请检查 video.yaml 中的 ffmpeg_executable 配置。"
-            )
+            try:
+                process = popen_registered(
+                    self.task_id,
+                    cmd,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                    text=True,
+                    encoding="utf-8",
+                    errors="replace",
+                )
+            except FileNotFoundError:
+                raise FileNotFoundError(
+                    f"找不到 ffmpeg 可执行程序: {ffmpeg_executable}\n"
+                    "请检查 video.yaml 中的 ffmpeg_executable 配置。"
+                )
 
-        try:
-            for line in process.stdout:
-                line = line.rstrip()
-                print(line)
-                logger.info(line)
+            if process.stdout:
+                for line in process.stdout:
+                    raise_if_force_stopped(self.task_id)
+
+                    line = line.rstrip()
+                    if line:
+                        print(line)
+                        logger.info(line)
 
             process.wait()
+
+            raise_if_force_stopped(self.task_id)
+
+            if process.returncode != 0:
+                logger.error("视频抽帧失败，返回码: %s", process.returncode)
+                raise RuntimeError(f"视频抽帧失败，返回码: {process.returncode}")
+
+            logger.info("视频抽帧完成")
+            print("视频抽帧完成")
+
         finally:
-            process_registry.unregister(self.task_id, process)
-
-        raise_if_force_stopped(self.task_id)
-
-        if process.returncode != 0:
-            logger.error("视频抽帧失败，返回码: %s", process.returncode)
-            raise RuntimeError(f"视频抽帧失败，返回码: {process.returncode}")
-
-        logger.info("视频抽帧完成")
-        print("视频抽帧完成")
+            if process is not None:
+                process_registry.unregister(self.task_id, process)

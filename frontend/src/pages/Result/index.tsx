@@ -1,520 +1,699 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
-import { 获取结果 } from '../../api/task'
+// frontend/src/pages/Result/index.tsx
 
-type AnyRecord = Record<string, any>
+import { useEffect, useMemo, useState } from "react";
+import { Link, useParams } from "react-router-dom";
 
-function 格式化时间(value: string | null | undefined) {
-  if (!value) return '-'
+type AnyObject = Record<string, any>;
 
-  const date = new Date(value)
+interface ResultDetail {
+  id?: string;
+  task_id?: string;
+  taskId?: string;
+  status?: string;
+  message?: string;
+  output_dir?: string;
+  outputDir?: string;
 
-  if (Number.isNaN(date.getTime())) {
-    return value
-  }
+  report?: AnyObject | string;
+  report_json?: AnyObject | string;
+  reportJson?: AnyObject | string;
 
-  return date.toLocaleString()
+  report_url?: string;
+  reportUrl?: string;
+  report_path?: string;
+  reportPath?: string;
+
+  metrics?: AnyObject;
+  images?: Array<string | AnyObject>;
+  artifacts?: Array<string | AnyObject>;
+  files?: Array<string | AnyObject>;
+  logs?: string | string[];
+
+  [key: string]: any;
 }
 
-function 状态文本(status: string | undefined) {
-  const map: Record<string, string> = {
-    created: '已创建',
-    queued: '排队中',
-    running: '运行中',
-    stopping: '停止中',
-    stopped: '已停止',
-    success: '已完成',
-    failed: '失败',
-    retrying: '重试中',
-    partial_success: '部分完成',
-    unknown: '未知',
-  }
-
-  return status ? map[status] ?? status : '-'
+interface PageState {
+  loading: boolean;
+  error: string | null;
+  result: ResultDetail | null;
+  report: AnyObject | null;
 }
 
-function 状态类名(status: string | undefined) {
-  if (status === 'success') return 'status-success'
-  if (status === 'failed' || status === 'stopped') return 'status-failed'
-  if (status === 'partial_success') return 'status-warning'
-  if (status === 'running' || status === 'queued' || status === 'retrying' || status === 'stopping') {
-    return 'status-running'
-  }
+const API_BASE =
+  (import.meta as any).env?.VITE_API_BASE_URL ||
+  (import.meta as any).env?.VITE_API_URL ||
+  "";
 
-  return 'status-idle'
+function joinUrl(base: string, path: string) {
+  const b = base.endsWith("/") ? base.slice(0, -1) : base;
+  const p = path.startsWith("/") ? path : `/${path}`;
+  return `${b}${p}`;
 }
 
-function 质量类名(level: string | undefined) {
-  if (level === '良好') return 'status-success'
-  if (level === '一般') return 'status-warning'
-  if (level === '较差' || level === '失败') return 'status-failed'
-  return 'status-idle'
+async function fetchJson<T = any>(url: string): Promise<T> {
+  const res = await fetch(url, {
+    headers: {
+      Accept: "application/json",
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error(`${res.status} ${res.statusText}`);
+  }
+
+  return res.json();
 }
 
-function 格式化值(value: unknown) {
-  if (value === null || value === undefined || value === '') return '-'
+function isObject(value: unknown): value is AnyObject {
+  return !!value && typeof value === "object" && !Array.isArray(value);
+}
 
-  if (typeof value === 'number') {
-    if (Number.isInteger(value)) return String(value)
-    return value.toFixed(4)
+function getByPath(obj: AnyObject | null | undefined, path: string[]) {
+  if (!obj) return undefined;
+
+  let cur: any = obj;
+
+  for (const key of path) {
+    if (!cur || typeof cur !== "object") return undefined;
+    cur = cur[key];
   }
 
-  if (typeof value === 'boolean') {
-    return value ? '是' : '否'
+  return cur;
+}
+
+function pickFirst(obj: AnyObject | null | undefined, paths: string[][]) {
+  for (const path of paths) {
+    const value = getByPath(obj, path);
+
+    if (value !== undefined && value !== null && value !== "") {
+      return value;
+    }
   }
+
+  return undefined;
+}
+
+function normalizeTextList(value: unknown): string[] {
+  if (value === undefined || value === null || value === "") return [];
 
   if (Array.isArray(value)) {
-    return value.length ? value.join(', ') : '-'
+    return value
+      .flatMap((item) => normalizeTextList(item))
+      .filter((item) => item.trim().length > 0);
   }
 
-  if (typeof value === 'object') {
-    return JSON.stringify(value, null, 2)
+  if (typeof value === "string") {
+    return value
+      .split(/\n+/)
+      .map((item) => item.replace(/^[-*•\d.、\s]+/, "").trim())
+      .filter(Boolean);
   }
 
-  return String(value)
+  if (typeof value === "number" || typeof value === "boolean") {
+    return [String(value)];
+  }
+
+  if (isObject(value)) {
+    return Object.entries(value).map(([key, val]) => {
+      if (Array.isArray(val)) {
+        return `${key}：${val.join("；")}`;
+      }
+
+      if (isObject(val)) {
+        return `${key}：${JSON.stringify(val, null, 2)}`;
+      }
+
+      return `${key}：${String(val)}`;
+    });
+  }
+
+  return [];
 }
 
-function 文件名(label: string) {
-  const map: Record<string, string> = {
-    metrics_json: '指标文件 metrics.json',
-    report_json: '报告文件 report.json',
-    report_md: 'Markdown 报告 report.md',
-    summary_csv: '汇总表 summary.csv',
-    summary_txt: '文本摘要 summary.txt',
-    colmap_quality_json: 'COLMAP 质量分析 JSON',
-    colmap_quality_txt: 'COLMAP 质量分析 TXT',
+function normalizeArray(value: unknown): Array<string | AnyObject> {
+  if (!value) return [];
+
+  if (Array.isArray(value)) {
+    return value as Array<string | AnyObject>;
   }
 
-  return map[label] ?? label
-}
-
-function 路径值(value: unknown) {
-  if (typeof value !== 'string') return ''
-  return value
-}
-
-function 是否有效值(value: unknown) {
-  return value !== null && value !== undefined && value !== ''
-}
-
-async function 复制文本(text: string) {
-  await navigator.clipboard.writeText(text)
-}
-
-export function ResultPage() {
-  const { taskId = '' } = useParams()
-  const navigate = useNavigate()
-
-  const [结果, set结果] = useState<AnyRecord | null>(null)
-  const [加载中, set加载中] = useState(true)
-  const [错误, set错误] = useState('')
-  const [提示, set提示] = useState('')
-
-  const metricsSummary = useMemo<AnyRecord>(() => {
-    return 结果?.metrics_summary ?? {}
-  }, [结果])
-
-  const result = useMemo<AnyRecord>(() => {
-    return 结果?.result ?? {}
-  }, [结果])
-
-  const resultFiles = useMemo<AnyRecord>(() => {
-    return 结果?.result_files ?? {}
-  }, [结果])
-
-  const colmapQuality = useMemo<AnyRecord>(() => {
-    return result?.colmap_quality ?? {}
-  }, [result])
-
-  const 核心指标列表 = useMemo(() => {
-    return [
-      ['PSNR', metricsSummary.psnr],
-      ['SSIM', metricsSummary.ssim],
-      ['LPIPS', metricsSummary.lpips],
-      ['MSE', metricsSummary.mse],
-      ['MAE', metricsSummary.mae],
-      ['Gaussian 数量', metricsSummary.gaussian_count],
-      ['最新迭代次数', metricsSummary.latest_iteration],
-      ['生成时间', metricsSummary.generated_at],
-    ].filter(([, value]) => 是否有效值(value))
-  }, [metricsSummary])
-
-  const colmap指标列表 = useMemo(() => {
-    const data = colmapQuality
-
-    return [
-      ['质量等级', data.quality_level],
-      ['是否建议继续', data.can_continue],
-      ['输入图像数量', data.input_image_count],
-      ['注册图像数量', data.registered_image_count],
-      [
-        '图像注册率',
-        是否有效值(data.registration_rate_percent)
-          ? `${data.registration_rate_percent}%`
-          : undefined,
-      ],
-      ['相机数量', data.camera_count],
-      ['稀疏点数量', data.point3d_count],
-      ['平均观测数', data.mean_track_length],
-      ['平均重投影误差', data.mean_reprojection_error],
-      ['模型格式', data.model_format],
-      ['sparse 模型路径', data.sparse_model_path],
-      ['生成时间', data.generated_at],
-    ].filter(([, value]) => 是否有效值(value))
-  }, [colmapQuality])
-
-  const 文件列表 = useMemo(() => {
-    return Object.entries(resultFiles).filter(([, value]) => Boolean(value))
-  }, [resultFiles])
-
-  const 路径列表 = useMemo(() => {
-    return [
-      ['输出目录', result.output_dir],
-      ['报告目录', result.report_dir],
-      ['日志目录', result.log_dir],
-      ['处理后数据目录', result.processed_dir],
-      ['运行时目录', result.runtime_dir],
-      ['源数据目录', result.source_dir],
-      ['原始图像目录', result.raw_image_dir],
-    ].filter(([, value]) => Boolean(value))
-  }, [result])
-
-  const 预览图片 = useMemo(() => {
-    const images = result.preview_images
-    return Array.isArray(images) ? images.filter((item): item is string => typeof item === 'string') : []
-  }, [result])
-
-  async function 加载结果() {
-    if (!taskId) {
-      set错误('任务编号缺失')
-      set加载中(false)
-      return
-    }
-
-    try {
-      set加载中(true)
-      const data = await 获取结果(taskId)
-      set结果(data as AnyRecord)
-      set错误('')
-    } catch (error) {
-      set错误(error instanceof Error ? error.message : '获取结果失败')
-    } finally {
-      set加载中(false)
-    }
+  if (typeof value === "string") {
+    return [value];
   }
 
-  async function 复制路径(path: string) {
-    if (!path) return
-
-    try {
-      await 复制文本(path)
-      set提示('路径已复制到剪贴板')
-
-      window.setTimeout(() => {
-        set提示('')
-      }, 2500)
-    } catch {
-      set错误('复制失败：浏览器不允许访问剪贴板')
-    }
+  if (isObject(value)) {
+    return Object.values(value).filter(
+      (item) => typeof item === "string" || isObject(item)
+    ) as Array<string | AnyObject>;
   }
 
-  useEffect(() => {
-    加载结果()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [taskId])
+  return [];
+}
 
-  if (加载中) {
-    return (
-      <div className="page">
-        <h1>结果查看</h1>
-        <div className="card">正在加载结果信息…</div>
-      </div>
-    )
-  }
+function normalizeUrl(item: string | AnyObject): string | null {
+  if (typeof item === "string") return item;
 
-  if (!结果) {
-    return (
-      <div className="page">
-        <div className="page-header">
-          <div>
-            <h1>结果查看</h1>
-            <p className="page-subtitle">未找到该任务的结果信息。</p>
-          </div>
+  return (
+    item.url ||
+    item.path ||
+    item.file ||
+    item.file_path ||
+    item.filePath ||
+    item.src ||
+    null
+  );
+}
 
-          <div className="inline-actions wrap-actions">
-            <button className="ghost-btn" onClick={() => navigate(-1)}>
-              返回
-            </button>
-
-            <Link className="primary-btn" to="/">
-              回到首页
-            </Link>
-          </div>
-        </div>
-
-        {错误 ? <div className="error-box">{错误}</div> : null}
-      </div>
-    )
+function normalizeName(item: string | AnyObject): string {
+  if (typeof item === "string") {
+    return item.split("/").pop() || item;
   }
 
   return (
-    <div className="page">
-      <div className="page-header">
+    item.name ||
+    item.filename ||
+    item.file_name ||
+    item.title ||
+    normalizeUrl(item)?.split("/").pop() ||
+    "文件"
+  );
+}
+
+function toDisplayUrl(url: string) {
+  if (/^https?:\/\//i.test(url)) return url;
+  if (url.startsWith("/")) return joinUrl(API_BASE, url);
+  return joinUrl(API_BASE, `/${url}`);
+}
+
+function isImageUrl(url: string) {
+  return /\.(png|jpg|jpeg|webp|gif|bmp|svg)$/i.test(url);
+}
+
+function StatusBadge({ status }: { status?: string }) {
+  const normalized = (status || "unknown").toLowerCase();
+
+  let label = status || "unknown";
+  let className = "status-badge";
+
+  if (["success", "finished", "done", "completed"].includes(normalized)) {
+    label = "已完成";
+    className += " success";
+  } else if (["failed", "error"].includes(normalized)) {
+    label = "失败";
+    className += " failed";
+  } else if (["running", "processing", "training"].includes(normalized)) {
+    label = "运行中";
+    className += " running";
+  } else if (["pending", "queued"].includes(normalized)) {
+    label = "等待中";
+    className += " pending";
+  }
+
+  return <span className={className}>{label}</span>;
+}
+
+function InsightCard({
+  title,
+  items,
+  empty,
+  type,
+}: {
+  title: string;
+  items: string[];
+  empty: string;
+  type: "conclusion" | "suggestion";
+}) {
+  return (
+    <section className={`result-card insight-card ${type}`}>
+      <div className="result-card-header">
+        <h2>{title}</h2>
+      </div>
+
+      {items.length > 0 ? (
+        <ul className="insight-list">
+          {items.map((item, index) => (
+            <li key={`${type}-${index}`}>{item}</li>
+          ))}
+        </ul>
+      ) : (
+        <p className="empty-text">{empty}</p>
+      )}
+    </section>
+  );
+}
+
+function MetricsCard({ metrics }: { metrics?: AnyObject }) {
+  if (!metrics || Object.keys(metrics).length === 0) return null;
+
+  return (
+    <section className="result-card">
+      <div className="result-card-header">
+        <h2>质量指标</h2>
+      </div>
+
+      <div className="metrics-grid">
+        {Object.entries(metrics).map(([key, value]) => (
+          <div className="metric-item" key={key}>
+            <span className="metric-key">{key}</span>
+            <span className="metric-value">
+              {typeof value === "object"
+                ? JSON.stringify(value)
+                : String(value)}
+            </span>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function ArtifactsCard({
+  title,
+  items,
+}: {
+  title: string;
+  items?: Array<string | AnyObject>;
+}) {
+  if (!items || items.length === 0) return null;
+
+  const normalized = items
+    .map((item) => {
+      const rawUrl = normalizeUrl(item);
+
+      if (!rawUrl) return null;
+
+      return {
+        name: normalizeName(item),
+        url: toDisplayUrl(rawUrl),
+      };
+    })
+    .filter(Boolean) as Array<{ name: string; url: string }>;
+
+  if (normalized.length === 0) return null;
+
+  const images = normalized.filter((item) => isImageUrl(item.url));
+  const files = normalized.filter((item) => !isImageUrl(item.url));
+
+  return (
+    <section className="result-card">
+      <div className="result-card-header">
+        <h2>{title}</h2>
+      </div>
+
+      {images.length > 0 && (
+        <div className="image-grid">
+          {images.map((item, index) => (
+            <a
+              href={item.url}
+              target="_blank"
+              rel="noreferrer"
+              className="image-preview"
+              key={`${item.url}-${index}`}
+            >
+              <img src={item.url} alt={item.name} />
+              <span>{item.name}</span>
+            </a>
+          ))}
+        </div>
+      )}
+
+      {files.length > 0 && (
+        <div className="file-list">
+          {files.map((item, index) => (
+            <a
+              href={item.url}
+              target="_blank"
+              rel="noreferrer"
+              className="file-item"
+              key={`${item.url}-${index}`}
+            >
+              {item.name}
+            </a>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function RawReportCard({ report }: { report: AnyObject | null }) {
+  if (!report) return null;
+
+  return (
+    <section className="result-card">
+      <details>
+        <summary>查看完整 report.json</summary>
+        <pre className="json-preview">{JSON.stringify(report, null, 2)}</pre>
+      </details>
+    </section>
+  );
+}
+
+function ResultPage() {
+  const params = useParams();
+
+  const taskId =
+    params.taskId ||
+    params.id ||
+    params.runId ||
+    params.resultId ||
+    "";
+
+  const [state, setState] = useState<PageState>({
+    loading: true,
+    error: null,
+    result: null,
+    report: null,
+  });
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadResultAndReport() {
+      if (!taskId) {
+        setState({
+          loading: false,
+          error: "缺少任务 ID，无法加载结果。",
+          result: null,
+          report: null,
+        });
+        return;
+      }
+
+      setState((prev) => ({
+        ...prev,
+        loading: true,
+        error: null,
+      }));
+
+      let result: ResultDetail | null = null;
+      let report: AnyObject | null = null;
+
+      const resultUrls = [
+        joinUrl(API_BASE, `/api/results/${taskId}`),
+        joinUrl(API_BASE, `/results/${taskId}`),
+        joinUrl(API_BASE, `/api/tasks/${taskId}/result`),
+        joinUrl(API_BASE, `/tasks/${taskId}/result`),
+      ];
+
+      let resultError: string | null = null;
+
+      for (const url of resultUrls) {
+        try {
+          result = await fetchJson<ResultDetail>(url);
+          break;
+        } catch (err: any) {
+          resultError = err?.message || String(err);
+        }
+      }
+
+      if (result) {
+        const embeddedReport =
+          result.report ||
+          result.report_json ||
+          result.reportJson ||
+          null;
+
+        if (isObject(embeddedReport)) {
+          report = embeddedReport;
+        } else if (typeof embeddedReport === "string") {
+          try {
+            report = JSON.parse(embeddedReport);
+          } catch {
+            // 可能是 URL，下面继续尝试 fetch
+          }
+        }
+      }
+
+      if (!report) {
+        const reportUrlFromResult =
+          result?.report_url ||
+          result?.reportUrl ||
+          result?.report_path ||
+          result?.reportPath ||
+          "";
+
+        const reportUrls = [
+          reportUrlFromResult,
+          joinUrl(API_BASE, `/api/results/${taskId}/report`),
+          joinUrl(API_BASE, `/api/results/${taskId}/report.json`),
+          joinUrl(API_BASE, `/results/${taskId}/report`),
+          joinUrl(API_BASE, `/results/${taskId}/report.json`),
+          joinUrl(API_BASE, `/outputs/${taskId}/report.json`),
+          joinUrl(API_BASE, `/static/results/${taskId}/report.json`),
+        ].filter(Boolean);
+
+        for (const url of reportUrls) {
+          try {
+            report = await fetchJson<AnyObject>(url);
+            break;
+          } catch {
+            // 继续尝试下一个路径
+          }
+        }
+      }
+
+      if (cancelled) return;
+
+      if (!result && !report) {
+        setState({
+          loading: false,
+          error:
+            resultError ||
+            "结果加载失败，请确认后端是否提供结果查询接口和 report.json。",
+          result: null,
+          report: null,
+        });
+        return;
+      }
+
+      setState({
+        loading: false,
+        error: null,
+        result,
+        report,
+      });
+    }
+
+    loadResultAndReport();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [taskId]);
+
+  const report = state.report;
+
+  const autoConclusions = useMemo(() => {
+    const value = pickFirst(report, [
+      ["自动结论"],
+      ["auto_conclusion"],
+      ["automatic_conclusion"],
+      ["autoConclusion"],
+      ["conclusion"],
+
+      ["summary", "自动结论"],
+      ["summary", "auto_conclusion"],
+      ["summary", "automatic_conclusion"],
+      ["summary", "conclusion"],
+
+      ["quality", "自动结论"],
+      ["quality", "auto_conclusion"],
+      ["quality", "conclusion"],
+
+      ["analysis", "自动结论"],
+      ["analysis", "auto_conclusion"],
+      ["analysis", "conclusion"],
+
+      ["colmap_quality", "自动结论"],
+      ["colmap_quality", "auto_conclusion"],
+      ["colmap_quality", "conclusion"],
+
+      ["quality_analysis", "自动结论"],
+      ["quality_analysis", "auto_conclusion"],
+      ["quality_analysis", "conclusion"],
+    ]);
+
+    return normalizeTextList(value);
+  }, [report]);
+
+  const optimizationSuggestions = useMemo(() => {
+    const value = pickFirst(report, [
+      ["优化建议"],
+      ["optimization_suggestions"],
+      ["optimizationSuggestions"],
+      ["suggestions"],
+      ["recommendations"],
+      ["next_steps"],
+      ["nextSteps"],
+
+      ["summary", "优化建议"],
+      ["summary", "optimization_suggestions"],
+      ["summary", "suggestions"],
+      ["summary", "recommendations"],
+
+      ["quality", "优化建议"],
+      ["quality", "optimization_suggestions"],
+      ["quality", "suggestions"],
+      ["quality", "recommendations"],
+
+      ["analysis", "优化建议"],
+      ["analysis", "optimization_suggestions"],
+      ["analysis", "suggestions"],
+      ["analysis", "recommendations"],
+
+      ["colmap_quality", "优化建议"],
+      ["colmap_quality", "optimization_suggestions"],
+      ["colmap_quality", "suggestions"],
+      ["colmap_quality", "recommendations"],
+
+      ["quality_analysis", "优化建议"],
+      ["quality_analysis", "optimization_suggestions"],
+      ["quality_analysis", "suggestions"],
+      ["quality_analysis", "recommendations"],
+    ]);
+
+    return normalizeTextList(value);
+  }, [report]);
+
+  const mergedMetrics = useMemo(() => {
+    const value =
+      state.result?.metrics ||
+      report?.metrics ||
+      report?.quality_metrics ||
+      report?.qualityMetrics ||
+      report?.colmap_metrics ||
+      report?.colmapMetrics ||
+      report?.colmap_quality?.metrics ||
+      report?.quality_analysis?.metrics;
+
+    return isObject(value) ? value : undefined;
+  }, [state.result, report]);
+
+  const artifacts = useMemo(() => {
+    return normalizeArray(
+      state.result?.artifacts ||
+        state.result?.files ||
+        report?.artifacts ||
+        report?.files ||
+        report?.outputs ||
+        report?.output_files
+    );
+  }, [state.result, report]);
+
+  const images = useMemo(() => {
+    return normalizeArray(
+      state.result?.images ||
+        report?.images ||
+        report?.previews ||
+        report?.preview_images ||
+        report?.visualizations
+    );
+  }, [state.result, report]);
+
+  if (state.loading) {
+    return (
+      <div className="result-page">
+        <div className="result-header">
+          <div>
+            <h1>结果详情</h1>
+            <p>正在加载任务结果和 report.json...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (state.error) {
+    return (
+      <div className="result-page">
+        <div className="result-header">
+          <div>
+            <h1>结果详情</h1>
+            <p className="error-text">{state.error}</p>
+          </div>
+
+          <Link to="/" className="back-link">
+            返回首页
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="result-page">
+      <div className="result-header">
         <div>
-          <h1>结果查看</h1>
-          <p className="page-subtitle">
-            查看三维重建任务的结果文件、评价指标、COLMAP 重建质量和输出路径。
+          <h1>结果详情</h1>
+          <p>
+            任务 ID：
+            <span className="mono-text">
+              {state.result?.task_id ||
+                state.result?.taskId ||
+                state.result?.id ||
+                taskId}
+            </span>
           </p>
         </div>
 
-        <div className="inline-actions wrap-actions">
-          <button className="ghost-btn" onClick={加载结果}>
-            刷新结果
-          </button>
+        <div className="result-header-actions">
+          <StatusBadge status={state.result?.status} />
 
-          <Link className="ghost-btn" to={`/tasks/${taskId}`}>
-            返回任务
-          </Link>
-
-          <Link className="primary-btn" to="/">
-            回到首页
+          <Link to="/" className="back-link">
+            返回首页
           </Link>
         </div>
       </div>
 
-      {提示 ? <div className="success-box">{提示}</div> : null}
-      {错误 ? <div className="error-box">{错误}</div> : null}
+      <div className="result-grid">
+        <InsightCard
+          title="自动结论"
+          type="conclusion"
+          items={autoConclusions}
+          empty="report.json 中暂未找到自动结论字段。"
+        />
 
-      <div className="info-grid">
-        <div className="card info-card">
-          <div className="meta-label">任务编号</div>
-          <div className="meta-value">{结果.task_id || taskId}</div>
-        </div>
-
-        <div className="card info-card">
-          <div className="meta-label">场景名称</div>
-          <div className="meta-value">{结果.scene_name || '-'}</div>
-        </div>
-
-        <div className="card info-card">
-          <div className="meta-label">任务状态</div>
-          <div className={`status-pill ${状态类名(结果.status)}`}>
-            {状态文本(结果.status)}
-          </div>
-        </div>
-
-        <div className="card info-card">
-          <div className="meta-label">当前阶段</div>
-          <div className="meta-value">{结果.current_stage || '-'}</div>
-        </div>
-
-        <div className="card info-card">
-          <div className="meta-label">重试次数</div>
-          <div className="meta-value">{结果.retry_count ?? 0}</div>
-        </div>
-
-        <div className="card info-card">
-          <div className="meta-label">下一步停止请求</div>
-          <div className="meta-value">{结果.stop_requested ? '是' : '否'}</div>
-        </div>
-
-        <div className="card info-card">
-          <div className="meta-label">立即停止请求</div>
-          <div className="meta-value">{结果.force_stop_requested ? '是' : '否'}</div>
-        </div>
+        <InsightCard
+          title="优化建议"
+          type="suggestion"
+          items={optimizationSuggestions}
+          empty="report.json 中暂未找到优化建议字段。"
+        />
       </div>
 
-      <div className="card">
-        <h3>核心评价指标</h3>
+      <MetricsCard metrics={mergedMetrics} />
 
-        {核心指标列表.length ? (
-          <div className="metric-grid">
-            {核心指标列表.map(([label, value]) => (
-              <div className="metric-card" key={String(label)}>
-                <div className="meta-label">{label}</div>
-                <div className="meta-value">{格式化值(value)}</div>
-              </div>
-            ))}
+      <ArtifactsCard title="结果预览" items={images} />
+
+      <ArtifactsCard title="输出文件" items={artifacts} />
+
+      {state.result?.message && (
+        <section className="result-card">
+          <div className="result-card-header">
+            <h2>运行信息</h2>
           </div>
-        ) : (
-          <div className="empty-tip">
-            当前还没有 PSNR、SSIM、LPIPS 等评价指标。若任务未执行评测阶段，这是正常现象。
-          </div>
-        )}
-      </div>
+          <p>{state.result.message}</p>
+        </section>
+      )}
 
-      <div className="card colmap-quality-card">
-        <div className="toolbar-row">
-          <div>
-            <h3>COLMAP 重建质量分析</h3>
-            <p className="section-tip">
-              用于评估相机位姿估计和稀疏点云质量，帮助判断是否适合进入 3DGS 训练。
-            </p>
-          </div>
+      {state.result?.logs && (
+        <section className="result-card">
+          <details>
+            <summary>查看运行日志</summary>
+            <pre className="log-preview">
+              {Array.isArray(state.result.logs)
+                ? state.result.logs.join("\n")
+                : state.result.logs}
+            </pre>
+          </details>
+        </section>
+      )}
 
-          {colmapQuality.quality_level ? (
-            <div className={`status-pill ${质量类名(colmapQuality.quality_level)}`}>
-              {colmapQuality.quality_level}
-            </div>
-          ) : null}
-        </div>
-
-        {colmap指标列表.length ? (
-          <>
-            <div className="metric-grid">
-              {colmap指标列表.map(([label, value]) => (
-                <div className="metric-card" key={String(label)}>
-                  <div className="meta-label">{label}</div>
-                  <div className="meta-value">{格式化值(value)}</div>
-                </div>
-              ))}
-            </div>
-
-            {Array.isArray(colmapQuality.suggestions) && colmapQuality.suggestions.length ? (
-              <div className="quality-suggestion-box">
-                <h4>优化建议</h4>
-
-                <ul>
-                  {colmapQuality.suggestions.map((item: string, index: number) => (
-                    <li key={`${index}-${item}`}>{item}</li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-          </>
-        ) : (
-          <div className="empty-tip">
-            暂未发现 COLMAP 质量分析结果。请确认任务是否执行到“COLMAP 质量分析”阶段，
-            或检查是否生成 colmap_quality.json。
-          </div>
-        )}
-      </div>
-
-      <div className="card">
-        <h3>结果文件</h3>
-
-        {文件列表.length ? (
-          <div className="file-grid">
-            {文件列表.map(([key, value]) => {
-              const path = 路径值(value)
-
-              return (
-                <div className="file-card" key={key}>
-                  <div className="file-card-head">
-                    <div className="meta-label">{文件名(key)}</div>
-
-                    {path ? (
-                      <button className="ghost-btn small-copy-btn" onClick={() => 复制路径(path)}>
-                        复制
-                      </button>
-                    ) : null}
-                  </div>
-
-                  <div className="file-value">{格式化值(value)}</div>
-                </div>
-              )
-            })}
-          </div>
-        ) : (
-          <div className="empty-tip">
-            暂未发现结果文件。若任务尚未执行到渲染、评测或报告阶段，这是正常现象。
-          </div>
-        )}
-      </div>
-
-      <div className="card">
-        <h3>输出路径</h3>
-
-        {路径列表.length ? (
-          <div className="file-grid">
-            {路径列表.map(([label, value]) => {
-              const path = 路径值(value)
-
-              return (
-                <div className="file-card" key={String(label)}>
-                  <div className="file-card-head">
-                    <div className="meta-label">{label}</div>
-
-                    {path ? (
-                      <button className="ghost-btn small-copy-btn" onClick={() => 复制路径(path)}>
-                        复制
-                      </button>
-                    ) : null}
-                  </div>
-
-                  <div className="file-value">{格式化值(value)}</div>
-                </div>
-              )
-            })}
-          </div>
-        ) : (
-          <div className="empty-tip">当前没有可显示的输出路径。</div>
-        )}
-      </div>
-
-      <div className="card">
-        <h3>预览图片</h3>
-
-        {预览图片.length ? (
-          <div className="preview-grid">
-            {预览图片.map((path) => (
-              <div className="preview-card" key={path}>
-                <img
-                  className="preview-image"
-                  src={path}
-                  alt="渲染预览"
-                  onError={(event) => {
-                    event.currentTarget.style.display = 'none'
-                  }}
-                />
-
-                <div className="preview-path">{path}</div>
-
-                <button className="ghost-btn small-copy-btn" onClick={() => 复制路径(path)}>
-                  复制路径
-                </button>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="empty-tip">
-            暂无预览图片。若后端返回的是本地磁盘绝对路径，浏览器可能无法直接显示图片，但路径仍可复制查看。
-          </div>
-        )}
-      </div>
-
-      <div className="card">
-        <h3>时间信息</h3>
-
-        <div className="details-grid">
-          <div>
-            <label>创建时间</label>
-            <div className="meta-value">{格式化时间(结果.created_at)}</div>
-          </div>
-
-          <div>
-            <label>开始时间</label>
-            <div className="meta-value">{格式化时间(结果.started_at)}</div>
-          </div>
-
-          <div>
-            <label>结束时间</label>
-            <div className="meta-value">{格式化时间(结果.finished_at)}</div>
-          </div>
-
-          <div className="details-full">
-            <label>状态说明</label>
-            <div className="meta-value">{结果.message || '-'}</div>
-          </div>
-
-          {结果.error ? (
-            <div className="details-full">
-              <label>错误信息</label>
-              <div className="error-panel">{结果.error}</div>
-            </div>
-          ) : null}
-        </div>
-      </div>
+      <RawReportCard report={report} />
     </div>
-  )
+  );
 }
+
+export { ResultPage };
+export default ResultPage;

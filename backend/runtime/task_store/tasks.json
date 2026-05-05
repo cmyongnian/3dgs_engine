@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-05-04T16:27:53.448595+00:00",
+  "updated_at": "2026-05-04T16:54:12.869927+00:00",
   "items": [
     {
       "task_id": "dc19f88d70e5",
@@ -582,27 +582,176 @@
           }
         }
       },
-      "status": "failed",
-      "current_stage": "执行失败",
-      "message": "任务执行失败",
-      "result": {},
-      "error": "unsupported operand type(s) for |: 'type' and 'NoneType'",
+      "status": "success",
+      "current_stage": "已完成",
+      "message": "任务执行完成",
+      "result": {
+        "scene_name": "video_scene_01",
+        "output_dir": "outputs\\video_scene_01",
+        "log_dir": "E:\\3dgs\\3dgs_platform\\engine\\logs\\video_scene_01",
+        "processed_dir": "datasets\\processed\\video_scene_01",
+        "runtime_dir": "E:\\3dgs\\3dgs_platform\\backend\\runtime\\24205759c6b1",
+        "metrics_summary": {
+          "colmap_registration_rate": 100.0,
+          "colmap_registered_images": 62,
+          "colmap_point3d_count": 34182,
+          "colmap_quality_level": "良好"
+        },
+        "report_summary": {},
+        "result_files": {
+          "metrics_json": "",
+          "report_json": "",
+          "report_md": "",
+          "summary_csv": "",
+          "summary_txt": "",
+          "colmap_quality_json": "E:\\3dgs\\3dgs_platform\\engine\\logs\\video_scene_01\\colmap_quality.json",
+          "colmap_quality_txt": "E:\\3dgs\\3dgs_platform\\engine\\logs\\video_scene_01\\colmap_quality.txt"
+        },
+        "preview_images": [],
+        "colmap_quality": {
+          "scene_name": "video_scene_01",
+          "image_path": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\raw\\video_scene_01\\images",
+          "workspace_path": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01",
+          "source_path": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\gs_input",
+          "sparse_model_path": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\sparse\\0",
+          "model_format": "bin",
+          "input_image_count": 62,
+          "generated_at": "2026-05-05T00:51:34",
+          "camera_count": 62,
+          "registered_image_count": 62,
+          "point3d_count": 34182,
+          "total_points2d": 363641,
+          "matched_points2d": 205809,
+          "mean_track_length": 6.021,
+          "mean_reprojection_error": 0.6686,
+          "registration_rate": 1.0,
+          "registration_rate_percent": 100.0,
+          "quality_level": "良好",
+          "status": "pass",
+          "can_continue": true,
+          "suggestions": [
+            "图像注册率和稀疏点数量较好，可以进入 3DGS 训练。"
+          ]
+        },
+        "stage_history": [
+          {
+            "stage_key": "preflight_raw",
+            "stage_label": "原始数据预检查",
+            "order": 2,
+            "status": "success",
+            "started_at": "2026-05-04T16:51:29.948936+00:00",
+            "finished_at": "2026-05-04T16:51:33.223222+00:00",
+            "duration_seconds": 3.274,
+            "error_type": null,
+            "error_message": null
+          },
+          {
+            "stage_key": "colmap",
+            "stage_label": "COLMAP 重建",
+            "order": 3,
+            "status": "success",
+            "started_at": "2026-05-04T16:51:33.226222+00:00",
+            "finished_at": "2026-05-04T16:51:34.217278+00:00",
+            "duration_seconds": 0.991,
+            "error_type": null,
+            "error_message": null
+          },
+          {
+            "stage_key": "colmap_quality",
+            "stage_label": "COLMAP 质量分析",
+            "order": 4,
+            "status": "success",
+            "started_at": "2026-05-04T16:51:34.220279+00:00",
+            "finished_at": "2026-05-04T16:51:34.445588+00:00",
+            "duration_seconds": 0.225,
+            "error_type": null,
+            "error_message": null
+          },
+          {
+            "stage_key": "convert",
+            "stage_label": "数据转换",
+            "order": 5,
+            "status": "success",
+            "started_at": "2026-05-04T16:51:34.449588+00:00",
+            "finished_at": "2026-05-04T16:51:42.068298+00:00",
+            "duration_seconds": 7.619,
+            "error_type": null,
+            "error_message": null
+          },
+          {
+            "stage_key": "preflight_processed",
+            "stage_label": "训练前复检",
+            "order": 6,
+            "status": "success",
+            "started_at": "2026-05-04T16:51:42.072297+00:00",
+            "finished_at": "2026-05-04T16:51:44.950617+00:00",
+            "duration_seconds": 2.878,
+            "error_type": null,
+            "error_message": null
+          },
+          {
+            "stage_key": "train",
+            "stage_label": "模型训练",
+            "order": 7,
+            "status": "success",
+            "started_at": "2026-05-04T16:51:44.953651+00:00",
+            "finished_at": "2026-05-04T16:52:24.609560+00:00",
+            "duration_seconds": 39.656,
+            "error_type": null,
+            "error_message": null
+          },
+          {
+            "stage_key": "render",
+            "stage_label": "离线渲染",
+            "order": 8,
+            "status": "success",
+            "started_at": "2026-05-04T16:52:24.613560+00:00",
+            "finished_at": "2026-05-04T16:52:32.071787+00:00",
+            "duration_seconds": 7.458,
+            "error_type": null,
+            "error_message": null
+          },
+          {
+            "stage_key": "metrics",
+            "stage_label": "指标评测",
+            "order": 9,
+            "status": "success",
+            "started_at": "2026-05-04T16:52:32.074787+00:00",
+            "finished_at": "2026-05-04T16:52:46.338199+00:00",
+            "duration_seconds": 14.263,
+            "error_type": null,
+            "error_message": null
+          },
+          {
+            "stage_key": "report",
+            "stage_label": "结果报告",
+            "order": 10,
+            "status": "success",
+            "started_at": "2026-05-04T16:52:46.342199+00:00",
+            "finished_at": "2026-05-04T16:52:46.455201+00:00",
+            "duration_seconds": 0.113,
+            "error_type": null,
+            "error_message": null
+          }
+        ]
+      },
+      "error": null,
       "created_at": "2026-05-04T16:27:49.774625+00:00",
-      "updated_at": "2026-05-04T16:27:53.448595+00:00",
-      "started_at": "2026-05-04T16:27:50.044953+00:00",
-      "finished_at": "2026-05-04T16:27:53.445595+00:00",
+      "updated_at": "2026-05-04T16:52:46.481235+00:00",
+      "started_at": "2026-05-04T16:51:29.918935+00:00",
+      "finished_at": "2026-05-04T16:52:46.476232+00:00",
       "stop_requested": false,
       "force_stop_requested": false,
-      "retry_count": 0,
+      "retry_count": 6,
       "stage_history": [
         {
           "stage_key": "preflight_raw",
           "stage_label": "原始数据预检查",
           "order": 2,
           "status": "success",
-          "started_at": "2026-05-04T16:27:50.077953+00:00",
-          "finished_at": "2026-05-04T16:27:53.420596+00:00",
-          "duration_seconds": 3.343,
+          "started_at": "2026-05-04T16:51:29.948936+00:00",
+          "finished_at": "2026-05-04T16:51:33.223222+00:00",
+          "duration_seconds": 3.274,
           "error_type": null,
           "error_message": null
         },
@@ -610,18 +759,108 @@
           "stage_key": "colmap",
           "stage_label": "COLMAP 重建",
           "order": 3,
-          "status": "failed",
-          "started_at": "2026-05-04T16:27:53.424596+00:00",
-          "finished_at": "2026-05-04T16:27:53.438603+00:00",
-          "duration_seconds": 0.014,
-          "error_type": "runtime_error",
-          "error_message": "unsupported operand type(s) for |: 'type' and 'NoneType'"
+          "status": "success",
+          "started_at": "2026-05-04T16:51:33.226222+00:00",
+          "finished_at": "2026-05-04T16:51:34.217278+00:00",
+          "duration_seconds": 0.991,
+          "error_type": null,
+          "error_message": null
+        },
+        {
+          "stage_key": "colmap_quality",
+          "stage_label": "COLMAP 质量分析",
+          "order": 4,
+          "status": "success",
+          "started_at": "2026-05-04T16:51:34.220279+00:00",
+          "finished_at": "2026-05-04T16:51:34.445588+00:00",
+          "duration_seconds": 0.225,
+          "error_type": null,
+          "error_message": null
+        },
+        {
+          "stage_key": "convert",
+          "stage_label": "数据转换",
+          "order": 5,
+          "status": "success",
+          "started_at": "2026-05-04T16:51:34.449588+00:00",
+          "finished_at": "2026-05-04T16:51:42.068298+00:00",
+          "duration_seconds": 7.619,
+          "error_type": null,
+          "error_message": null
+        },
+        {
+          "stage_key": "preflight_processed",
+          "stage_label": "训练前复检",
+          "order": 6,
+          "status": "success",
+          "started_at": "2026-05-04T16:51:42.072297+00:00",
+          "finished_at": "2026-05-04T16:51:44.950617+00:00",
+          "duration_seconds": 2.878,
+          "error_type": null,
+          "error_message": null
+        },
+        {
+          "stage_key": "train",
+          "stage_label": "模型训练",
+          "order": 7,
+          "status": "success",
+          "started_at": "2026-05-04T16:51:44.953651+00:00",
+          "finished_at": "2026-05-04T16:52:24.609560+00:00",
+          "duration_seconds": 39.656,
+          "error_type": null,
+          "error_message": null
+        },
+        {
+          "stage_key": "render",
+          "stage_label": "离线渲染",
+          "order": 8,
+          "status": "success",
+          "started_at": "2026-05-04T16:52:24.613560+00:00",
+          "finished_at": "2026-05-04T16:52:32.071787+00:00",
+          "duration_seconds": 7.458,
+          "error_type": null,
+          "error_message": null
+        },
+        {
+          "stage_key": "metrics",
+          "stage_label": "指标评测",
+          "order": 9,
+          "status": "success",
+          "started_at": "2026-05-04T16:52:32.074787+00:00",
+          "finished_at": "2026-05-04T16:52:46.338199+00:00",
+          "duration_seconds": 14.263,
+          "error_type": null,
+          "error_message": null
+        },
+        {
+          "stage_key": "report",
+          "stage_label": "结果报告",
+          "order": 10,
+          "status": "success",
+          "started_at": "2026-05-04T16:52:46.342199+00:00",
+          "finished_at": "2026-05-04T16:52:46.455201+00:00",
+          "duration_seconds": 0.113,
+          "error_type": null,
+          "error_message": null
         }
       ],
       "runtime_dir": "E:\\3dgs\\3dgs_platform\\backend\\runtime\\24205759c6b1",
-      "result_files": {},
-      "metrics_summary": {},
-      "last_error_type": "runtime_error",
+      "result_files": {
+        "metrics_json": "",
+        "report_json": "",
+        "report_md": "",
+        "summary_csv": "",
+        "summary_txt": "",
+        "colmap_quality_json": "E:\\3dgs\\3dgs_platform\\engine\\logs\\video_scene_01\\colmap_quality.json",
+        "colmap_quality_txt": "E:\\3dgs\\3dgs_platform\\engine\\logs\\video_scene_01\\colmap_quality.txt"
+      },
+      "metrics_summary": {
+        "colmap_registration_rate": 100.0,
+        "colmap_registered_images": 62,
+        "colmap_point3d_count": 34182,
+        "colmap_quality_level": "良好"
+      },
+      "last_error_type": null,
       "log_file": "E:\\3dgs\\3dgs_platform\\backend\\runtime\\task_logs\\24205759c6b1.log"
     }
   ]

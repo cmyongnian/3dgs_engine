@@ -1,11 +1,16 @@
 from pathlib import Path
 import subprocess
 import sys
+from typing import Optional
 
 from engine.core.config import load_yaml
 from engine.core.paths import PathManager
 from engine.core.logger import setup_logger
-from engine.core.process_utils import popen_registered, process_registry, raise_if_force_stopped
+from engine.core.process_utils import (
+    popen_registered,
+    process_registry,
+    raise_if_force_stopped,
+)
 
 
 class RenderService:
@@ -13,7 +18,7 @@ class RenderService:
         self,
         system_config_path="configs/system.yaml",
         render_config_path="configs/render.yaml",
-        task_id: str | None = None,
+        task_id: Optional[str] = None,
     ):
         self.pm = PathManager(system_config_path)
         self.task_id = task_id
@@ -31,6 +36,8 @@ class RenderService:
         return (self.pm.project_root / p).resolve()
 
     def run(self):
+        raise_if_force_stopped(self.task_id)
+
         scene_name = self.render_cfg["scene_name"]
         model_path = self._resolve_user_path(self.render_cfg["model_path"])
 
@@ -54,8 +61,10 @@ class RenderService:
         cmd = [
             sys.executable,
             str(render_script),
-            "-m", str(model_path),
-            "--iteration", str(iteration),
+            "-m",
+            str(model_path),
+            "--iteration",
+            str(iteration),
         ]
 
         if skip_train:
@@ -69,40 +78,49 @@ class RenderService:
 
         logger.info("开始渲染")
         logger.info("项目根目录: %s", self.pm.project_root)
-        logger.info("3DGS仓库目录: %s", self.pm.gs_repo)
+        logger.info("3DGS 仓库目录: %s", self.pm.gs_repo)
         logger.info("场景名称: %s", scene_name)
         logger.info("模型目录: %s", model_path)
         logger.info("执行命令: %s", " ".join(cmd))
 
         print(f"开始渲染: {scene_name}")
         print(f"模型目录: {model_path}")
+        print("执行命令:", " ".join(cmd))
 
-        process = popen_registered(
-            self.task_id,
-            cmd,
-            cwd=str(self.pm.gs_repo),
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
-            encoding="utf-8",
-            errors="replace"
-        )
+        process = None
 
         try:
-            for line in process.stdout:
-                line = line.rstrip()
-                print(line)
-                logger.info(line)
+            process = popen_registered(
+                self.task_id,
+                cmd,
+                cwd=str(self.pm.gs_repo),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+            )
+
+            if process.stdout:
+                for line in process.stdout:
+                    raise_if_force_stopped(self.task_id)
+
+                    line = line.rstrip()
+                    if line:
+                        print(line)
+                        logger.info(line)
 
             process.wait()
+
+            raise_if_force_stopped(self.task_id)
+
+            if process.returncode == 0:
+                logger.info("渲染完成")
+                print("渲染完成")
+            else:
+                logger.error("渲染失败，返回码: %s", process.returncode)
+                raise RuntimeError(f"渲染失败，返回码: {process.returncode}")
+
         finally:
-            process_registry.unregister(self.task_id, process)
-
-        raise_if_force_stopped(self.task_id)
-
-        if process.returncode == 0:
-            logger.info("渲染完成")
-            print("渲染完成")
-        else:
-            logger.error("渲染失败，返回码: %s", process.returncode)
-            raise RuntimeError(f"渲染失败，返回码: {process.returncode}")
+            if process is not None:
+                process_registry.unregister(self.task_id, process)
