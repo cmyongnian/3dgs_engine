@@ -1,0 +1,6 @@
+render:
+  scene_name: 三星堆立人
+  model_path: outputs\三星堆立人\9562a43d4969
+  model_paths:
+  - outputs\三星堆立人\9562a43d4969
+  quiet: false

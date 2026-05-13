@@ -9,6 +9,7 @@ from typing import Any, Iterable, List, Optional
 
 import cv2
 import numpy as np
+from PIL import Image
 
 from engine.core.config import load_yaml
 from engine.core.logger import setup_logger
@@ -74,22 +75,63 @@ class AugmentationService:
         return cv2.cvtColor(image_bgr, cv2.COLOR_BGR2RGB)
 
     def _write_image(self, path: Path, image_rgb: np.ndarray, jpeg_quality: int) -> None:
+        """
+        保存增强后的图片，并立即做格式校验。
+
+        不能再使用 encoded.tofile(str(path)) 作为唯一写法。
+        在 Windows 中文路径、PNG 编码以及部分 OpenCV 组合下，
+        这样写出的文件可能能被部分工具读取，但 COLMAP 会报 BITMAP_ERROR。
+        这里改为普通二进制写入，并在写完后用 PIL 重新打开校验。
+        """
         path.parent.mkdir(parents=True, exist_ok=True)
+
+        if image_rgb is None:
+            raise RuntimeError(f"待保存图片为空: {path}")
+
+        if image_rgb.dtype != np.uint8:
+            image_rgb = np.clip(image_rgb, 0, 255).astype(np.uint8)
+
+        if image_rgb.ndim == 2:
+            image_rgb = cv2.cvtColor(image_rgb, cv2.COLOR_GRAY2RGB)
+
+        if image_rgb.ndim == 3 and image_rgb.shape[2] == 4:
+            image_rgb = image_rgb[:, :, :3]
+
+        if image_rgb.ndim != 3 or image_rgb.shape[2] != 3:
+            raise RuntimeError(f"图片通道格式异常: {path}, shape={image_rgb.shape}")
+
+        image_rgb = np.ascontiguousarray(image_rgb)
         image_bgr = cv2.cvtColor(image_rgb, cv2.COLOR_RGB2BGR)
 
         suffix = path.suffix.lower()
-        params: List[int] = []
+        if suffix not in IMAGE_EXTS:
+            suffix = ".png"
+            path = path.with_suffix(".png")
 
+        params: List[int] = []
         if suffix in {".jpg", ".jpeg"}:
             params = [int(cv2.IMWRITE_JPEG_QUALITY), int(jpeg_quality)]
         elif suffix == ".png":
-            params = [int(cv2.IMWRITE_PNG_COMPRESSION), 3]
+            # 压缩级别不要过高，避免兼容性问题。
+            params = [int(cv2.IMWRITE_PNG_COMPRESSION), 1]
 
-        ok, encoded = cv2.imencode(suffix if suffix else ".jpg", image_bgr, params)
-        if not ok:
+        ok, encoded = cv2.imencode(suffix, image_bgr, params)
+        if not ok or encoded is None:
             raise RuntimeError(f"无法编码图片: {path}")
 
-        encoded.tofile(str(path))
+        with open(path, "wb") as f:
+            f.write(encoded.tobytes())
+
+        # 写完立即验证。这样坏图不会继续进入 COLMAP。
+        try:
+            with Image.open(path) as img:
+                img.verify()
+
+            with Image.open(path) as img:
+                img.load()
+                _ = img.size
+        except Exception as exc:
+            raise RuntimeError(f"增强图片写入后校验失败: {path}，原因: {exc}")
 
     def _iter_images(self, input_dir: Path) -> Iterable[Path]:
         for item in sorted(input_dir.iterdir()):
@@ -217,9 +259,9 @@ class AugmentationService:
                 amount=float(self.augmentation_cfg.get("sharpen_amount", 0.25)),
             )
 
-        max_long_edge = int(self.augmentation_cfg.get("max_long_edge", 0) or 0)
-        image = self._resize_long_edge(image, max_long_edge=max_long_edge)
-
+        # 对 3DGS / COLMAP 流程来说，增强图必须保持与原图完全相同的尺寸。
+        # 如果改变分辨率，COLMAP 得到的相机内参与训练图像尺寸会不匹配。
+        # 因此这里保留 _resize_long_edge 方法，但默认不在当前安全增强流程中调用。
         return image
 
     def _write_reports(
@@ -242,7 +284,7 @@ class AugmentationService:
             "auto_gamma": bool(self.augmentation_cfg.get("auto_gamma", False)),
             "denoise": bool(self.augmentation_cfg.get("denoise", False)),
             "sharpen": bool(self.augmentation_cfg.get("sharpen", False)),
-            "resize_long_edge": int(self.augmentation_cfg.get("max_long_edge", 0) or 0) > 0,
+            "resize_long_edge": False,
         }
 
         parameters = {
@@ -260,7 +302,7 @@ class AugmentationService:
             "denoise_h": float(self.augmentation_cfg.get("denoise_h", 3.0)),
             "sharpen": operations["sharpen"],
             "sharpen_amount": float(self.augmentation_cfg.get("sharpen_amount", 0.25)),
-            "max_long_edge": int(self.augmentation_cfg.get("max_long_edge", 0) or 0),
+            "max_long_edge": 0,
         }
 
         report = {
@@ -313,7 +355,7 @@ class AugmentationService:
             f"跳过: {skipped_count}",
             f"增强预设: {self.augmentation_cfg.get('preset', 'safe')}",
             f"JPEG质量: {self.augmentation_cfg.get('jpeg_quality', 95)}",
-            f"最大长边: {self.augmentation_cfg.get('max_long_edge', 0)}",
+            "最大长边: 0（安全模式下不改变图像尺寸）",
             "增强类型: pixel-level/image-only，不使用裁剪、旋转、翻转、仿射等几何增强。",
         ]
         txt_path.write_text("\n".join(txt_lines), encoding="utf-8")

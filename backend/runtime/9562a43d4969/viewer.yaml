@@ -1,0 +1,6 @@
+viewer:
+  scene_name: 三星堆立人
+  source_path: datasets\processed\三星堆立人\9562a43d4969\gs_input
+  model_path: outputs\三星堆立人\9562a43d4969
+  viewer_root: third_party/viewer/bin
+  quiet: false

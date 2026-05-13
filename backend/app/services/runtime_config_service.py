@@ -335,7 +335,11 @@ class RuntimeConfigService:
 
         augmentation_enabled = self._as_bool(augmentation.get("enabled", True), True)
         run_augmentation = self._as_bool(pipeline.get("run_augmentation", True), True) and augmentation_enabled
-        effective_image_path = augmented_image_path if run_augmentation else raw_image_path
+
+        # COLMAP 阶段始终使用原始图片。
+        # 增强图只作为 convert / 训练输入候选，避免 COLMAP 读取增强 PNG 时出现 BITMAP_ERROR。
+        colmap_image_path = raw_image_path
+        convert_source_images = augmented_image_path if run_augmentation else raw_image_path
 
         train_profiles = self._build_train_profiles(train)
         active_profile_data = train_profiles["active_profile_data"]
@@ -481,14 +485,15 @@ class RuntimeConfigService:
                 "denoise_h": self._clamp_float(augmentation.get("denoise_h", 3.0), 3.0, 0.0),
                 "sharpen": self._as_bool(augmentation.get("sharpen", False), False),
                 "sharpen_amount": self._clamp_float(augmentation.get("sharpen_amount", 0.2), 0.2, 0.0, 1.0),
-                "max_long_edge": self._clamp_int(augmentation.get("max_long_edge", 0), 0, 0),
+                # 安全增强不允许改变图片尺寸，否则会破坏 COLMAP 相机内参与训练图像之间的对应关系。
+                "max_long_edge": 0,
             }
         }
         colmap_yaml = {
             "colmap": {
                 "scene_name": scene_name,
-                "image_path": effective_image_path,
-                "raw_image_path": effective_image_path,
+                "image_path": colmap_image_path,
+                "raw_image_path": raw_image_path,
                 "workspace_path": processed_scene_path,
                 "processed_scene_path": processed_scene_path,
                 "source_path": source_path,
@@ -501,7 +506,7 @@ class RuntimeConfigService:
         convert_yaml = {
             "convert": {
                 "scene_name": scene_name,
-                "source_images": effective_image_path,
+                "source_images": convert_source_images,
                 "raw_source_images": raw_image_path,
                 "augmented_source_images": augmented_image_path,
                 "colmap_workspace": processed_scene_path,

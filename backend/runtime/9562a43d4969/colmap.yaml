@@ -1,0 +1,10 @@
+colmap:
+  scene_name: 三星堆立人
+  image_path: datasets\raw\三星堆立人\9562a43d4969\images
+  raw_image_path: datasets\raw\三星堆立人\9562a43d4969\images
+  workspace_path: datasets\processed\三星堆立人\9562a43d4969
+  processed_scene_path: datasets\processed\三星堆立人\9562a43d4969
+  source_path: datasets\processed\三星堆立人\9562a43d4969\gs_input
+  colmap_executable: third_party/colmap/COLMAP.bat
+  use_gpu: true
+  quiet: false

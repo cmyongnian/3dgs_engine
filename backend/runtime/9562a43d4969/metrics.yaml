@@ -1,0 +1,12 @@
+metrics:
+  scene_name: 三星堆立人
+  model_paths:
+  - outputs\三星堆立人\9562a43d4969
+  processed_scene_path: datasets\processed\三星堆立人\9562a43d4969
+  render_dir: outputs\三星堆立人\9562a43d4969
+  log_dir: E:\3dgs\3dgs_platform\engine\logs\三星堆立人\9562a43d4969
+  collect_colmap_stats: true
+  collect_resource_stats: true
+  collect_gaussian_stats: true
+  collect_preview_images: true
+  quiet: false

@@ -1,0 +1,23 @@
+augmentation:
+  scene_name: 三星堆立人
+  enabled: true
+  preset: safe
+  input_images: datasets\raw\三星堆立人\9562a43d4969\images
+  output_images: datasets\processed\三星堆立人\9562a43d4969\augmented_images
+  log_dir: E:\3dgs\3dgs_platform\engine\logs\三星堆立人\9562a43d4969
+  overwrite: true
+  keep_original_if_failed: true
+  jpeg_quality: 95
+  gray_world: true
+  clahe: true
+  clahe_clip_limit: 2.0
+  clahe_tile_grid_size:
+  - 8
+  - 8
+  auto_gamma: false
+  gamma_target_mean: 0.48
+  denoise: false
+  denoise_h: 3.0
+  sharpen: false
+  sharpen_amount: 0.2
+  max_long_edge: 0

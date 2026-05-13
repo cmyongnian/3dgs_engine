@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-05-05T12:51:01.530724+00:00",
+  "updated_at": "2026-05-13T15:02:39.870122+00:00",
   "items": [
     {
       "task_id": "b45750f9a68b",
@@ -1859,15 +1859,1073 @@
           }
         }
       },
-      "status": "running",
-      "current_stage": "COLMAP 重建",
-      "message": "正在执行：COLMAP 重建",
-      "result": {},
+      "status": "success",
+      "current_stage": "已完成",
+      "message": "任务执行完成",
+      "result": {
+        "scene_name": "video_scene_01",
+        "output_dir": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\66fe55040195",
+        "report_dir": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\66fe55040195",
+        "log_dir": "E:\\3dgs\\3dgs_platform\\engine\\logs\\video_scene_01\\66fe55040195",
+        "processed_dir": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\66fe55040195",
+        "source_dir": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\66fe55040195\\gs_input",
+        "raw_image_dir": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\66fe55040195\\augmented_images",
+        "runtime_dir": "E:\\3dgs\\3dgs_platform\\backend\\runtime\\66fe55040195",
+        "metrics_summary": {
+          "psnr": 20.93368911743164,
+          "ssim": 0.7893914580345154,
+          "lpips": 0.1746586561203003,
+          "gaussian_count": 39404,
+          "latest_iteration": 7000,
+          "generated_at": "2026-05-05T21:30:50",
+          "metrics_source_file": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\66fe55040195\\results.json",
+          "colmap_registration_rate": 100.0,
+          "colmap_registered_images": 62,
+          "colmap_input_images": 62,
+          "colmap_point3d_count": 38035,
+          "colmap_camera_count": 62,
+          "colmap_mean_track_length": 5.9013,
+          "colmap_mean_reprojection_error": 0.6787,
+          "colmap_quality_level": "良好",
+          "data_quality_score": 88,
+          "data_quality_risk_level": "low",
+          "data_quality_risk_label": "低风险",
+          "input_image_count": 62,
+          "blur_image_count": 12,
+          "exposure_issue_count": 0
+        },
+        "report_summary": {
+          "scene_name": "video_scene_01",
+          "model_path": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\66fe55040195",
+          "processed_scene_path": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\66fe55040195",
+          "log_dir": "E:\\3dgs\\3dgs_platform\\engine\\logs\\video_scene_01\\66fe55040195",
+          "report_dir": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\66fe55040195",
+          "generated_at": "2026-05-05T21:30:51",
+          "data_summary": {
+            "processed_scene_path": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\66fe55040195",
+            "source_path": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\66fe55040195\\gs_input",
+            "source_images_dir": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\66fe55040195\\gs_input\\images",
+            "processed_image_count": 248,
+            "source_image_count": 62,
+            "sparse_zero_path": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\66fe55040195\\gs_input\\sparse\\0",
+            "has_sparse_bin": true,
+            "has_sparse_txt": false,
+            "has_sparse_model": true
+          },
+          "data_quality": {
+            "task_id": "66fe55040195",
+            "scene_name": "video_scene_01",
+            "generated_at": "2026-05-05T20:50:37",
+            "input_mode": "images",
+            "image_dir": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\raw\\video_scene_01\\images",
+            "video_path": "datasets/videos/video_scene_01.mp4",
+            "score": 88,
+            "risk_level": "low",
+            "risk_label": "低风险",
+            "status": "pass",
+            "summary": {
+              "total_images": 62,
+              "sampled_images": 62,
+              "readable_images": 62,
+              "unreadable_images": 0,
+              "main_resolution": "720x1280",
+              "resolution_counter": {
+                "720x1280": 62
+              },
+              "resolution_consistency": true,
+              "avg_blur_score": 187.5701,
+              "min_blur_score": 36.1042,
+              "blur_images": 12,
+              "severe_blur_images": 3,
+              "avg_brightness": 0.3794,
+              "brightness_std": 0.0358,
+              "dark_images": 0,
+              "overexposed_images": 0,
+              "avg_contrast": 0.2221,
+              "low_contrast_images": 0,
+              "duplicate_like_images": 5,
+              "sampling_note": "已分析全部输入图片。"
+            },
+            "checks": {
+              "image_count": {
+                "status": "pass",
+                "value": 62,
+                "threshold": 20
+              },
+              "resolution": {
+                "status": "pass",
+                "main_resolution": "720x1280",
+                "resolution_counter": {
+                  "720x1280": 62
+                }
+              },
+              "blur": {
+                "status": "warning",
+                "threshold": 100.0,
+                "severe_threshold": 50.0,
+                "blur_images": 12,
+                "severe_blur_images": 3
+              },
+              "exposure": {
+                "status": "pass",
+                "dark_images": 0,
+                "overexposed_images": 0,
+                "dark_mean_threshold": 0.28,
+                "bright_mean_threshold": 0.78
+              },
+              "contrast": {
+                "status": "pass",
+                "low_contrast_images": 0,
+                "low_contrast_threshold": 0.08
+              },
+              "duplicate": {
+                "status": "warning",
+                "duplicate_like_images": 5,
+                "hamming_threshold": 3
+              }
+            },
+            "conclusions": [
+              "共检测到 62 张输入图片，主分辨率为 720x1280。",
+              "图片数量满足常规 3DGS 重建的基本需求。",
+              "检测到 12 张可能模糊图片，其中严重模糊 3 张。",
+              "检测到 5 张疑似重复帧，可能说明视频抽帧间隔过密。"
+            ],
+            "recommendations": [
+              "建议删除严重模糊帧；视频数据可降低抽帧 FPS 或重新采集更稳定的镜头。",
+              "如输入来自视频，建议适当降低 target_fps，减少重复帧并保留有视角变化的帧。"
+            ],
+            "thresholds": {
+              "min_images": 20,
+              "max_sample_images": 300,
+              "blur_threshold": 100.0,
+              "severe_blur_threshold": 50.0,
+              "dark_mean_threshold": 0.28,
+              "bright_mean_threshold": 0.78,
+              "dark_pixel_ratio_threshold": 0.45,
+              "overexposed_pixel_ratio_threshold": 0.15,
+              "low_contrast_threshold": 0.08,
+              "duplicate_hamming_threshold": 3
+            },
+            "suspicious_items": [
+              {
+                "filename": "image000003.png",
+                "status": "ok",
+                "width": 720,
+                "height": 1280,
+                "blur_score": 262.746,
+                "brightness": 0.4123,
+                "contrast": 0.2504,
+                "dark_pixel_ratio": 0.0042,
+                "overexposed_pixel_ratio": 0.0003,
+                "duplicate_like": true,
+                "warnings": [
+                  "疑似重复帧"
+                ],
+                "message": ""
+              },
+              {
+                "filename": "image000005.png",
+                "status": "ok",
+                "width": 720,
+                "height": 1280,
+                "blur_score": 305.1077,
+                "brightness": 0.4112,
+                "contrast": 0.259,
+                "dark_pixel_ratio": 0.003,
+                "overexposed_pixel_ratio": 0.0004,
+                "duplicate_like": true,
+                "warnings": [
+                  "疑似重复帧"
+                ],
+                "message": ""
+              },
+              {
+                "filename": "image000006.png",
+                "status": "ok",
+                "width": 720,
+                "height": 1280,
+                "blur_score": 286.1348,
+                "brightness": 0.3931,
+                "contrast": 0.2622,
+                "dark_pixel_ratio": 0.0361,
+                "overexposed_pixel_ratio": 0.0004,
+                "duplicate_like": true,
+                "warnings": [
+                  "疑似重复帧"
+                ],
+                "message": ""
+              },
+              {
+                "filename": "image000007.png",
+                "status": "ok",
+                "width": 720,
+                "height": 1280,
+                "blur_score": 328.5952,
+                "brightness": 0.3825,
+                "contrast": 0.2633,
+                "dark_pixel_ratio": 0.0524,
+                "overexposed_pixel_ratio": 0.0004,
+                "duplicate_like": true,
+                "warnings": [
+                  "疑似重复帧"
+                ],
+                "message": ""
+              },
+              {
+                "filename": "image000023.png",
+                "status": "ok",
+                "width": 720,
+                "height": 1280,
+                "blur_score": 89.0119,
+                "brightness": 0.3605,
+                "contrast": 0.2242,
+                "dark_pixel_ratio": 0.0399,
+                "overexposed_pixel_ratio": 0.0003,
+                "duplicate_like": false,
+                "warnings": [
+                  "轻微模糊"
+                ],
+                "message": ""
+              },
+              {
+                "filename": "image000033.png",
+                "status": "ok",
+                "width": 720,
+                "height": 1280,
+                "blur_score": 75.5939,
+                "brightness": 0.2935,
+                "contrast": 0.1951,
+                "dark_pixel_ratio": 0.0222,
+                "overexposed_pixel_ratio": 0.0001,
+                "duplicate_like": false,
+                "warnings": [
+                  "轻微模糊"
+                ],
+                "message": ""
+              },
+              {
+                "filename": "image000034.png",
+                "status": "ok",
+                "width": 720,
+                "height": 1280,
+                "blur_score": 85.0726,
+                "brightness": 0.3162,
+                "contrast": 0.2028,
+                "dark_pixel_ratio": 0.0235,
+                "overexposed_pixel_ratio": 0.0001,
+                "duplicate_like": false,
+                "warnings": [
+                  "轻微模糊"
+                ],
+                "message": ""
+              },
+              {
+                "filename": "image000035.png",
+                "status": "ok",
+                "width": 720,
+                "height": 1280,
+                "blur_score": 55.1238,
+                "brightness": 0.3369,
+                "contrast": 0.2013,
+                "dark_pixel_ratio": 0.0105,
+                "overexposed_pixel_ratio": 0.0001,
+                "duplicate_like": false,
+                "warnings": [
+                  "轻微模糊"
+                ],
+                "message": ""
+              },
+              {
+                "filename": "image000036.png",
+                "status": "ok",
+                "width": 720,
+                "height": 1280,
+                "blur_score": 36.1042,
+                "brightness": 0.3453,
+                "contrast": 0.1897,
+                "dark_pixel_ratio": 0.0109,
+                "overexposed_pixel_ratio": 0.0,
+                "duplicate_like": false,
+                "warnings": [
+                  "严重模糊"
+                ],
+                "message": ""
+              },
+              {
+                "filename": "image000037.png",
+                "status": "ok",
+                "width": 720,
+                "height": 1280,
+                "blur_score": 45.4049,
+                "brightness": 0.3587,
+                "contrast": 0.1918,
+                "dark_pixel_ratio": 0.0137,
+                "overexposed_pixel_ratio": 0.0003,
+                "duplicate_like": false,
+                "warnings": [
+                  "严重模糊"
+                ],
+                "message": ""
+              },
+              {
+                "filename": "image000038.png",
+                "status": "ok",
+                "width": 720,
+                "height": 1280,
+                "blur_score": 47.7537,
+                "brightness": 0.3817,
+                "contrast": 0.2002,
+                "dark_pixel_ratio": 0.0141,
+                "overexposed_pixel_ratio": 0.0008,
+                "duplicate_like": false,
+                "warnings": [
+                  "严重模糊"
+                ],
+                "message": ""
+              },
+              {
+                "filename": "image000039.png",
+                "status": "ok",
+                "width": 720,
+                "height": 1280,
+                "blur_score": 55.5077,
+                "brightness": 0.3829,
+                "contrast": 0.1969,
+                "dark_pixel_ratio": 0.0139,
+                "overexposed_pixel_ratio": 0.0,
+                "duplicate_like": false,
+                "warnings": [
+                  "轻微模糊"
+                ],
+                "message": ""
+              },
+              {
+                "filename": "image000040.png",
+                "status": "ok",
+                "width": 720,
+                "height": 1280,
+                "blur_score": 97.0777,
+                "brightness": 0.3887,
+                "contrast": 0.1983,
+                "dark_pixel_ratio": 0.0146,
+                "overexposed_pixel_ratio": 0.0,
+                "duplicate_like": false,
+                "warnings": [
+                  "轻微模糊"
+                ],
+                "message": ""
+              },
+              {
+                "filename": "image000041.png",
+                "status": "ok",
+                "width": 720,
+                "height": 1280,
+                "blur_score": 78.8183,
+                "brightness": 0.4154,
+                "contrast": 0.1971,
+                "dark_pixel_ratio": 0.0102,
+                "overexposed_pixel_ratio": 0.0002,
+                "duplicate_like": false,
+                "warnings": [
+                  "轻微模糊"
+                ],
+                "message": ""
+              },
+              {
+                "filename": "image000042.png",
+                "status": "ok",
+                "width": 720,
+                "height": 1280,
+                "blur_score": 61.5037,
+                "brightness": 0.4193,
+                "contrast": 0.1907,
+                "dark_pixel_ratio": 0.0003,
+                "overexposed_pixel_ratio": 0.0059,
+                "duplicate_like": false,
+                "warnings": [
+                  "轻微模糊"
+                ],
+                "message": ""
+              },
+              {
+                "filename": "image000043.png",
+                "status": "ok",
+                "width": 720,
+                "height": 1280,
+                "blur_score": 88.6253,
+                "brightness": 0.3826,
+                "contrast": 0.1862,
+                "dark_pixel_ratio": 0.0045,
+                "overexposed_pixel_ratio": 0.0056,
+                "duplicate_like": false,
+                "warnings": [
+                  "轻微模糊"
+                ],
+                "message": ""
+              },
+              {
+                "filename": "image000061.png",
+                "status": "ok",
+                "width": 720,
+                "height": 1280,
+                "blur_score": 274.2248,
+                "brightness": 0.4146,
+                "contrast": 0.226,
+                "dark_pixel_ratio": 0.0003,
+                "overexposed_pixel_ratio": 0.0002,
+                "duplicate_like": true,
+                "warnings": [
+                  "疑似重复帧"
+                ],
+                "message": ""
+              }
+            ],
+            "notes": "该模块只进行质量诊断，不修改原始图片；预处理建议可用于选择数据增强预设或重新采集数据。"
+          },
+          "colmap_quality": {
+            "scene_name": "video_scene_01",
+            "image_path": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\66fe55040195\\augmented_images",
+            "workspace_path": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\66fe55040195",
+            "source_path": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\66fe55040195\\gs_input",
+            "sparse_model_path": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\66fe55040195\\sparse\\0",
+            "model_format": "bin",
+            "input_image_count": 62,
+            "generated_at": "2026-05-05T21:28:44",
+            "camera_count": 62,
+            "registered_image_count": 62,
+            "point3d_count": 38035,
+            "total_points2d": 440803,
+            "matched_points2d": 224456,
+            "mean_track_length": 5.9013,
+            "mean_reprojection_error": 0.6787,
+            "registration_rate": 1.0,
+            "registration_rate_percent": 100.0,
+            "quality_level": "良好",
+            "status": "pass",
+            "can_continue": true,
+            "suggestions": [
+              "图像注册率和稀疏点数量较好，可以进入 3DGS 训练。"
+            ]
+          },
+          "training_summary": {
+            "model_path": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\66fe55040195",
+            "latest_iteration": 7000,
+            "latest_iteration_dir": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\66fe55040195\\point_cloud\\iteration_7000",
+            "point_cloud_ply": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\66fe55040195\\point_cloud\\iteration_7000\\point_cloud.ply",
+            "gaussian_count": 39404,
+            "checkpoint_count": 2,
+            "checkpoint_files": [
+              "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\66fe55040195\\chkpnt2000.pth",
+              "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\66fe55040195\\chkpnt7000.pth"
+            ],
+            "has_point_cloud": true
+          },
+          "render_summary": {
+            "test_render_image_count": 16,
+            "train_render_image_count": 0,
+            "direct_render_image_count": 0,
+            "render_image_count": 16,
+            "preview_images": [
+              "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\66fe55040195\\test\\ours_7000\\gt\\00000.png",
+              "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\66fe55040195\\test\\ours_7000\\gt\\00001.png",
+              "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\66fe55040195\\test\\ours_7000\\gt\\00002.png",
+              "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\66fe55040195\\test\\ours_7000\\gt\\00003.png",
+              "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\66fe55040195\\test\\ours_7000\\gt\\00004.png",
+              "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\66fe55040195\\test\\ours_7000\\gt\\00005.png",
+              "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\66fe55040195\\test\\ours_7000\\gt\\00006.png",
+              "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\66fe55040195\\test\\ours_7000\\gt\\00007.png"
+            ]
+          },
+          "metrics_summary": {
+            "psnr": 20.93368911743164,
+            "ssim": 0.7893914580345154,
+            "lpips": 0.1746586561203003,
+            "mse": null,
+            "mae": null,
+            "gaussian_count": 39404,
+            "latest_iteration": 7000,
+            "metrics_source_file": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\66fe55040195\\results.json",
+            "generated_at": "2026-05-05T21:30:50"
+          },
+          "overall_conclusion": "输入数据质量体检评分为 88/100，风险等级为 低风险。 体检阶段共检测输入图像 62 张，主分辨率为 720x1280。 COLMAP 图像注册率为 100.00%。 图像注册率较高，相机位姿估计整体可靠。 输入图像 62 张，成功注册 62 张。 稀疏点云数量为 38035。 平均重投影误差为 0.6787。 3DGS 训练已生成 iteration_7000 结果。 模型包含 Gaussian 数量 39404。 已生成渲染图像 16 张。 PSNR 为 20.9337。 SSIM 为 0.7894。 LPIPS 为 0.1747。 COLMAP 质量等级为：良好。",
+          "suggestions": [
+            "存在模糊图片，建议删除严重模糊帧或重新采集稳定图像。",
+            "存在疑似重复帧，视频输入可适当降低抽帧 FPS。",
+            "建议删除严重模糊帧；视频数据可降低抽帧 FPS 或重新采集更稳定的镜头。",
+            "如输入来自视频，建议适当降低 target_fps，减少重复帧并保留有视角变化的帧。"
+          ],
+          "preview_images": [
+            "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\66fe55040195\\test\\ours_7000\\gt\\00000.png",
+            "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\66fe55040195\\test\\ours_7000\\gt\\00001.png",
+            "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\66fe55040195\\test\\ours_7000\\gt\\00002.png",
+            "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\66fe55040195\\test\\ours_7000\\gt\\00003.png",
+            "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\66fe55040195\\test\\ours_7000\\gt\\00004.png",
+            "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\66fe55040195\\test\\ours_7000\\gt\\00005.png",
+            "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\66fe55040195\\test\\ours_7000\\gt\\00006.png",
+            "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\66fe55040195\\test\\ours_7000\\gt\\00007.png"
+          ],
+          "log_files": [
+            "E:\\3dgs\\3dgs_platform\\engine\\logs\\video_scene_01\\66fe55040195\\augmentation.log",
+            "E:\\3dgs\\3dgs_platform\\engine\\logs\\video_scene_01\\66fe55040195\\data_quality.log",
+            "E:\\3dgs\\3dgs_platform\\engine\\logs\\video_scene_01\\66fe55040195\\report.log"
+          ],
+          "result_files": {
+            "metrics_json": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\66fe55040195\\metrics.json",
+            "colmap_quality_json": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\66fe55040195\\colmap_quality.json",
+            "colmap_quality_txt": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\66fe55040195\\colmap_quality.txt",
+            "data_quality_json": "E:\\3dgs\\3dgs_platform\\engine\\logs\\video_scene_01\\66fe55040195\\data_quality_report.json",
+            "data_quality_txt": "E:\\3dgs\\3dgs_platform\\engine\\logs\\video_scene_01\\66fe55040195\\data_quality_report.txt",
+            "report_json": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\66fe55040195\\report.json",
+            "report_md": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\66fe55040195\\report.md",
+            "summary_csv": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\66fe55040195\\summary.csv",
+            "summary_txt": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\66fe55040195\\summary.txt"
+          }
+        },
+        "result_files": {
+          "metrics_json": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\66fe55040195\\metrics.json",
+          "report_json": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\66fe55040195\\report.json",
+          "report_md": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\66fe55040195\\report.md",
+          "summary_csv": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\66fe55040195\\summary.csv",
+          "summary_txt": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\66fe55040195\\summary.txt",
+          "colmap_quality_json": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\66fe55040195\\colmap_quality.json",
+          "colmap_quality_txt": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\66fe55040195\\colmap_quality.txt",
+          "data_quality_json": "E:\\3dgs\\3dgs_platform\\engine\\logs\\video_scene_01\\66fe55040195\\data_quality_report.json",
+          "data_quality_txt": "E:\\3dgs\\3dgs_platform\\engine\\logs\\video_scene_01\\66fe55040195\\data_quality_report.txt"
+        },
+        "preview_images": [
+          "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\66fe55040195\\test\\ours_7000\\gt\\00000.png",
+          "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\66fe55040195\\test\\ours_7000\\gt\\00001.png",
+          "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\66fe55040195\\test\\ours_7000\\gt\\00002.png",
+          "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\66fe55040195\\test\\ours_7000\\gt\\00003.png",
+          "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\66fe55040195\\test\\ours_7000\\gt\\00004.png",
+          "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\66fe55040195\\test\\ours_7000\\gt\\00005.png",
+          "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\66fe55040195\\test\\ours_7000\\gt\\00006.png",
+          "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\66fe55040195\\test\\ours_7000\\gt\\00007.png"
+        ],
+        "colmap_quality": {
+          "scene_name": "video_scene_01",
+          "image_path": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\66fe55040195\\augmented_images",
+          "workspace_path": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\66fe55040195",
+          "source_path": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\66fe55040195\\gs_input",
+          "sparse_model_path": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\66fe55040195\\sparse\\0",
+          "model_format": "bin",
+          "input_image_count": 62,
+          "generated_at": "2026-05-05T21:28:44",
+          "camera_count": 62,
+          "registered_image_count": 62,
+          "point3d_count": 38035,
+          "total_points2d": 440803,
+          "matched_points2d": 224456,
+          "mean_track_length": 5.9013,
+          "mean_reprojection_error": 0.6787,
+          "registration_rate": 1.0,
+          "registration_rate_percent": 100.0,
+          "quality_level": "良好",
+          "status": "pass",
+          "can_continue": true,
+          "suggestions": [
+            "图像注册率和稀疏点数量较好，可以进入 3DGS 训练。"
+          ]
+        },
+        "data_quality_report": {
+          "task_id": "66fe55040195",
+          "scene_name": "video_scene_01",
+          "generated_at": "2026-05-05T20:50:37",
+          "input_mode": "images",
+          "image_dir": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\raw\\video_scene_01\\images",
+          "video_path": "datasets/videos/video_scene_01.mp4",
+          "score": 88,
+          "risk_level": "low",
+          "risk_label": "低风险",
+          "status": "pass",
+          "summary": {
+            "total_images": 62,
+            "sampled_images": 62,
+            "readable_images": 62,
+            "unreadable_images": 0,
+            "main_resolution": "720x1280",
+            "resolution_counter": {
+              "720x1280": 62
+            },
+            "resolution_consistency": true,
+            "avg_blur_score": 187.5701,
+            "min_blur_score": 36.1042,
+            "blur_images": 12,
+            "severe_blur_images": 3,
+            "avg_brightness": 0.3794,
+            "brightness_std": 0.0358,
+            "dark_images": 0,
+            "overexposed_images": 0,
+            "avg_contrast": 0.2221,
+            "low_contrast_images": 0,
+            "duplicate_like_images": 5,
+            "sampling_note": "已分析全部输入图片。"
+          },
+          "checks": {
+            "image_count": {
+              "status": "pass",
+              "value": 62,
+              "threshold": 20
+            },
+            "resolution": {
+              "status": "pass",
+              "main_resolution": "720x1280",
+              "resolution_counter": {
+                "720x1280": 62
+              }
+            },
+            "blur": {
+              "status": "warning",
+              "threshold": 100.0,
+              "severe_threshold": 50.0,
+              "blur_images": 12,
+              "severe_blur_images": 3
+            },
+            "exposure": {
+              "status": "pass",
+              "dark_images": 0,
+              "overexposed_images": 0,
+              "dark_mean_threshold": 0.28,
+              "bright_mean_threshold": 0.78
+            },
+            "contrast": {
+              "status": "pass",
+              "low_contrast_images": 0,
+              "low_contrast_threshold": 0.08
+            },
+            "duplicate": {
+              "status": "warning",
+              "duplicate_like_images": 5,
+              "hamming_threshold": 3
+            }
+          },
+          "conclusions": [
+            "共检测到 62 张输入图片，主分辨率为 720x1280。",
+            "图片数量满足常规 3DGS 重建的基本需求。",
+            "检测到 12 张可能模糊图片，其中严重模糊 3 张。",
+            "检测到 5 张疑似重复帧，可能说明视频抽帧间隔过密。"
+          ],
+          "recommendations": [
+            "建议删除严重模糊帧；视频数据可降低抽帧 FPS 或重新采集更稳定的镜头。",
+            "如输入来自视频，建议适当降低 target_fps，减少重复帧并保留有视角变化的帧。"
+          ],
+          "thresholds": {
+            "min_images": 20,
+            "max_sample_images": 300,
+            "blur_threshold": 100.0,
+            "severe_blur_threshold": 50.0,
+            "dark_mean_threshold": 0.28,
+            "bright_mean_threshold": 0.78,
+            "dark_pixel_ratio_threshold": 0.45,
+            "overexposed_pixel_ratio_threshold": 0.15,
+            "low_contrast_threshold": 0.08,
+            "duplicate_hamming_threshold": 3
+          },
+          "suspicious_items": [
+            {
+              "filename": "image000003.png",
+              "status": "ok",
+              "width": 720,
+              "height": 1280,
+              "blur_score": 262.746,
+              "brightness": 0.4123,
+              "contrast": 0.2504,
+              "dark_pixel_ratio": 0.0042,
+              "overexposed_pixel_ratio": 0.0003,
+              "duplicate_like": true,
+              "warnings": [
+                "疑似重复帧"
+              ],
+              "message": ""
+            },
+            {
+              "filename": "image000005.png",
+              "status": "ok",
+              "width": 720,
+              "height": 1280,
+              "blur_score": 305.1077,
+              "brightness": 0.4112,
+              "contrast": 0.259,
+              "dark_pixel_ratio": 0.003,
+              "overexposed_pixel_ratio": 0.0004,
+              "duplicate_like": true,
+              "warnings": [
+                "疑似重复帧"
+              ],
+              "message": ""
+            },
+            {
+              "filename": "image000006.png",
+              "status": "ok",
+              "width": 720,
+              "height": 1280,
+              "blur_score": 286.1348,
+              "brightness": 0.3931,
+              "contrast": 0.2622,
+              "dark_pixel_ratio": 0.0361,
+              "overexposed_pixel_ratio": 0.0004,
+              "duplicate_like": true,
+              "warnings": [
+                "疑似重复帧"
+              ],
+              "message": ""
+            },
+            {
+              "filename": "image000007.png",
+              "status": "ok",
+              "width": 720,
+              "height": 1280,
+              "blur_score": 328.5952,
+              "brightness": 0.3825,
+              "contrast": 0.2633,
+              "dark_pixel_ratio": 0.0524,
+              "overexposed_pixel_ratio": 0.0004,
+              "duplicate_like": true,
+              "warnings": [
+                "疑似重复帧"
+              ],
+              "message": ""
+            },
+            {
+              "filename": "image000023.png",
+              "status": "ok",
+              "width": 720,
+              "height": 1280,
+              "blur_score": 89.0119,
+              "brightness": 0.3605,
+              "contrast": 0.2242,
+              "dark_pixel_ratio": 0.0399,
+              "overexposed_pixel_ratio": 0.0003,
+              "duplicate_like": false,
+              "warnings": [
+                "轻微模糊"
+              ],
+              "message": ""
+            },
+            {
+              "filename": "image000033.png",
+              "status": "ok",
+              "width": 720,
+              "height": 1280,
+              "blur_score": 75.5939,
+              "brightness": 0.2935,
+              "contrast": 0.1951,
+              "dark_pixel_ratio": 0.0222,
+              "overexposed_pixel_ratio": 0.0001,
+              "duplicate_like": false,
+              "warnings": [
+                "轻微模糊"
+              ],
+              "message": ""
+            },
+            {
+              "filename": "image000034.png",
+              "status": "ok",
+              "width": 720,
+              "height": 1280,
+              "blur_score": 85.0726,
+              "brightness": 0.3162,
+              "contrast": 0.2028,
+              "dark_pixel_ratio": 0.0235,
+              "overexposed_pixel_ratio": 0.0001,
+              "duplicate_like": false,
+              "warnings": [
+                "轻微模糊"
+              ],
+              "message": ""
+            },
+            {
+              "filename": "image000035.png",
+              "status": "ok",
+              "width": 720,
+              "height": 1280,
+              "blur_score": 55.1238,
+              "brightness": 0.3369,
+              "contrast": 0.2013,
+              "dark_pixel_ratio": 0.0105,
+              "overexposed_pixel_ratio": 0.0001,
+              "duplicate_like": false,
+              "warnings": [
+                "轻微模糊"
+              ],
+              "message": ""
+            },
+            {
+              "filename": "image000036.png",
+              "status": "ok",
+              "width": 720,
+              "height": 1280,
+              "blur_score": 36.1042,
+              "brightness": 0.3453,
+              "contrast": 0.1897,
+              "dark_pixel_ratio": 0.0109,
+              "overexposed_pixel_ratio": 0.0,
+              "duplicate_like": false,
+              "warnings": [
+                "严重模糊"
+              ],
+              "message": ""
+            },
+            {
+              "filename": "image000037.png",
+              "status": "ok",
+              "width": 720,
+              "height": 1280,
+              "blur_score": 45.4049,
+              "brightness": 0.3587,
+              "contrast": 0.1918,
+              "dark_pixel_ratio": 0.0137,
+              "overexposed_pixel_ratio": 0.0003,
+              "duplicate_like": false,
+              "warnings": [
+                "严重模糊"
+              ],
+              "message": ""
+            },
+            {
+              "filename": "image000038.png",
+              "status": "ok",
+              "width": 720,
+              "height": 1280,
+              "blur_score": 47.7537,
+              "brightness": 0.3817,
+              "contrast": 0.2002,
+              "dark_pixel_ratio": 0.0141,
+              "overexposed_pixel_ratio": 0.0008,
+              "duplicate_like": false,
+              "warnings": [
+                "严重模糊"
+              ],
+              "message": ""
+            },
+            {
+              "filename": "image000039.png",
+              "status": "ok",
+              "width": 720,
+              "height": 1280,
+              "blur_score": 55.5077,
+              "brightness": 0.3829,
+              "contrast": 0.1969,
+              "dark_pixel_ratio": 0.0139,
+              "overexposed_pixel_ratio": 0.0,
+              "duplicate_like": false,
+              "warnings": [
+                "轻微模糊"
+              ],
+              "message": ""
+            },
+            {
+              "filename": "image000040.png",
+              "status": "ok",
+              "width": 720,
+              "height": 1280,
+              "blur_score": 97.0777,
+              "brightness": 0.3887,
+              "contrast": 0.1983,
+              "dark_pixel_ratio": 0.0146,
+              "overexposed_pixel_ratio": 0.0,
+              "duplicate_like": false,
+              "warnings": [
+                "轻微模糊"
+              ],
+              "message": ""
+            },
+            {
+              "filename": "image000041.png",
+              "status": "ok",
+              "width": 720,
+              "height": 1280,
+              "blur_score": 78.8183,
+              "brightness": 0.4154,
+              "contrast": 0.1971,
+              "dark_pixel_ratio": 0.0102,
+              "overexposed_pixel_ratio": 0.0002,
+              "duplicate_like": false,
+              "warnings": [
+                "轻微模糊"
+              ],
+              "message": ""
+            },
+            {
+              "filename": "image000042.png",
+              "status": "ok",
+              "width": 720,
+              "height": 1280,
+              "blur_score": 61.5037,
+              "brightness": 0.4193,
+              "contrast": 0.1907,
+              "dark_pixel_ratio": 0.0003,
+              "overexposed_pixel_ratio": 0.0059,
+              "duplicate_like": false,
+              "warnings": [
+                "轻微模糊"
+              ],
+              "message": ""
+            },
+            {
+              "filename": "image000043.png",
+              "status": "ok",
+              "width": 720,
+              "height": 1280,
+              "blur_score": 88.6253,
+              "brightness": 0.3826,
+              "contrast": 0.1862,
+              "dark_pixel_ratio": 0.0045,
+              "overexposed_pixel_ratio": 0.0056,
+              "duplicate_like": false,
+              "warnings": [
+                "轻微模糊"
+              ],
+              "message": ""
+            },
+            {
+              "filename": "image000061.png",
+              "status": "ok",
+              "width": 720,
+              "height": 1280,
+              "blur_score": 274.2248,
+              "brightness": 0.4146,
+              "contrast": 0.226,
+              "dark_pixel_ratio": 0.0003,
+              "overexposed_pixel_ratio": 0.0002,
+              "duplicate_like": true,
+              "warnings": [
+                "疑似重复帧"
+              ],
+              "message": ""
+            }
+          ],
+          "notes": "该模块只进行质量诊断，不修改原始图片；预处理建议可用于选择数据增强预设或重新采集数据。"
+        },
+        "stage_history": [
+          {
+            "stage_key": "data_quality",
+            "stage_label": "数据质量体检",
+            "order": 2,
+            "status": "success",
+            "started_at": "2026-05-05T12:50:35.130268+00:00",
+            "finished_at": "2026-05-05T12:50:37.347178+00:00",
+            "duration_seconds": 2.217,
+            "error_type": null,
+            "error_message": null
+          },
+          {
+            "stage_key": "preflight_raw",
+            "stage_label": "原始数据预检查",
+            "order": 3,
+            "status": "success",
+            "started_at": "2026-05-05T12:50:37.353176+00:00",
+            "finished_at": "2026-05-05T12:50:40.539963+00:00",
+            "duration_seconds": 3.187,
+            "error_type": null,
+            "error_message": null
+          },
+          {
+            "stage_key": "augmentation",
+            "stage_label": "数据增强",
+            "order": 4,
+            "status": "success",
+            "started_at": "2026-05-05T12:50:40.545963+00:00",
+            "finished_at": "2026-05-05T12:51:01.519725+00:00",
+            "duration_seconds": 20.974,
+            "error_type": null,
+            "error_message": null
+          },
+          {
+            "stage_key": "colmap",
+            "stage_label": "COLMAP 重建",
+            "order": 5,
+            "status": "success",
+            "started_at": "2026-05-05T12:51:01.524725+00:00",
+            "finished_at": "2026-05-05T13:28:44.055582+00:00",
+            "duration_seconds": 2262.531,
+            "error_type": null,
+            "error_message": null
+          },
+          {
+            "stage_key": "colmap_quality",
+            "stage_label": "COLMAP 质量分析",
+            "order": 6,
+            "status": "success",
+            "started_at": "2026-05-05T13:28:44.060613+00:00",
+            "finished_at": "2026-05-05T13:28:44.340194+00:00",
+            "duration_seconds": 0.28,
+            "error_type": null,
+            "error_message": null
+          },
+          {
+            "stage_key": "convert",
+            "stage_label": "数据转换",
+            "order": 7,
+            "status": "success",
+            "started_at": "2026-05-05T13:28:44.345229+00:00",
+            "finished_at": "2026-05-05T13:28:53.355574+00:00",
+            "duration_seconds": 9.01,
+            "error_type": null,
+            "error_message": null
+          },
+          {
+            "stage_key": "preflight_processed",
+            "stage_label": "训练前复检",
+            "order": 8,
+            "status": "success",
+            "started_at": "2026-05-05T13:28:53.361108+00:00",
+            "finished_at": "2026-05-05T13:28:56.359263+00:00",
+            "duration_seconds": 2.998,
+            "error_type": null,
+            "error_message": null
+          },
+          {
+            "stage_key": "train",
+            "stage_label": "模型训练",
+            "order": 9,
+            "status": "success",
+            "started_at": "2026-05-05T13:28:56.364261+00:00",
+            "finished_at": "2026-05-05T13:30:27.306757+00:00",
+            "duration_seconds": 90.942,
+            "error_type": null,
+            "error_message": null
+          },
+          {
+            "stage_key": "render",
+            "stage_label": "离线渲染",
+            "order": 10,
+            "status": "success",
+            "started_at": "2026-05-05T13:30:27.312756+00:00",
+            "finished_at": "2026-05-05T13:30:36.095331+00:00",
+            "duration_seconds": 8.783,
+            "error_type": null,
+            "error_message": null
+          },
+          {
+            "stage_key": "metrics",
+            "stage_label": "指标评测",
+            "order": 11,
+            "status": "success",
+            "started_at": "2026-05-05T13:30:36.100331+00:00",
+            "finished_at": "2026-05-05T13:30:50.988485+00:00",
+            "duration_seconds": 14.888,
+            "error_type": null,
+            "error_message": null
+          },
+          {
+            "stage_key": "report",
+            "stage_label": "结果报告",
+            "order": 12,
+            "status": "success",
+            "started_at": "2026-05-05T13:30:50.994449+00:00",
+            "finished_at": "2026-05-05T13:30:51.143561+00:00",
+            "duration_seconds": 0.149,
+            "error_type": null,
+            "error_message": null
+          }
+        ]
+      },
       "error": null,
       "created_at": "2026-05-05T12:50:34.742760+00:00",
-      "updated_at": "2026-05-05T12:51:01.530724+00:00",
+      "updated_at": "2026-05-05T13:30:51.235593+00:00",
       "started_at": "2026-05-05T12:50:35.076362+00:00",
-      "finished_at": null,
+      "finished_at": "2026-05-05T13:30:51.230595+00:00",
       "stop_requested": false,
       "force_stop_requested": false,
       "retry_count": 0,
@@ -1909,19 +2967,307 @@
           "stage_key": "colmap",
           "stage_label": "COLMAP 重建",
           "order": 5,
-          "status": "running",
+          "status": "success",
           "started_at": "2026-05-05T12:51:01.524725+00:00",
-          "finished_at": null,
-          "duration_seconds": null,
+          "finished_at": "2026-05-05T13:28:44.055582+00:00",
+          "duration_seconds": 2262.531,
+          "error_type": null,
+          "error_message": null
+        },
+        {
+          "stage_key": "colmap_quality",
+          "stage_label": "COLMAP 质量分析",
+          "order": 6,
+          "status": "success",
+          "started_at": "2026-05-05T13:28:44.060613+00:00",
+          "finished_at": "2026-05-05T13:28:44.340194+00:00",
+          "duration_seconds": 0.28,
+          "error_type": null,
+          "error_message": null
+        },
+        {
+          "stage_key": "convert",
+          "stage_label": "数据转换",
+          "order": 7,
+          "status": "success",
+          "started_at": "2026-05-05T13:28:44.345229+00:00",
+          "finished_at": "2026-05-05T13:28:53.355574+00:00",
+          "duration_seconds": 9.01,
+          "error_type": null,
+          "error_message": null
+        },
+        {
+          "stage_key": "preflight_processed",
+          "stage_label": "训练前复检",
+          "order": 8,
+          "status": "success",
+          "started_at": "2026-05-05T13:28:53.361108+00:00",
+          "finished_at": "2026-05-05T13:28:56.359263+00:00",
+          "duration_seconds": 2.998,
+          "error_type": null,
+          "error_message": null
+        },
+        {
+          "stage_key": "train",
+          "stage_label": "模型训练",
+          "order": 9,
+          "status": "success",
+          "started_at": "2026-05-05T13:28:56.364261+00:00",
+          "finished_at": "2026-05-05T13:30:27.306757+00:00",
+          "duration_seconds": 90.942,
+          "error_type": null,
+          "error_message": null
+        },
+        {
+          "stage_key": "render",
+          "stage_label": "离线渲染",
+          "order": 10,
+          "status": "success",
+          "started_at": "2026-05-05T13:30:27.312756+00:00",
+          "finished_at": "2026-05-05T13:30:36.095331+00:00",
+          "duration_seconds": 8.783,
+          "error_type": null,
+          "error_message": null
+        },
+        {
+          "stage_key": "metrics",
+          "stage_label": "指标评测",
+          "order": 11,
+          "status": "success",
+          "started_at": "2026-05-05T13:30:36.100331+00:00",
+          "finished_at": "2026-05-05T13:30:50.988485+00:00",
+          "duration_seconds": 14.888,
+          "error_type": null,
+          "error_message": null
+        },
+        {
+          "stage_key": "report",
+          "stage_label": "结果报告",
+          "order": 12,
+          "status": "success",
+          "started_at": "2026-05-05T13:30:50.994449+00:00",
+          "finished_at": "2026-05-05T13:30:51.143561+00:00",
+          "duration_seconds": 0.149,
           "error_type": null,
           "error_message": null
         }
       ],
       "runtime_dir": "E:\\3dgs\\3dgs_platform\\backend\\runtime\\66fe55040195",
-      "result_files": {},
-      "metrics_summary": {},
+      "result_files": {
+        "metrics_json": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\66fe55040195\\metrics.json",
+        "report_json": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\66fe55040195\\report.json",
+        "report_md": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\66fe55040195\\report.md",
+        "summary_csv": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\66fe55040195\\summary.csv",
+        "summary_txt": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\66fe55040195\\summary.txt",
+        "colmap_quality_json": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\66fe55040195\\colmap_quality.json",
+        "colmap_quality_txt": "E:\\3dgs\\3dgs_platform\\engine\\datasets\\processed\\video_scene_01\\66fe55040195\\colmap_quality.txt",
+        "data_quality_json": "E:\\3dgs\\3dgs_platform\\engine\\logs\\video_scene_01\\66fe55040195\\data_quality_report.json",
+        "data_quality_txt": "E:\\3dgs\\3dgs_platform\\engine\\logs\\video_scene_01\\66fe55040195\\data_quality_report.txt"
+      },
+      "metrics_summary": {
+        "psnr": 20.93368911743164,
+        "ssim": 0.7893914580345154,
+        "lpips": 0.1746586561203003,
+        "gaussian_count": 39404,
+        "latest_iteration": 7000,
+        "generated_at": "2026-05-05T21:30:50",
+        "metrics_source_file": "E:\\3dgs\\3dgs_platform\\engine\\outputs\\video_scene_01\\66fe55040195\\results.json",
+        "colmap_registration_rate": 100.0,
+        "colmap_registered_images": 62,
+        "colmap_input_images": 62,
+        "colmap_point3d_count": 38035,
+        "colmap_camera_count": 62,
+        "colmap_mean_track_length": 5.9013,
+        "colmap_mean_reprojection_error": 0.6787,
+        "colmap_quality_level": "良好",
+        "data_quality_score": 88,
+        "data_quality_risk_level": "low",
+        "data_quality_risk_label": "低风险",
+        "input_image_count": 62,
+        "blur_image_count": 12,
+        "exposure_issue_count": 0
+      },
       "last_error_type": null,
       "log_file": "E:\\3dgs\\3dgs_platform\\backend\\runtime\\task_logs\\66fe55040195.log"
+    },
+    {
+      "task_id": "9562a43d4969",
+      "scene_name": "三星堆立人",
+      "payload": {
+        "model": {
+          "scene": {
+            "scene_name": "三星堆立人",
+            "raw_image_path": "datasets/raw/三星堆立人/images",
+            "processed_scene_path": "datasets/processed/三星堆立人",
+            "source_path": "datasets/processed/三星堆立人/gs_input",
+            "model_output": "outputs/三星堆立人",
+            "video_path": "datasets/videos/三星堆立人.mp4",
+            "colmap_executable": "third_party/colmap/COLMAP.bat",
+            "magick_executable": "",
+            "ffmpeg_executable": "ffmpeg",
+            "viewer_root": "third_party/viewer/bin",
+            "colmap_use_gpu": true,
+            "video_target_fps": 3
+          },
+          "system_paths": {
+            "gs_repo": "third_party/gaussian-splatting",
+            "raw_data": "datasets/raw",
+            "processed_data": "datasets/processed",
+            "outputs": "outputs",
+            "logs": "logs",
+            "videos_data": "datasets/videos"
+          },
+          "pipeline": {
+            "input_mode": "video",
+            "run_preflight": true,
+            "run_video_extract": true,
+            "run_data_quality": true,
+            "run_augmentation": true,
+            "run_colmap": true,
+            "run_convert": true,
+            "run_train": true,
+            "run_render": true,
+            "run_metrics": true,
+            "launch_viewer": true
+          },
+          "augmentation": {
+            "enabled": true,
+            "preset": "safe",
+            "output_subdir": "augmented_images",
+            "overwrite": true,
+            "keep_original_if_failed": true,
+            "jpeg_quality": 95,
+            "gray_world": true,
+            "clahe": true,
+            "clahe_clip_limit": 2.0,
+            "clahe_tile_grid_size": [
+              8,
+              8
+            ],
+            "auto_gamma": false,
+            "gamma_target_mean": 0.48,
+            "denoise": false,
+            "denoise_h": 3.0,
+            "sharpen": false,
+            "sharpen_amount": 0.2,
+            "max_long_edge": 0
+          },
+          "train": {
+            "active_profile": "low_vram",
+            "eval": true,
+            "iterations": 60000,
+            "save_iterations": [
+              7000,
+              30000,
+              60000
+            ],
+            "test_iterations": [
+              -1
+            ],
+            "checkpoint_iterations": [
+              2000,
+              15000,
+              30000,
+              60000
+            ],
+            "start_checkpoint": "",
+            "resume_from_latest": false,
+            "quiet": false,
+            "extra_args": {
+              "data_device": "cuda",
+              "resolution": 4,
+              "densify_grad_threshold": 0.001,
+              "densification_interval": 200,
+              "densify_until_iter": 3000
+            }
+          }
+        }
+      },
+      "status": "failed",
+      "current_stage": "执行失败",
+      "message": "任务执行失败",
+      "result": {},
+      "error": "COLMAP 质量分析失败：未找到完整的 COLMAP sparse 模型文件，请检查 COLMAP 是否执行成功。",
+      "created_at": "2026-05-13T14:24:26.383669+00:00",
+      "updated_at": "2026-05-13T15:02:39.870122+00:00",
+      "started_at": "2026-05-13T15:01:25.527976+00:00",
+      "finished_at": "2026-05-13T15:02:39.860090+00:00",
+      "stop_requested": false,
+      "force_stop_requested": false,
+      "retry_count": 5,
+      "stage_history": [
+        {
+          "stage_key": "video_extract",
+          "stage_label": "视频抽帧",
+          "order": 1,
+          "status": "success",
+          "started_at": "2026-05-13T15:01:25.568631+00:00",
+          "finished_at": "2026-05-13T15:01:28.307740+00:00",
+          "duration_seconds": 2.739,
+          "error_type": null,
+          "error_message": null
+        },
+        {
+          "stage_key": "data_quality",
+          "stage_label": "数据质量体检",
+          "order": 2,
+          "status": "success",
+          "started_at": "2026-05-13T15:01:28.314737+00:00",
+          "finished_at": "2026-05-13T15:01:36.891964+00:00",
+          "duration_seconds": 8.577,
+          "error_type": null,
+          "error_message": null
+        },
+        {
+          "stage_key": "preflight_raw",
+          "stage_label": "原始数据预检查",
+          "order": 3,
+          "status": "success",
+          "started_at": "2026-05-13T15:01:36.898964+00:00",
+          "finished_at": "2026-05-13T15:01:49.040322+00:00",
+          "duration_seconds": 12.141,
+          "error_type": null,
+          "error_message": null
+        },
+        {
+          "stage_key": "augmentation",
+          "stage_label": "数据增强",
+          "order": 4,
+          "status": "success",
+          "started_at": "2026-05-13T15:01:49.047322+00:00",
+          "finished_at": "2026-05-13T15:02:36.626321+00:00",
+          "duration_seconds": 47.579,
+          "error_type": null,
+          "error_message": null
+        },
+        {
+          "stage_key": "colmap",
+          "stage_label": "COLMAP 重建",
+          "order": 5,
+          "status": "success",
+          "started_at": "2026-05-13T15:02:36.634440+00:00",
+          "finished_at": "2026-05-13T15:02:39.757285+00:00",
+          "duration_seconds": 3.123,
+          "error_type": null,
+          "error_message": null
+        },
+        {
+          "stage_key": "colmap_quality",
+          "stage_label": "COLMAP 质量分析",
+          "order": 6,
+          "status": "failed",
+          "started_at": "2026-05-13T15:02:39.764284+00:00",
+          "finished_at": "2026-05-13T15:02:39.852126+00:00",
+          "duration_seconds": 0.088,
+          "error_type": "tool_error",
+          "error_message": "COLMAP 质量分析失败：未找到完整的 COLMAP sparse 模型文件，请检查 COLMAP 是否执行成功。"
+        }
+      ],
+      "runtime_dir": "E:\\3dgs\\3dgs_platform\\backend\\runtime\\9562a43d4969",
+      "result_files": {},
+      "metrics_summary": {},
+      "last_error_type": "tool_error",
+      "log_file": "E:\\3dgs\\3dgs_platform\\backend\\runtime\\task_logs\\9562a43d4969.log"
     }
   ]
 }

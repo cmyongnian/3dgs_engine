@@ -1,0 +1,9 @@
+preflight:
+  scene_name: 三星堆立人
+  input_mode: video
+  raw_image_path: datasets\raw\三星堆立人\9562a43d4969\images
+  processed_image_path: datasets\processed\三星堆立人\9562a43d4969\gs_input
+  source_path: datasets\processed\三星堆立人\9562a43d4969\gs_input
+  video_path: datasets/videos/三星堆立人.mp4
+  model_output: outputs\三星堆立人\9562a43d4969
+  quiet: false

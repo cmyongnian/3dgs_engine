@@ -1,0 +1,14 @@
+convert:
+  scene_name: 三星堆立人
+  source_images: datasets\processed\三星堆立人\9562a43d4969\augmented_images
+  raw_source_images: datasets\raw\三星堆立人\9562a43d4969\images
+  augmented_source_images: datasets\processed\三星堆立人\9562a43d4969\augmented_images
+  colmap_workspace: datasets\processed\三星堆立人\9562a43d4969
+  gs_input_path: datasets\processed\三星堆立人\9562a43d4969\gs_input
+  colmap_executable: third_party/colmap/COLMAP.bat
+  magick_executable: ''
+  skip_matching: true
+  resize: false
+  use_magick: false
+  gs_repo: third_party/gaussian-splatting
+  quiet: false

@@ -1,0 +1,7 @@
+video:
+  scene_name: 三星堆立人
+  video_path: datasets/videos/三星堆立人.mp4
+  output_images: datasets\raw\三星堆立人\9562a43d4969\images
+  ffmpeg_executable: ffmpeg
+  target_fps: 3
+  quiet: false
