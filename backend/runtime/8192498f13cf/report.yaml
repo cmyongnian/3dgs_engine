@@ -1,0 +1,8 @@
+report:
+  scene_name: touxiang
+  model_paths:
+  - outputs\touxiang\8192498f13cf
+  report_dir: outputs\touxiang\8192498f13cf
+  log_dir: E:\3dgs\3dgs_platform\engine\logs\touxiang\8192498f13cf
+  processed_scene_path: datasets\processed\touxiang\8192498f13cf
+  quiet: false

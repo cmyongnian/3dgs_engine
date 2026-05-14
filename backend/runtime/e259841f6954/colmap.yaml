@@ -1,0 +1,10 @@
+colmap:
+  scene_name: liren
+  image_path: datasets\raw\liren\e259841f6954\images
+  raw_image_path: datasets\raw\liren\e259841f6954\images
+  workspace_path: datasets\processed\liren\e259841f6954
+  processed_scene_path: datasets\processed\liren\e259841f6954
+  source_path: datasets\processed\liren\e259841f6954\gs_input
+  colmap_executable: third_party/colmap/COLMAP.bat
+  use_gpu: true
+  quiet: false

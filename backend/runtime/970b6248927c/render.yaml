@@ -1,0 +1,6 @@
+render:
+  scene_name: liren
+  model_path: outputs\liren\970b6248927c
+  model_paths:
+  - outputs\liren\970b6248927c
+  quiet: false

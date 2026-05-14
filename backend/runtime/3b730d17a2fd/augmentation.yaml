@@ -1,0 +1,23 @@
+augmentation:
+  scene_name: video_scene_01
+  enabled: true
+  preset: custom
+  input_images: datasets/raw/video_scene_01/images
+  output_images: datasets\processed\video_scene_01\3b730d17a2fd\augmented_images
+  log_dir: E:\3dgs\3dgs_platform\engine\logs\video_scene_01\3b730d17a2fd
+  overwrite: true
+  keep_original_if_failed: true
+  jpeg_quality: 95
+  gray_world: true
+  clahe: true
+  clahe_clip_limit: 2.0
+  clahe_tile_grid_size:
+  - 8
+  - 8
+  auto_gamma: true
+  gamma_target_mean: 0.48
+  denoise: true
+  denoise_h: 3.0
+  sharpen: true
+  sharpen_amount: 0.2
+  max_long_edge: 0

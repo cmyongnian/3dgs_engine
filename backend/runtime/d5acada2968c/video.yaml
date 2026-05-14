@@ -1,0 +1,7 @@
+video:
+  scene_name: liren
+  video_path: datasets/videos/liren.mp4
+  output_images: datasets\raw\liren\d5acada2968c\images
+  ffmpeg_executable: ffmpeg
+  target_fps: 3
+  quiet: false

@@ -1,0 +1,12 @@
+colmap:
+  scene_name: touxiang
+  image_path: datasets\raw\touxiang\8192498f13cf\images
+  raw_image_path: datasets\raw\touxiang\8192498f13cf\images
+  workspace_path: datasets\processed\touxiang\8192498f13cf
+  processed_scene_path: datasets\processed\touxiang\8192498f13cf
+  source_path: datasets\processed\touxiang\8192498f13cf\gs_input
+  colmap_executable: third_party/colmap/COLMAP.bat
+  use_gpu: true
+  quiet: false
+  reuse_enabled: true
+  reuse_workspace_path: datasets/processed/touxiang/b74ca04494ea

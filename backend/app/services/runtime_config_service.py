@@ -500,6 +500,19 @@ class RuntimeConfigService:
                 "colmap_executable": scene.get("colmap_executable", "colmap"),
                 "use_gpu": self._as_bool(scene.get("colmap_use_gpu", True), True),
                 "quiet": quiet,
+
+                # COLMAP 复用配置。
+                # enabled=True 时，engine/core/colmap_service.py 会把 reuse_workspace_path
+                # 中的 database.db 与 sparse/0 复制到当前任务 workspace_path，
+                # 然后跳过真正的 COLMAP 重建。
+                "reuse_enabled": self._as_bool(
+                    scene.get("colmap_reuse_enabled", False),
+                    False,
+                ),
+                "reuse_workspace_path": self._clean_path_text(
+                    scene.get("colmap_reuse_workspace"),
+                    "",
+                ),
             }
         }
 

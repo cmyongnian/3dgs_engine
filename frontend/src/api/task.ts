@@ -6,6 +6,7 @@ import type {
   任务响应,
   结果响应,
   任务日志响应,
+  可复用COLMAP响应,
 } from '../types/task'
 
 export function 创建任务(payload: 创建任务请求) {
@@ -50,6 +51,11 @@ export function 删除任务(taskId: string) {
   return 请求<任务动作响应>(`/tasks/${taskId}`, {
     method: 'DELETE',
   })
+}
+
+export function 获取可复用COLMAP列表(sceneName: string) {
+  const encoded = encodeURIComponent(sceneName.trim())
+  return 请求<可复用COLMAP响应>(`/tasks/colmap-reuse?scene_name=${encoded}`)
 }
 
 export function 获取任务(taskId: string) {

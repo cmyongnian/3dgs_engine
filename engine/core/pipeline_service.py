@@ -66,10 +66,10 @@ class PipelineService:
             print(">>> 数据增强结束")
 
         if self.run_colmap_flag:
-            print(">>> 第四步：COLMAP 重建")
+            print(">>> 第四步：COLMAP 重建/复用")
             colmap_service = ColmapService(system_config_path=self.system_config_path)
             colmap_service.run()
-            print(">>> COLMAP 重建结束")
+            print(">>> COLMAP 重建/复用结束")
 
         if self.run_convert_flag:
             print(">>> 第五步：执行 convert.py")

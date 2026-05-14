@@ -1,0 +1,7 @@
+video:
+  scene_name: touxiang
+  video_path: datasets/videos/touxiang.mp4
+  output_images: datasets\raw\touxiang\b74ca04494ea\images
+  ffmpeg_executable: ffmpeg
+  target_fps: 2
+  quiet: false

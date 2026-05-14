@@ -1,0 +1,9 @@
+preflight:
+  scene_name: liren
+  input_mode: video
+  raw_image_path: datasets\raw\liren\e259841f6954\images
+  processed_image_path: datasets\processed\liren\e259841f6954\gs_input
+  source_path: datasets\processed\liren\e259841f6954\gs_input
+  video_path: datasets/videos/liren.mp4
+  model_output: outputs\liren\e259841f6954
+  quiet: false

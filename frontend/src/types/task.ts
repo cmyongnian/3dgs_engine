@@ -79,6 +79,8 @@ export interface 创建任务请求 {
     viewer_root: string
     colmap_use_gpu: boolean
     video_target_fps: number
+    colmap_reuse_enabled: boolean
+    colmap_reuse_workspace: string
   }
   system_paths: 系统路径配置
   pipeline: {
@@ -197,6 +199,26 @@ export interface 结果响应 {
   config_snapshot?: Record<string, unknown>
   submitted_config?: Record<string, unknown>
   result: Record<string, unknown>
+}
+
+
+export interface 可复用COLMAP选项 {
+  scene_name: string
+  task_id: string
+  workspace_path: string
+  sparse_path: string
+  database_path: string
+  created_at: string | null
+  updated_at: string | null
+  status: string | null
+  source: string
+  note: string
+}
+
+export interface 可复用COLMAP响应 {
+  scene_name: string
+  items: 可复用COLMAP选项[]
+  count: number
 }
 
 export interface 任务日志响应 {

@@ -1,0 +1,8 @@
+report:
+  scene_name: touxiang
+  model_paths:
+  - outputs\touxiang\b74ca04494ea
+  report_dir: outputs\touxiang\b74ca04494ea
+  log_dir: E:\3dgs\3dgs_platform\engine\logs\touxiang\b74ca04494ea
+  processed_scene_path: datasets\processed\touxiang\b74ca04494ea
+  quiet: false

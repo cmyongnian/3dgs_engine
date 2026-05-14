@@ -1,0 +1,14 @@
+convert:
+  scene_name: liren
+  source_images: datasets\processed\liren\d5acada2968c\augmented_images
+  raw_source_images: datasets\raw\liren\d5acada2968c\images
+  augmented_source_images: datasets\processed\liren\d5acada2968c\augmented_images
+  colmap_workspace: datasets\processed\liren\d5acada2968c
+  gs_input_path: datasets\processed\liren\d5acada2968c\gs_input
+  colmap_executable: third_party/colmap/COLMAP.bat
+  magick_executable: ''
+  skip_matching: true
+  resize: false
+  use_magick: false
+  gs_repo: third_party/gaussian-splatting
+  quiet: false

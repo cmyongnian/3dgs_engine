@@ -1,0 +1,6 @@
+render:
+  scene_name: liren
+  model_path: outputs\liren\fae32ca2370f
+  model_paths:
+  - outputs\liren\fae32ca2370f
+  quiet: false

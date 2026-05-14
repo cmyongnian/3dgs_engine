@@ -1,0 +1,9 @@
+preflight:
+  scene_name: touxiang
+  input_mode: video
+  raw_image_path: datasets\raw\touxiang\b74ca04494ea\images
+  processed_image_path: datasets\processed\touxiang\b74ca04494ea\gs_input
+  source_path: datasets\processed\touxiang\b74ca04494ea\gs_input
+  video_path: datasets/videos/touxiang.mp4
+  model_output: outputs\touxiang\b74ca04494ea
+  quiet: false

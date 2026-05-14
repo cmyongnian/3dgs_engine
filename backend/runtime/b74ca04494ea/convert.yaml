@@ -1,0 +1,14 @@
+convert:
+  scene_name: touxiang
+  source_images: datasets\processed\touxiang\b74ca04494ea\augmented_images
+  raw_source_images: datasets\raw\touxiang\b74ca04494ea\images
+  augmented_source_images: datasets\processed\touxiang\b74ca04494ea\augmented_images
+  colmap_workspace: datasets\processed\touxiang\b74ca04494ea
+  gs_input_path: datasets\processed\touxiang\b74ca04494ea\gs_input
+  colmap_executable: third_party/colmap/COLMAP.bat
+  magick_executable: ''
+  skip_matching: true
+  resize: false
+  use_magick: false
+  gs_repo: third_party/gaussian-splatting
+  quiet: false

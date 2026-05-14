@@ -1,0 +1,14 @@
+convert:
+  scene_name: liren
+  source_images: datasets\processed\liren\fae32ca2370f\augmented_images
+  raw_source_images: datasets\raw\liren\fae32ca2370f\images
+  augmented_source_images: datasets\processed\liren\fae32ca2370f\augmented_images
+  colmap_workspace: datasets\processed\liren\fae32ca2370f
+  gs_input_path: datasets\processed\liren\fae32ca2370f\gs_input
+  colmap_executable: third_party/colmap/COLMAP.bat
+  magick_executable: ''
+  skip_matching: true
+  resize: false
+  use_magick: false
+  gs_repo: third_party/gaussian-splatting
+  quiet: false

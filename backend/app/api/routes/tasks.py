@@ -5,8 +5,10 @@ from backend.app.schemas.task import (
     TaskCreateRequest,
     TaskResponse,
     TaskLogResponse,
+    ColmapReuseListResponse,
 )
 from backend.app.services.task_service import task_service
+from backend.app.services.colmap_reuse_service import colmap_reuse_service
 
 router = APIRouter()
 
@@ -22,6 +24,12 @@ def create_and_start_task(payload: TaskCreateRequest) -> TaskResponse:
     if task is None:
         raise HTTPException(status_code=500, detail="任务创建后启动失败")
     return task
+
+
+@router.get("/colmap-reuse", response_model=ColmapReuseListResponse)
+def list_colmap_reuse_options(scene_name: str) -> ColmapReuseListResponse:
+    items = colmap_reuse_service.list_options(scene_name)
+    return ColmapReuseListResponse(scene_name=scene_name, items=items, count=len(items))
 
 
 @router.post("/{task_id}/start", response_model=TaskResponse)

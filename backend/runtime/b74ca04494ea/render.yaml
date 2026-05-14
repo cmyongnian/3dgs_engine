@@ -1,0 +1,6 @@
+render:
+  scene_name: touxiang
+  model_path: outputs\touxiang\b74ca04494ea
+  model_paths:
+  - outputs\touxiang\b74ca04494ea
+  quiet: false

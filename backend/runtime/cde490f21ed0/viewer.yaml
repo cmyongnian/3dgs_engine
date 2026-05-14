@@ -1,0 +1,6 @@
+viewer:
+  scene_name: liren
+  source_path: datasets\processed\liren\cde490f21ed0\gs_input
+  model_path: outputs\liren\cde490f21ed0
+  viewer_root: third_party/viewer/bin
+  quiet: false

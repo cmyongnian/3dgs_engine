@@ -1,0 +1,12 @@
+metrics:
+  scene_name: touxiang
+  model_paths:
+  - outputs\touxiang\c21362e850ef
+  processed_scene_path: datasets\processed\touxiang\c21362e850ef
+  render_dir: outputs\touxiang\c21362e850ef
+  log_dir: E:\3dgs\3dgs_platform\engine\logs\touxiang\c21362e850ef
+  collect_colmap_stats: true
+  collect_resource_stats: true
+  collect_gaussian_stats: true
+  collect_preview_images: true
+  quiet: false

@@ -1,0 +1,6 @@
+viewer:
+  scene_name: touxiang
+  source_path: datasets\processed\touxiang\b74ca04494ea\gs_input
+  model_path: outputs\touxiang\b74ca04494ea
+  viewer_root: third_party/viewer/bin
+  quiet: false

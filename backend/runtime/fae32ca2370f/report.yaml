@@ -1,0 +1,8 @@
+report:
+  scene_name: liren
+  model_paths:
+  - outputs\liren\fae32ca2370f
+  report_dir: outputs\liren\fae32ca2370f
+  log_dir: E:\3dgs\3dgs_platform\engine\logs\liren\fae32ca2370f
+  processed_scene_path: datasets\processed\liren\fae32ca2370f
+  quiet: false

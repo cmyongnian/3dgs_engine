@@ -95,6 +95,31 @@ class SceneConfig(BaseModel):
     colmap_use_gpu: bool = True
     video_target_fps: int = 2
 
+    # 是否复用同名场景下已有的 COLMAP 结果。
+    # 复用时不会重新执行 automatic_reconstructor，而是把选中的 database.db 与 sparse/0
+    # 复制到当前任务独立目录，后续 convert / train / render 仍然按新任务隔离执行。
+    colmap_reuse_enabled: bool = False
+    colmap_reuse_workspace: str = ""
+
+
+class ColmapReuseOption(BaseModel):
+    scene_name: str
+    task_id: str
+    workspace_path: str
+    sparse_path: str
+    database_path: str
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
+    status: Optional[str] = None
+    source: str = "filesystem"
+    note: str = ""
+
+
+class ColmapReuseListResponse(BaseModel):
+    scene_name: str
+    items: List[ColmapReuseOption] = Field(default_factory=list)
+    count: int = 0
+
 
 class TaskCreateRequest(BaseModel):
     scene: SceneConfig

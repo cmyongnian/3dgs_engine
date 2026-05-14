@@ -1,7 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { 创建任务, 启动任务 } from '../../api/task'
-import type { 创建任务请求 } from '../../types/task'
+import { 创建任务, 启动任务, 获取可复用COLMAP列表 } from '../../api/task'
+import type { 创建任务请求, 可复用COLMAP选项 } from '../../types/task'
 import {
   根据场景名更新路径,
   生成默认任务请求,
@@ -13,7 +13,7 @@ const 开关项: Array<[keyof 创建任务请求['pipeline'], string]> = [
   ['run_video_extract', '执行视频抽帧'],
   ['run_data_quality', '执行数据质量体检'],
   ['run_augmentation', '执行数据增强'],
-  ['run_colmap', '执行 COLMAP'],
+  ['run_colmap', '执行/复用 COLMAP'],
   ['run_convert', '执行转换'],
   ['run_train', '执行训练'],
   ['run_render', '执行渲染'],
@@ -40,11 +40,31 @@ function 构建校验信息(表单: 创建任务请求) {
   if (表单.train.iterations <= 0) messages.push('训练轮数必须大于 0。')
   if (表单.train.extra_args.resolution <= 0) messages.push('分辨率倍率必须大于 0。')
 
+  if (表单.scene.colmap_reuse_enabled && !表单.scene.colmap_reuse_workspace.trim()) {
+    messages.push('已开启 COLMAP 复用，但没有选择或填写复用目录。')
+  }
+
+  if (表单.scene.colmap_reuse_enabled && !表单.pipeline.run_colmap) {
+    messages.push('COLMAP 复用需要开启“执行/复用 COLMAP”，该阶段负责复制旧的重建结果。')
+  }
+
   if (!表单.pipeline.run_train && (表单.pipeline.run_render || 表单.pipeline.run_metrics)) {
     messages.push('未启用训练时，不建议直接启用渲染或评测。')
   }
 
   return messages
+}
+
+function 格式化时间(value?: string | null) {
+  if (!value) return '未知时间'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return value
+  return date.toLocaleString()
+}
+
+function 构建COLMAP选项标签(item: 可复用COLMAP选项) {
+  const status = item.status ? `，状态：${item.status}` : ''
+  return `${item.task_id}（${格式化时间(item.updated_at || item.created_at)}${status}）`
 }
 
 export function TaskCreatePage() {
@@ -54,8 +74,42 @@ export function TaskCreatePage() {
   const [提交中, set提交中] = useState(false)
   const [错误, set错误] = useState('')
   const [提示, set提示] = useState('')
+  const [colmap选项, setColmap选项] = useState<可复用COLMAP选项[]>([])
+  const [colmap加载中, setColmap加载中] = useState(false)
+  const [colmap加载错误, setColmap加载错误] = useState('')
 
   const 校验信息 = useMemo(() => 构建校验信息(表单), [表单])
+
+  useEffect(() => {
+    const sceneName = 表单.scene.scene_name.trim()
+    if (!sceneName) {
+      setColmap选项([])
+      setColmap加载错误('')
+      return
+    }
+
+    let cancelled = false
+    setColmap加载中(true)
+    setColmap加载错误('')
+
+    获取可复用COLMAP列表(sceneName)
+      .then((data) => {
+        if (cancelled) return
+        setColmap选项(data.items ?? [])
+      })
+      .catch((error) => {
+        if (cancelled) return
+        setColmap选项([])
+        setColmap加载错误(error instanceof Error ? error.message : '读取可复用 COLMAP 结果失败')
+      })
+      .finally(() => {
+        if (!cancelled) setColmap加载中(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [表单.scene.scene_name])
 
   const 当前输入模式说明 =
     表单.pipeline.input_mode === 'video'
@@ -64,8 +118,21 @@ export function TaskCreatePage() {
 
   const 模板摘要 = `当前模板：${表单.train.active_profile}，训练轮数：${表单.train.iterations}，分辨率倍率：${表单.train.extra_args.resolution}，数据设备：${表单.train.extra_args.data_device}`
 
+  const 当前选中的COLMAP = colmap选项.find(
+    (item) => item.workspace_path === 表单.scene.colmap_reuse_workspace,
+  )
+
   const 刷新路径 = (sceneName: string) => {
-    set表单((prev) => 根据场景名更新路径(prev, 系统设置, sceneName))
+    set表单((prev) => {
+      const next = 根据场景名更新路径(prev, 系统设置, sceneName)
+      return {
+        ...next,
+        scene: {
+          ...next.scene,
+          colmap_reuse_workspace: '',
+        },
+      }
+    })
   }
 
   const 应用模板 = (template: 'fast' | 'normal' | 'low_vram') => {
@@ -174,6 +241,24 @@ export function TaskCreatePage() {
     window.setTimeout(() => set提示(''), 1500)
   }
 
+  const 切换COLMAP复用 = (checked: boolean) => {
+    const 默认复用目录 = colmap选项[0]?.workspace_path ?? ''
+    set表单((prev) => ({
+      ...prev,
+      scene: {
+        ...prev.scene,
+        colmap_reuse_enabled: checked,
+        colmap_reuse_workspace: checked
+          ? prev.scene.colmap_reuse_workspace || 默认复用目录
+          : '',
+      },
+      pipeline: {
+        ...prev.pipeline,
+        run_colmap: checked ? true : prev.pipeline.run_colmap,
+      },
+    }))
+  }
+
   const 提交 = async () => {
     if (校验信息.length) {
       set错误(校验信息[0])
@@ -261,6 +346,7 @@ export function TaskCreatePage() {
                       scene: {
                         ...prev.scene,
                         scene_name: value,
+                        colmap_reuse_workspace: '',
                       },
                     }))
                   }
@@ -387,6 +473,99 @@ export function TaskCreatePage() {
               />
             </div>
           </div>
+        </div>
+
+        <div className="card span-2">
+          <div className="toolbar-row">
+            <div>
+              <h3>COLMAP 复用</h3>
+              <p className="section-tip">
+                场景名称相同时，可以从历史任务中选择一份 COLMAP 结果复用。系统只复制
+                database.db 和 sparse/0，训练输出仍然写入当前新任务目录。
+              </p>
+            </div>
+            <span className="light-tip">
+              {colmap加载中 ? '正在扫描历史结果...' : `找到 ${colmap选项.length} 个可复用结果`}
+            </span>
+          </div>
+
+          {colmap加载错误 ? (
+            <div className="warning-box" style={{ marginTop: 12 }}>
+              {colmap加载错误}
+            </div>
+          ) : null}
+
+          <div className="field-grid two-columns" style={{ marginTop: 12 }}>
+            <label className="flag-card compact-flag-card">
+              <input
+                type="checkbox"
+                checked={表单.scene.colmap_reuse_enabled}
+                onChange={(e) => 切换COLMAP复用(e.target.checked)}
+              />
+              <span>复用已有 COLMAP 结果</span>
+            </label>
+
+            <div>
+              <label>选择历史 COLMAP 结果</label>
+              <select
+                value={表单.scene.colmap_reuse_workspace}
+                disabled={!表单.scene.colmap_reuse_enabled || colmap选项.length === 0}
+                onChange={(e) =>
+                  set表单((prev) => ({
+                    ...prev,
+                    scene: {
+                      ...prev.scene,
+                      colmap_reuse_enabled: true,
+                      colmap_reuse_workspace: e.target.value,
+                    },
+                    pipeline: {
+                      ...prev.pipeline,
+                      run_colmap: true,
+                    },
+                  }))
+                }
+              >
+                <option value="">请选择历史结果</option>
+                {colmap选项.map((item) => (
+                  <option key={item.workspace_path} value={item.workspace_path}>
+                    {构建COLMAP选项标签(item)}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="full-width">
+              <label>复用目录</label>
+              <input
+                value={表单.scene.colmap_reuse_workspace}
+                placeholder="例如：datasets/processed/liren/2b8a7d427d63"
+                disabled={!表单.scene.colmap_reuse_enabled}
+                onChange={(e) =>
+                  set表单((prev) => ({
+                    ...prev,
+                    scene: {
+                      ...prev.scene,
+                      colmap_reuse_workspace: e.target.value,
+                    },
+                    pipeline: {
+                      ...prev.pipeline,
+                      run_colmap: true,
+                    },
+                  }))
+                }
+              />
+            </div>
+          </div>
+
+          {当前选中的COLMAP ? (
+            <div className="light-tip" style={{ marginTop: 12 }}>
+              当前选择：{当前选中的COLMAP.workspace_path}；稀疏模型：{当前选中的COLMAP.sparse_path}
+            </div>
+          ) : (
+            <div className="light-tip" style={{ marginTop: 12 }}>
+              没有历史结果时，也可以手动填写旧任务的处理目录。旧目录必须包含 database.db 和 sparse/0。
+            </div>
+          )}
         </div>
 
         <div className="card">
@@ -555,6 +734,17 @@ export function TaskCreatePage() {
                 onChange={(e) =>
                   set表单((prev) => ({
                     ...prev,
+                    scene: {
+                      ...prev.scene,
+                      colmap_reuse_enabled:
+                        字段 === 'run_colmap' && !e.target.checked
+                          ? false
+                          : prev.scene.colmap_reuse_enabled,
+                      colmap_reuse_workspace:
+                        字段 === 'run_colmap' && !e.target.checked
+                          ? ''
+                          : prev.scene.colmap_reuse_workspace,
+                    },
                     pipeline: {
                       ...prev.pipeline,
                       [字段]: e.target.checked,

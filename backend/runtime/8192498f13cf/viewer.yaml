@@ -1,0 +1,6 @@
+viewer:
+  scene_name: touxiang
+  source_path: datasets\processed\touxiang\8192498f13cf\gs_input
+  model_path: outputs\touxiang\8192498f13cf
+  viewer_root: third_party/viewer/bin
+  quiet: false

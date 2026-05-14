@@ -1,0 +1,6 @@
+viewer:
+  scene_name: liren
+  source_path: datasets\processed\liren\fae32ca2370f\gs_input
+  model_path: outputs\liren\fae32ca2370f
+  viewer_root: third_party/viewer/bin
+  quiet: false

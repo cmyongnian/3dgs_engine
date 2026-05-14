@@ -1,0 +1,8 @@
+report:
+  scene_name: liren
+  model_paths:
+  - outputs\liren\e259841f6954
+  report_dir: outputs\liren\e259841f6954
+  log_dir: E:\3dgs\3dgs_platform\engine\logs\liren\e259841f6954
+  processed_scene_path: datasets\processed\liren\e259841f6954
+  quiet: false

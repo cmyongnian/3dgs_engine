@@ -1,0 +1,12 @@
+colmap:
+  scene_name: video_scene_01
+  image_path: datasets/raw/video_scene_01/images
+  raw_image_path: datasets/raw/video_scene_01/images
+  workspace_path: datasets\processed\video_scene_01\3b730d17a2fd
+  processed_scene_path: datasets\processed\video_scene_01\3b730d17a2fd
+  source_path: datasets\processed\video_scene_01\3b730d17a2fd\gs_input
+  colmap_executable: third_party/colmap/COLMAP.bat
+  use_gpu: true
+  quiet: false
+  reuse_enabled: false
+  reuse_workspace_path: ''

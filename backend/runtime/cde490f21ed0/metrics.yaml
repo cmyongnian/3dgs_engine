@@ -1,0 +1,12 @@
+metrics:
+  scene_name: liren
+  model_paths:
+  - outputs\liren\cde490f21ed0
+  processed_scene_path: datasets\processed\liren\cde490f21ed0
+  render_dir: outputs\liren\cde490f21ed0
+  log_dir: E:\3dgs\3dgs_platform\engine\logs\liren\cde490f21ed0
+  collect_colmap_stats: true
+  collect_resource_stats: true
+  collect_gaussian_stats: true
+  collect_preview_images: true
+  quiet: false

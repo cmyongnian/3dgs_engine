@@ -1,0 +1,12 @@
+metrics:
+  scene_name: liren
+  model_paths:
+  - outputs\liren\fae32ca2370f
+  processed_scene_path: datasets\processed\liren\fae32ca2370f
+  render_dir: outputs\liren\fae32ca2370f
+  log_dir: E:\3dgs\3dgs_platform\engine\logs\liren\fae32ca2370f
+  collect_colmap_stats: true
+  collect_resource_stats: true
+  collect_gaussian_stats: true
+  collect_preview_images: true
+  quiet: false

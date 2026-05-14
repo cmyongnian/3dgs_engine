@@ -1,0 +1,6 @@
+render:
+  scene_name: touxiang
+  model_path: outputs\touxiang\2bd5c86b18dc
+  model_paths:
+  - outputs\touxiang\2bd5c86b18dc
+  quiet: false
